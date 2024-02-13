@@ -17,8 +17,7 @@ fi
 
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
-alias fnv='~/tmux-sessionizer.sh'
-alias ftm='~/tmux-session_v1.sh'
+alias ftm='~/tmux-sessionizer.sh'
 PS1='[\u@\h \W]\$ '
 
 # Created by `pipx` on 2024-02-11 17:29:58
