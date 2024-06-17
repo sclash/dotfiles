@@ -21,7 +21,7 @@ alias ftm='~/tmux-sessionizer.sh'
 PS1='[\u@\h \W]\$ '
 
 # Created by `pipx` on 2024-02-11 17:29:58
-export PATH="$PATH:/home/asergi/.local/bin"
+export PATH="$PATH:/home/$USER/.local/bin"
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 # Set name of the theme to load --- if set to "random", it will

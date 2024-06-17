@@ -27,6 +27,11 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
         - [Plugins](#tmux-plugins)
 - [Custom Scripts](#custom-scripts)
     - [Tmux Sessionizer](#tmux-sessionizer)
+- [Misc](#misc)
+    - [Network](#network)
+    - [Keyboard layout](#keyboard-layout)
+    - [Picom](#picom)
+    - [Docker](#Docker)
 
 ## Alacritty
 
@@ -188,3 +193,49 @@ The Plugins we want are already taken account of in the `tmux.conf` file in this
 - The script must be copied to the `~` path
 
 **NOTE: ** remember to run `chmod +x <your_script>.sh` before running the script to make it executable
+
+## Misc
+
+### Network
+Connect to a Wi-fi network, needed during instalation of Arch if ethernet not available
+```bash
+iwctl --passphrase "<your_network_password>" station wlan0 connect <your-network-name>
+```
+To connect on startup
+```bash
+sudo systemctl start iwd
+sudo systemctl restart systemd-resolved.service
+sudo systemctl restart systemd-networkd
+sudo systemctl enable iwd
+sudo systemctl enable systemd-resolved.service
+sudo systemctl enable systemd-networkd
+networkctl
+```
+
+### Keyboard layout
+To chanhe keyboard layout
+```bash
+setxkbmap -layout it
+```
+
+### Picom
+Copy the file `picom.conf` in this repo to `/etc/xdg/picom.conf` to remove shadows under menu windows, dialog boc, etc.
+
+### Docker 
+To isntall `docker` and `docker-compose` use `pacman` refere to the official arch page for how to start the services:
+```bash
+sudo system ctl start docker.service
+sudo system ctl start docker.socket
+sudo system ctl enable docker.service
+sudo system ctl enable docker.socket
+```
+
+To run docker without root privileges we have to add the user to group
+group are stored in the `/etc/group` file
+```bash
+sudo groupadd docker
+sudo usermod -aG docker <usern_name>
+su - <usern_name>
+```
+
+
