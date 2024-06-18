@@ -213,11 +213,16 @@ networkctl
 ```
 
 ### Keyboard layout
-To chanhe keyboard layout
+To change keyboard layout
 ```bash
 setxkbmap -layout it
 ```
 
+To change keyboard layout automatically at startup add the following command to `$HOME/.profile` (create it if doesn't exist)
+
+```bash
+setxkbmap -layout it
+```
 ### Picom
 Copy the file `picom.conf` in this repo to `/etc/xdg/picom.conf` to remove shadows under menu windows, dialog boc, etc.
 
