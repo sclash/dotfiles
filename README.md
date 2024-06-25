@@ -32,6 +32,8 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
     - [Keyboard layout](#keyboard-layout)
     - [Picom](#picom)
     - [Docker](#Docker)
+    - [Ethernet](#Ethernet)
+    - [USB Drive](#usb-drive)
 
 ## Alacritty
 
@@ -243,4 +245,34 @@ sudo usermod -aG docker <usern_name>
 su - <usern_name>
 ```
 
+### Ethernet
 
+To connect to Ethernet if when plugging the cable it does not get automatically detected:
+
+- Get the ethernet network interface name by running `ip addr show` or `ip link` usually is `enp2s0` or `eth0`
+- Check that the interface is `UP`, if it is not run the following `sudo ip link <interface name> up`
+- Now you should get an IPv6 address, to get an IPv4 address use a DHCP client e.g. `sudo dhclient <interface_name>`
+
+
+### USB Drive
+[Guide to mount USB Drives]( https://ejmastnak.com/tutorials/arch/usb/#udisk2 )
+
+Using `udisks2`
+
+```bash
+# Install usdisks2
+sudo pacman -S udisks2
+
+# Mount a drive's data partition
+udisksctl mount -b /dev/sdxN
+
+# Unmount a drive's data partition
+udisksctl unmount -b /dev/sdxN
+
+# Power off a drive
+udisksctl power-off -b /dev/sdx
+```
+
+Note: `sdxN` is an alias for your usb drive name as seen by runnign `lsblk`, e.g. `sdb1`
+
+To check where your drive has been mounted run again `lsblk` go to the mount direcotory `/run/media/$USER/$DEVICE_UUID` to access your USB Drive filesystem
