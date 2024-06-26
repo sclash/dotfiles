@@ -15,6 +15,7 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
         - [Arch](#configuration-arch)
     - [Useful references](#i3-useful-referencese)
 - [ZSH](#zsh)
+    - [Dependencies](#zsh-dependencies)
     - [Installation](#zsh-installation)
     - [Configuration](#zsh-configuration)
         - [Plugin Manager](#zsh-plugin-manager)
@@ -133,6 +134,12 @@ Copy the i3 config files inside this Repo into the default config i3 paths speci
 
 A default `.zshrc` file can be generated when zsh run for the first time, and then modified.
 Otherwise create it and start from scratch.
+### ZSH Dependencies
+[eza](https://github.com/eza-community/eza) Display file tree with icons and details, to install it 
+```bash
+yay -S eza-git
+```
+
 ### ZSH Installation
 
 ```bash

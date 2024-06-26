@@ -15,9 +15,17 @@ fi
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+show_eza_tree() {
+	level_arg=${1:-2}
+	eza --tree --level="$level_arg" --long --icons --git
+}
+
+
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias ftm='~/tmux-sessionizer.sh'
+# alias lz = 'eza --tree --level=2 --long --icons --git'
+alias lz='show_eza_tree'
 PS1='[\u@\h \W]\$ '
 
 # Created by `pipx` on 2024-02-11 17:29:58
