@@ -4,6 +4,10 @@ This respository contains all the dotfiles, the steps needed, and any useful ref
 
 The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://github.com/sclash/neovimrc )
 
+
+- [NixOs](#NixOS)
+    - [Installation](#nixos-installation)
+    - [Network](#nixos-network)
 - [Alacritty](#alacritty)
 - [i3](#i3-window-manger)
     - [Dependencies](#i3-dependencies)
@@ -35,6 +39,27 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
     - [Docker](#Docker)
     - [Ethernet](#Ethernet)
     - [USB Drive](#usb-drive)
+
+## NixOS
+
+Inside the `nixos` directory there are the `configuration.nix` and `flake.nix` files.
+
+### Installation
+To install NixOs refer to the [ official guide ](https://nixos.org/manual/nixos/stable/#ch-installation) then cd inside the `~/dotfiles/nixos` directory and run 
+```bash
+sudo nixos-generate-config
+cd /mnt/nixos
+sudo cp hardware-configuration.nix ~/dotfiles/nixos
+cd ~/dotfiles/nixos
+sudo nixos-install --flake .#nixos-os --root
+reboot
+```
+
+### Network
+Use `nmcli`
+```bash
+nmcli device wifi connect <ssid> <password>
+```
 
 ## Alacritty
 
