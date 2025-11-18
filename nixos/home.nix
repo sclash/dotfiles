@@ -41,6 +41,7 @@
     ".config/nvim"={ 
 			source = "${neovimrc}";
 			executable = false;
+			recursive = true;
 			force = true;
 		};
     # Example: symlink a script from the repo to ~/.local/bin
@@ -73,19 +74,22 @@
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
     ".config/ghostty"={ 
-			source = "${my-dotfiles}/tmux";
+			source = "${my-dotfiles}/ghostty";
 			executable = false;
 			force = true;
+			recursive = true;
 		};
     ".config/hypr"={ 
-			source = "${my-dotfiles}/tmux";
+			source = "${my-dotfiles}/hypr";
 			executable = false;
 			force = true;
+			recursive = true;
 		};
     ".config/waybar"={ 
-			source = "${my-dotfiles}/tmux";
+			source = "${my-dotfiles}/waybar";
 			executable = false;
 			force = true;
+			recursive = true;
 		};
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
