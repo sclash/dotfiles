@@ -4,24 +4,42 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-	#    ashell = {
-	# url = "github:MalpenZibo/ashell";
-	#    };
-	#
-	   elephant = {
-	url = "github:abenz1267/elephant";
-	   };
-	
+    # my-dotfiles.url = "https://github.com/sclash/dotfiles";
+    # my-dotifiles.inputs = { ref = "master"; };
+    # my-dotfiles.url = "github:sclash/dotfiles";
+    my-dotfiles = {
+      url = "github:sclash/dotfiles?ref=master";
+      # url = "https://github.com/sclash/dotfiles?ref=master";
+      # `rev` pins to a specific commit
+      # `ref` pins to a branch (optional, defaults to default branch)
+      flake = false; # if the repo is not a flake
+      # ref = "master";  # track master branch
+    };
+
+    neovimrc = {
+      url = "github:sclash/neovimrc?ref=master";
+      # url = "https://github.com/sclash/neovimrc?ref=master";
+      flake = false; # if the repo is not a flake
+    };
+    #    ashell = {
+    # url = "github:MalpenZibo/ashell";
+    #    };
+    #
+    elephant = { url = "github:abenz1267/elephant"; };
+
     walker = {
-	url = "github:abenz1267/walker";
-	inputs.elephant.follows = "elephant";
+      url = "github:abenz1267/walker";
+      inputs.elephant.follows = "elephant";
     };
 
   };
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, ashell, ... }:
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, elephant, walker,  ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, elephant
+    , walker, my-dotfiles, neovimrc, ... }:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
@@ -32,7 +50,23 @@
       nixosConfigurations = {
         nixos-os = lib.nixosSystem {
           inherit system;
-          modules = [ ./configuration.nix ];
+          modules = [
+            ./configuration.nix
+            home-manager.nixosModules.home-manager
+
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.asergi = ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit my-dotfiles;
+                inherit neovimrc;
+              };
+
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
+          ];
           specialArgs = {
             inherit username;
             inherit pkgs-unstable;
