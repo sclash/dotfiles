@@ -38,7 +38,11 @@
     # ".config/tmux".source = builtins.path { path = "${my-dotfiles}/tmux"; };
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
-    ".config/nvim".source = "${neovimrc}/tmux";
+    ".config/nvim"={ 
+			source = "${neovimrc}";
+			executable = false;
+			force = true;
+		};
     # Example: symlink a script from the repo to ~/.local/bin
     # home.file.".local/bin/myscript" = {
     #   source = "${my-scripts}/myscript.sh";
@@ -68,9 +72,24 @@
     #    };
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
-    ".config/ghostty".source = "${my-dotfiles}/tmux";
-    ".config/hypr".source = "${my-dotfiles}/hypr";
-    ".config/waybar".source = "${my-dotfiles}/waybar";
+    ".config/ghostty"={ 
+			source = "${my-dotfiles}/tmux";
+			executable = false;
+			force = true;
+		};
+    ".config/hypr"={ 
+			source = "${my-dotfiles}/tmux";
+			executable = false;
+			force = true;
+		};
+    ".config/waybar"={ 
+			source = "${my-dotfiles}/tmux";
+			executable = false;
+			force = true;
+		};
+    # ".config/ghostty".source = "${my-dotfiles}/tmux";
+    # ".config/hypr".source = "${my-dotfiles}/hypr";
+    # ".config/waybar".source = "${my-dotfiles}/waybar";
   };
 
   home.stateVersion = "25.05"; # Did you read the comment?

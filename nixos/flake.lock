@@ -56,6 +56,23 @@
         "type": "github"
       }
     },
+    "neovimrc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1763460485,
+        "narHash": "sha256-P6q9b6fKhxK3nQ+hzrzx7a466HLKbaMZrpZK/P0gp28=",
+        "owner": "sclash",
+        "repo": "neovimrc",
+        "rev": "fca2cc533e81fb27a560c0803f6570e1c4c0e466",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sclash",
+        "ref": "master",
+        "repo": "neovimrc",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1760284886,
@@ -123,6 +140,7 @@
         "elephant": "elephant",
         "home-manager": "home-manager",
         "my-dotfiles": "my-dotfiles",
+        "neovimrc": "neovimrc",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "walker": "walker"
