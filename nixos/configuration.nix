@@ -11,6 +11,13 @@
       inputs.walker.nixosModules.default
     ];
 
+programs.neovim.enable = true;
+programs.neovim.defaultEditor = true;
+environment.variables.SUDO_EDITOR = "nvim";
+environment.variables.EDITOR = "nvim";
+environment.variables.VISUAL = "nvim";
+
+
 programs.walker = {
 	enable = true;
 };
