@@ -5,6 +5,7 @@
   programs.tmux = {
     enable = true;
     terminal = "tmux-256color";
+    keyMode = "vi";
 
     plugins = with pkgs.tmuxPlugins; [
       sensible
