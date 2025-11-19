@@ -40,7 +40,7 @@
                   bind -n M-l select-pane -R
 
                   bind -n M-d previous-window
-                  bind -n M-u next-widnow
+                  bind -n M-u next-window
                   # Alt+number to select window
 		  # don't work because captured by ghostty
 
