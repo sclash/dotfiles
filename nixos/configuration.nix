@@ -157,6 +157,14 @@
         source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
       fi
 
+
+show_eza_tree() {
+	level_arg=''${1:-2}
+	eza --tree --level="$level_arg" --long --icons --git
+}
+
+alias lz='show_eza_tree'
+
       # uncomment if you want to customize your LS_COLORS
       # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
       #LS_COLORS='...'

@@ -20,12 +20,12 @@ show_eza_tree() {
 	eza --tree --level="$level_arg" --long --icons --git
 }
 
+alias lz='show_eza_tree'
 
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias ftm='~/tmux-sessionizer.sh'
 # alias lz = 'eza --tree --level=2 --long --icons --git'
-alias lz='show_eza_tree'
 PS1='[\u@\h \W]\$ '
 
 # Created by `pipx` on 2024-02-11 17:29:58

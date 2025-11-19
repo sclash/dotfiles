@@ -24,8 +24,7 @@
 
   # --- Packages ---
   # Install user-specific packages
-  # home.packages = (with pkgs; [ tmux eza ])
-  #   ++ (with pkgs-unstable; [ tmux eza ]);
+  home.packages = (with pkgs; [ eza ]) ++ (with pkgs-unstable; [ ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
@@ -38,12 +37,12 @@
     # ".config/tmux".source = builtins.path { path = "${my-dotfiles}/tmux"; };
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
-    ".config/nvim"={ 
-			source = "${neovimrc}";
-			executable = false;
-			recursive = true;
-			force = true;
-		};
+    ".config/nvim" = {
+      source = "${neovimrc}";
+      executable = false;
+      recursive = true;
+      force = true;
+    };
     # Example: symlink a script from the repo to ~/.local/bin
     # home.file.".local/bin/myscript" = {
     #   source = "${my-scripts}/myscript.sh";
@@ -73,24 +72,24 @@
     #    };
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
-    ".config/ghostty"={ 
-			source = "${my-dotfiles}/ghostty";
-			executable = false;
-			force = true;
-			recursive = true;
-		};
-    ".config/hypr"={ 
-			source = "${my-dotfiles}/hypr";
-			executable = false;
-			force = true;
-			recursive = true;
-		};
-    ".config/waybar"={ 
-			source = "${my-dotfiles}/waybar";
-			executable = false;
-			force = true;
-			recursive = true;
-		};
+    ".config/ghostty" = {
+      source = "${my-dotfiles}/ghostty";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
+    ".config/hypr" = {
+      source = "${my-dotfiles}/hypr";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
+    ".config/waybar" = {
+      source = "${my-dotfiles}/waybar";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
     # ".config/waybar".source = "${my-dotfiles}/waybar";
