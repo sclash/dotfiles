@@ -6,21 +6,21 @@
     enable = true;
     terminal = "tmux-256color";
     keyMode = "vi";
-    clipboard = true;
 
     plugins = with pkgs.tmuxPlugins; [
       sensible
       continuum
       resurrect
-      rose-pine
+      # rose-pine
       tmux-sessionx
-      # tokyo-night-tmux
+      tokyo-night-tmux
+      tilish
     ];
     # extraConfig = builtins.readFile /home/asergi/dotfiles/tmux/tmux.conf;
     # extraConfig = builtins.readFile "/home/asergi/dotfiles/tmux/tmux-nix.conf";
     # extraConfig = builtins.readFile "${my-dotfiles}/tmux/tmux-nix.conf";
-    extraConfig = builtins.readFile
-      "${config.home.homeDirectory}/dotfiles/tmux/tmux-nix.conf";
+    # extraConfig = builtins.readFile
+    #   "${config.home.homeDirectory}/dotfiles/tmux/tmux-nix.conf";
   };
 
 }
