@@ -17,7 +17,7 @@
       # tokyo-night-tmux
       # tilish
     ];
-    extraConfigBeforePlugins = ''
+    extraConfig = ''
 
       set -g set-clipboard on
 
