@@ -8,6 +8,7 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
 - [NixOs](#NixOS)
     - [Installation](#nixos-installation)
     - [Network](#nixos-network)
+    - [Dotfiles](#dotfiles)
 - [Alacritty](#alacritty)
 - [i3](#i3-window-manger)
     - [Dependencies](#i3-dependencies)
@@ -60,6 +61,16 @@ Use `nmcli`
 ```bash
 nmcli device wifi connect <ssid> <password>
 ```
+### Dotfiles
+
+To update the NixOS configuration we can work in the directory in which this repo is cloned.
+The `flake.nix` and `home.nix` files tracks the `master` branch of this repo
+After having made changes to the repo staged and commited them, To update the system
+```bash
+cd ~/dotfiles/nixos #provided this repo has been cloned in ~/
+sudo nixos-rebuild switch --flake .#nixos-os
+```
+if you encounter any problem copy the `hardware-configuration.nix` and `flake.nix` from `/etx/nixos` to `~/dotfiles/nixos` and try again
 
 ## Alacritty
 
