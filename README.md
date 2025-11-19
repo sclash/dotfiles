@@ -50,7 +50,10 @@ To install NixOs refer to the [ official guide ](https://nixos.org/manual/nixos/
 ```bash
 sudo nixos-generate-config
 cd /mnt/nixos
-sudo cp hardware-configuration.nix ~/dotfiles/nixos
+### This line is not needed if /etc/nixos/hardware-configuration.nix
+### is imported in configuration.nix
+sudo nix flake update
+sudo cp hardware-configuration.nix ~/dotfiles/nixos 
 cd ~/dotfiles/nixos
 sudo nixos-install --flake .#nixos-os --root
 reboot
