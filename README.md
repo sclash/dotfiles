@@ -68,7 +68,7 @@ The `flake.nix` and `home.nix` files tracks the `master` branch of this repo
 After having made changes to the repo staged and commited them, To update the system
 ```bash
 cd ~/dotfiles/nixos #provided this repo has been cloned in ~/
-sudo nixos-rebuild switch --flake .#nixos-os
+sudo nixos-rebuild switch --flake .#nixos-os --impure
 ```
 if you encounter any problem copy the `hardware-configuration.nix` and `flake.nix` from `/etx/nixos` to `~/dotfiles/nixos` and try again
 
