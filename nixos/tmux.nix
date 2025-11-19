@@ -13,7 +13,7 @@
 			# tokyo-night-tmux
     ];
     # extraConfig = builtins.readFile /home/asergi/dotfiles/tmux/tmux.conf;
-    extraConfig = "${my-dotfiles}/tmux/tmux-nix.conf";
+    extraConfig = builtins.readFile "${my-dotfiles}/tmux/tmux-nix.conf";
   };
 
 }
