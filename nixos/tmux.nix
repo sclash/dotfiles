@@ -11,10 +11,10 @@
       sensible
       continuum
       resurrect
-      rose-pine
+      # rose-pine
       tmux-fzf
       tmux-sessionx
-      # tokyo-night-tmux
+      tokyo-night-tmux
       # tilish
     ];
     extraConfig = ''
@@ -35,6 +35,7 @@
       bind -n M-l select-pane -R
 
       # Alt+number to select window
+      bind -n M-0 select-window -t 0
       bind -n M-1 select-window -t 1
       bind -n M-2 select-window -t 2
       bind -n M-3 select-window -t 3
