@@ -1,11 +1,19 @@
-{ config, lib, pkgs, unstable-pkgs, ... }:
+{ config, lib, pkgs, unstable-pkgs, my-dotfiles ... }:
 
 {
 
   programs.tmux = {
     enable = true;
-    plugins = with pkgs.tmuxPlugins; [ tilish sensible tokyo-night-tmux ];
+    plugins = with pkgs.tmuxPlugins; [
+      sensible
+      continuum
+      resurrect
+	rose-pine
+	tmux-sessionx
+			# tokyo-night-tmux
+    ];
     # extraConfig = builtins.readFile /home/asergi/dotfiles/tmux/tmux.conf;
+    extraConfig = "${my-dotfiles}/tmux/tmux-nix.conf";
   };
 
 }

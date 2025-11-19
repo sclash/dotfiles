@@ -4,7 +4,6 @@
 
 { config, lib, inputs, pkgs, pkgs-unstable, home-manager, ... }:
 
-
 {
   imports = [ # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -194,6 +193,7 @@
     neovim
     tree-sitter
 
+    bat
     unzip
     google-chrome
     git
