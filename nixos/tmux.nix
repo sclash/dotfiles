@@ -12,6 +12,7 @@
       continuum
       resurrect
       # rose-pine
+      tmux-fzf
       tmux-sessionx
       tokyo-night-tmux
       tilish
