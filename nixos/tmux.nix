@@ -6,6 +6,7 @@
     enable = true;
     terminal = "tmux-256color";
     keyMode = "vi";
+    clipboard = true;
 
     plugins = with pkgs.tmuxPlugins; [
       sensible
