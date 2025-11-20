@@ -9,7 +9,7 @@
     # ./hardware-configuration.nix
 
     # builtins.readFile "/etc/nixos/hardware-configuration.nix"
-	/etc/nixos/hardware-configuration.nix
+    /etc/nixos/hardware-configuration.nix
     # ./tmux.nix
     inputs.walker.nixosModules.default
   ];
@@ -20,9 +20,7 @@
   environment.variables.EDITOR = "nvim";
   environment.variables.VISUAL = "nvim";
 
-	programs.sway = {
-		enable = true;
-	};
+  programs.sway = { enable = true; };
 
   programs.walker = { enable = true; };
   nixpkgs.config.allowUnfree = true;
@@ -75,8 +73,6 @@
     # It must be in extraPortals for Hyprland to use it for settings.
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
-
 
   programs.hyprland = {
     enable = true;
@@ -154,29 +150,29 @@
     histFile = "$HOME/.zsh_history";
     setOptions = [ "HIST_IGNORE_ALL_DUPS" ];
     promptInit = ''
-      # this act as your ~/.zshrc but for all users (/etc/zshrc)
-      source "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme"
-      # source /etc/powerlevel10k/p10k.zsh
+            # this act as your ~/.zshrc but for all users (/etc/zshrc)
+            source "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme"
+            # source /etc/powerlevel10k/p10k.zsh
 
-      # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-      # Initialization code that may require console input (password prompts, [y/n]
-      # confirmations, etc.) must go above this block; everything else may go below.
-      if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-        source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-      fi
+            # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+            # Initialization code that may require console input (password prompts, [y/n]
+            # confirmations, etc.) must go above this block; everything else may go below.
+            if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+              source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+            fi
 
 
-show_eza_tree() {
-	level_arg=''${1:-2}
-	eza --tree --level="$level_arg" --long --icons --git
-}
+      show_eza_tree() {
+      	level_arg=''${1:-2}
+      	eza --tree --level="$level_arg" --long --icons --git
+      }
 
-alias lz='show_eza_tree'
+      alias lz='show_eza_tree'
 
-      # uncomment if you want to customize your LS_COLORS
-      # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
-      #LS_COLORS='...'
-      #export LS_COLORS
+            # uncomment if you want to customize your LS_COLORS
+            # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
+            #LS_COLORS='...'
+            #export LS_COLORS
     '';
   };
   users.defaultUserShell = pkgs.zsh;
@@ -222,6 +218,7 @@ alias lz='show_eza_tree'
     kitty
     xorg.xrandr
     gtkd
+    pkg-config
     wofi
     nautilus
     gnome-themes-extra
