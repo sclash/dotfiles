@@ -79,7 +79,8 @@
       recursive = true;
     };
     ".config/hypr" = {
-      source = "${my-dotfiles}/hypr";
+      # source = "${my-dotfiles}/hypr";
+      source = "/home/asergi/dotfiles/hypr";
       executable = false;
       force = true;
       recursive = true;
