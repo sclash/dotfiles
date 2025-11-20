@@ -235,7 +235,7 @@
     clang
     clang-tools
     libclang
-    liggcc
+    libgcc
     bear
     gdb
 
