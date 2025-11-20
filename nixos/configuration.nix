@@ -218,7 +218,6 @@
     kitty
     xorg.xrandr
     gtkd
-    pkg-config
     wofi
     nautilus
     gnome-themes-extra
