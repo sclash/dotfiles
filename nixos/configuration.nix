@@ -20,6 +20,10 @@
   environment.variables.EDITOR = "nvim";
   environment.variables.VISUAL = "nvim";
 
+	programs.sway = {
+		enable = true;
+	};
+
   programs.walker = { enable = true; };
   nixpkgs.config.allowUnfree = true;
   # Use the systemd-boot EFI boot loader.
