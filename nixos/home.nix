@@ -16,7 +16,7 @@
 # in 
 {
 
-  imports = [ ./tmux.nix ];
+  imports = [ ./tmux.nix ./swaync.nix];
 
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
@@ -90,12 +90,12 @@
       force = true;
       recursive = true;
     };
-    # ".config/swaync" = {
-    #   source = "${my-dotfiles}/swaync";
-    #   executable = false;
-    #   force = true;
-    #   recursive = true;
-    # };
+    ".config/swaync" = {
+      source = "${my-dotfiles}/swaync";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
     # ".config/waybar".source = "${my-dotfiles}/waybar";
