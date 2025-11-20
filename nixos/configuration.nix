@@ -8,7 +8,8 @@
   imports = [ # Include the results of the hardware scan.
     # ./hardware-configuration.nix
 
-    builtins.readFile "/etc/nixos/hardware-configuration.nix"
+    # builtins.readFile "/etc/nixos/hardware-configuration.nix"
+	/etc/nixos/hardware-configuration.nix
     # ./tmux.nix
     inputs.walker.nixosModules.default
   ];
