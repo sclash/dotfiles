@@ -18,6 +18,7 @@
 
   imports = [ ./tmux.nix ./swaync.nix ];
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
