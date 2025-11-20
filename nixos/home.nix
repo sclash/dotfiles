@@ -79,8 +79,8 @@
       recursive = true;
     };
     ".config/hypr" = {
-      # source = "${my-dotfiles}/hypr";
-      source = "/home/asergi/dotfiles/hypr";
+      source = "${my-dotfiles}/hypr";
+      # source = "/home/asergi/dotfiles/hypr";
       executable = false;
       force = true;
       recursive = true;
@@ -91,12 +91,12 @@
       force = true;
       recursive = true;
     };
-    # ".config/swaync" = {
-    #   source = "${my-dotfiles}/swaync";
-    #   executable = false;
-    #   force = true;
-    #   recursive = true;
-    # };
+    ".config/swaync" = {
+      source = "${my-dotfiles}/swaync";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
     # ".config/waybar".source = "${my-dotfiles}/waybar";
