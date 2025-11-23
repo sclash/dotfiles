@@ -206,6 +206,8 @@
     neovim
     tree-sitter
 
+    yay
+
     bat
     unzip
     google-chrome
@@ -215,11 +217,11 @@
     btop
     htop
     wget
-    kitty
+    # kitty
     xorg.xrandr
-    gtkd
+    # gtkd
     pkg-config
-    wofi
+    # wofi
     nautilus
     gnome-themes-extra
     # gnome-control-center
@@ -239,6 +241,7 @@
     libgcc
     bear
     gdb
+    valgrind
 
     dbus
 
@@ -254,7 +257,7 @@
     hyprlock
     pywal
     swaynotificationcenter
-    yay
+
     gvfs
     libnotify
     # inputs.ashell.defaultPackage.${pkgs.system}
@@ -270,6 +273,9 @@
     zsh-autosuggestions
     zsh-history
     zsh-powerlevel10k
+
+    fd
+    gq
   ])
 
     ++
@@ -288,37 +294,8 @@
       rustup
       rustc
       zig
-    ]);
 
-  # List packages installed in system profile.
-  # You can use https://search.nixos.org/ to find more packages (and options).
-  #   environment.systemPackages = with pkgs; [
-  #     	vim 
-  # neovim
-  # unzip
-  # # dconf
-  # google-chrome
-  # git
-  # lazygit
-  # ghostty
-  # btop
-  # htop
-  #        wget
-  # kitty
-  # xorg.xrandr
-  # gtkd
-  # wofi
-  # nautilus
-  #    	gnome-themes-extra
-  #    	gnome-control-center
-  #    	nwg-look
-  #    # pkgs.waybar
-  #    # pkgs.eww
-  #    # libnotify
-  #    # pkgs.dunst
-  #    # xdg-desktop-portal
-  #    # xdg-desktop-portal-hyprland
-  #   ];
+    ]);
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

@@ -25,7 +25,7 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza ]) ++ (with pkgs-unstable; [ ]);
+  home.packages = (with pkgs; [ eza zathura ]) ++ (with pkgs-unstable; [ ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
