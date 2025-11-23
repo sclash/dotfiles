@@ -275,7 +275,8 @@
     zsh-powerlevel10k
 
     fd
-    gq
+    jq
+    starship
   ])
 
     ++
