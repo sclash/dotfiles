@@ -65,12 +65,12 @@
 		"tooltip-format-disconnected": "Error",
 		"tooltip-format-wifi": "{essid} ({signalStrength}%) \n{ipaddr}",
 		/*"tooltip-format-ethernet": "{ifname} 🖧 ",*/
-		"tooltip-format-ethernet": "{essid}\n{ipaddr} 🖧 ",
+		"tooltip-format-ethernet": "{essid}\n{ipaddr} 🖧 "
 	},
 	"wireplumber": {
 		"format": "  {volume}% ",
 		"format-muted": "🔇",
-		"scroll-step": 5,
+		"scroll-step": 5
 	},
 	/*    "bluetooth": {
             "format-on": "󰂯",
@@ -87,7 +87,7 @@
 	"battery": {
 		"interval": 30,
 		"states": {
-			"good": 95,
+			"good": 90,
 			"warning": 30,
 			"critical": 20
 		},
@@ -102,7 +102,7 @@
 			"󰂀",
 			"󰂂",
 			"󰁹"
-		],
+		]
 	},
 	"custom/expand": {
 		"format": "",
@@ -127,7 +127,7 @@
 			"memory",
 			"temperature",
 			"custom/endpoint"
-		],
+		]
 	},
 	/*"custom/colorpicker": {
             "format": "{}",
@@ -138,21 +138,36 @@
             "signal": 1
         },*/
 	"cpu": {
-		"format": "󰻠 {usage}% {load}",
+		"format": "󰻠 {usage}% {load}"
 		/*"tooltip": true*/
 	},
 	"memory": {
 		"format": "  {used}GiB {percentage}%",
+		"states": {
+			"good": 30,
+			"warning": 60,
+			"critical": 90
+		}
 	},
 	"disk": {
 		"format": " 💿 {used}Gb {percentage_used}%",
+		"states": {
+			"good": 30,
+			"warning": 60,
+			"critical": 90
+		}
 	},
 	"temperature": {
 		"critical-threshold": 80,
 		"format": " {temperatureC} °C",
+		"states": {
+			"good": 30,
+			"warning": 60,
+			"critical": 90
+		}
 	},
 	"tray": {
 		"icon-size": 12,
 		"spacing": 12
-	},
+	}
 }
