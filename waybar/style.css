@@ -142,6 +142,24 @@ tooltip {
     animation-iteration-count: infinite;
     animation-direction: alternate;
 }
+#cpu{
+    padding: 0px 5px;
+    transition: all .3s ease;
+    color:@color7;
+}
+
+#cpu.warning {
+    color: #ffbe61;
+}
+
+#cpu.critical {
+    color: #f53c3c;
+    animation-name: blink;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
 
 #disk{
     padding: 0px 5px;
@@ -166,8 +184,7 @@ tooltip {
     padding: 0px 5px;
     transition: all .3s ease;
     /* color:@color7; */
-    /* color: #ffbe61; */
-    color: #f53c3c;
+    color: #1189f2;
 }
 
 #temperature.warning {

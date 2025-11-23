@@ -15,8 +15,12 @@
 		"wireplumber",
 		"network",
 		"battery",
+		"separator",
 		"custom/notification"
 	],
+	"separator": {
+		"format": "║"
+	},
 	/*"modules-right": ["group/expand","bluetooth","network","battery"],*/
 	"hyprland/workspaces": {
 		"format": "{icon}",
@@ -36,7 +40,6 @@
 		"format-en": "|| ⌨ US",
 		"format-it": "|| ⌨ IT",
 		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next"
-
 	},
 	"custom/notification": {
 		"tooltip": false,
@@ -91,10 +94,10 @@
 			"warning": 30,
 			"critical": 20
 		},
-		"format": "{icon} {capacity}% ||",
-		"format-charging": "{capacity}% 󰂄 ||",
-		"format-plugged": "{capacity}% 󰂄  ||",
-		"format-alt": "{time} {icon} ||",
+		"format": "{icon} {capacity}% ",
+		"format-charging": "{capacity}% 󰂄 ",
+		"format-plugged": "{capacity}% 󰂄  ",
+		"format-alt": "{time} {icon} ",
 		"format-icons": [
 			"󰁻",
 			"󰁼",
@@ -138,8 +141,13 @@
             "signal": 1
         },*/
 	"cpu": {
-		"format": "󰻠 {usage}% {load}"
+		"format": "󰻠 {usage}% {load}",
 		/*"tooltip": true*/
+		"states": {
+			"good": 30,
+			"warning": 60,
+			"critical": 90
+		}
 	},
 	"memory": {
 		"format": "  {used}GiB {percentage}%",
