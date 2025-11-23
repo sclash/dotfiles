@@ -224,6 +224,7 @@
     gnome-themes-extra
     # gnome-control-center
     nwg-look
+    evince
 
     nodejs
     gcc
