@@ -37,8 +37,10 @@
 	},
 	"hyprland/language": {
 		"format": "{}",
-		"format-en": "|| ⌨ US",
-		"format-it": "|| ⌨ IT",
+		// "format-en": "|| ⌨ US",
+		// "format-en": "|| ⌨ IT",
+		"format-en": "|| ⌨ 🇺🇸",
+		"format-it": "|| ⌨ 🇮🇹",
 		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
 	},
 	"custom/notification": {
