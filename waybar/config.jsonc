@@ -5,10 +5,10 @@
 	"modules-left": [
 		"clock",
 		"tray",
-		"hyprland/language"
+		"hyprland/language",
 	],
 	"modules-center": [
-		"hyprland/workspaces"
+		"hyprland/workspaces",
 	],
 	"modules-right": [
 		"group/expand",
@@ -16,7 +16,7 @@
 		"network",
 		"battery",
 		"separator",
-		"custom/notification"
+		"custom/notification",
 	],
 	"separator": {
 		"format": "║"
@@ -27,11 +27,11 @@
 		"format-icons": {
 			"active": "",
 			"default": "",
-			"empty": ""
+			"empty": "",
 		},
 		"persistent-workspaces": {
 			"*": [
-				1
+				1,
 			]
 		}
 	},
@@ -39,13 +39,13 @@
 		"format": "{}",
 		"format-en": "|| ⌨ US",
 		"format-it": "|| ⌨ IT",
-		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next"
+		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
 	},
 	"custom/notification": {
 		"tooltip": false,
 		"format": "",
 		"on-click": "swaync-client -t -sw",
-		"escape": true
+		"escape": true,
 	},
 	"clock": {
 		"format": "{:%a | %d-%m-%Y | %H:%M:%S} ",
@@ -53,12 +53,12 @@
 		"tooltip-format": "<tt>{calendar}</tt>",
 		"calendar": {
 			"format": {
-				"today": "<span color='#fAfBfC'><b>{}</b></span>"
+				"today": "<span color='#fAfBfC'><b>{}</b></span>",
 			}
 		},
 		"actions": {
 			"on-click-right": "shift_down",
-			"on-click": "shift_up"
+			"on-click": "shift_up",
 		}
 	},
 	"network": {
@@ -68,12 +68,12 @@
 		"tooltip-format-disconnected": "Error",
 		"tooltip-format-wifi": "{essid} ({signalStrength}%) \n{ipaddr}",
 		/*"tooltip-format-ethernet": "{ifname} 🖧 ",*/
-		"tooltip-format-ethernet": "{essid}\n{ipaddr} 🖧 "
+		"tooltip-format-ethernet": "{essid}\n{ipaddr} 🖧 ",
 	},
 	"wireplumber": {
 		"format": "  {volume}% ",
 		"format-muted": "🔇",
-		"scroll-step": 5
+		"scroll-step": 5,
 	},
 	/*    "bluetooth": {
             "format-on": "󰂯",
@@ -92,7 +92,7 @@
 		"states": {
 			"good": 90,
 			"warning": 30,
-			"critical": 20
+			"critical": 20,
 		},
 		"format": "{icon} {capacity}% ",
 		"format-charging": "{capacity}% 󰂄 ",
@@ -104,23 +104,23 @@
 			"󰁾",
 			"󰂀",
 			"󰂂",
-			"󰁹"
+			"󰁹",
 		]
 	},
 	"custom/expand": {
 		"format": "",
-		"tooltip": false
+		"tooltip": false,
 	},
 	"custom/endpoint": {
 		"format": "|",
-		"tooltip": false
+		"tooltip": false,
 	},
 	"group/expand": {
 		"orientation": "horizontal",
 		"drawer": {
 			"transition-duration": 600,
 			"transition-to-left": true,
-			"click-to-reveal": true
+			"click-to-reveal": true,
 		},
 		/*"modules": ["custom/expand", "custom/colorpicker","cpu","memory","temperature","custom/endpoint"],*/
 		"modules": [
@@ -129,7 +129,7 @@
 			"cpu",
 			"memory",
 			"temperature",
-			"custom/endpoint"
+			"custom/endpoint",
 		]
 	},
 	/*"custom/colorpicker": {
@@ -146,7 +146,7 @@
 		"states": {
 			"good": 30,
 			"warning": 60,
-			"critical": 90
+			"critical": 90,
 		}
 	},
 	"memory": {
@@ -154,7 +154,7 @@
 		"states": {
 			"good": 30,
 			"warning": 60,
-			"critical": 90
+			"critical": 90,
 		}
 	},
 	"disk": {
@@ -162,7 +162,7 @@
 		"states": {
 			"good": 30,
 			"warning": 60,
-			"critical": 90
+			"critical": 90,
 		}
 	},
 	"temperature": {
@@ -171,11 +171,11 @@
 		"states": {
 			"good": 30,
 			"warning": 60,
-			"critical": 90
+			"critical": 90,
 		}
 	},
 	"tray": {
 		"icon-size": 12,
-		"spacing": 12
+		"spacing": 12,
 	}
 }
