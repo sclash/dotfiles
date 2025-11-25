@@ -13,6 +13,8 @@
     # ./tmux.nix
     inputs.walker.nixosModules.default
   ];
+	  home-manager.users.asergi = import ./home.nix;
+
 
   programs.neovim.enable = true;
   programs.neovim.defaultEditor = true;
@@ -62,6 +64,7 @@
       initial_session = {
         command = "hyprland > /dev/null 2>&1";
         user = "asergi";
+        shell = pkgs.zsh;
       };
       default_session = initial_session;
     };
@@ -174,12 +177,13 @@
   #           #export LS_COLORS
   #   '';
   # };
-  # users.defaultUserShell = pkgs.zsh;
+  programs.zsh.enable = true;
+  users.defaultUserShell = pkgs.zsh;
   # system.userActivationScripts.zshrc ="touch .zshrc"; # to avoid being prompted to generate the config for first time
 
   # environment.shells = pkgs.zsh; # https://wiki.nixos.org/wiki/Zsh#GDM_does_not_show_user_when_zsh_is_the_default_shell
   # environment.loginShellInit = ''
-  #   # equivalent to .profile
+  # equivalent to .profile
   #   # https://search.nixos.org/options?show=environment.loginShellInit
   # '';
 
