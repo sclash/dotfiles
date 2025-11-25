@@ -39,8 +39,8 @@
 		"format": "{}",
 		// "format-en": "|| ⌨ US",
 		// "format-en": "|| ⌨ IT",
-		"format-en": "|| ⌨ 🇺🇸",
-		"format-it": "|| ⌨ 🇮🇹",
+		"format-en": "|| ⌨ US 🇺🇸",
+		"format-it": "|| ⌨ IT 🇮🇹",
 		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
 	},
 	"custom/notification": {
