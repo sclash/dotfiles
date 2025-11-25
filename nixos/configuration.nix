@@ -123,76 +123,65 @@
   users.users.asergi = {
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-    packages = with pkgs; [ tree ];
+    # packages = with pkgs; [ tree ];
   };
-  programs.firefox.enable = true;
 
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestions.enable = true;
-    syntaxHighlighting.enable = true;
+  # programs.zsh = {
+  #   enable = true;
+  #   enableCompletion = true;
+  #   autosuggestions.enable = true;
+  #   syntaxHighlighting.enable = true;
+  #
+  #   shellAliases = {
+  #     ll = "ls -l";
+  #     edit = "sudo -e";
+  #     update = "sudo nixos-rebuild switch --flake /etc/nixos";
+  #     ftm = "~/tmux-sessionizer.sh";
+  #   };
+  #
+  #   ohMyZsh = { # "ohMyZsh" without Home Manager
+  #     enable = true;
+  #     plugins = [ "git" ];
+  #     # theme = "robbyrussell";
+  #     # theme = "powerlevel10k";
+  #   };
+  #   histSize = 10000;
+  #   histFile = "$HOME/.zsh_history";
+  #   setOptions = [ "HIST_IGNORE_ALL_DUPS" ];
+  #   promptInit = ''
+  #           # this act as your ~/.zshrc but for all users (/etc/zshrc)
+  #           source "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme"
+  #           # source /etc/powerlevel10k/p10k.zsh
+  #
+  #           # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+  #           # Initialization code that may require console input (password prompts, [y/n]
+  #           # confirmations, etc.) must go above this block; everything else may go below.
+  #           if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+  #             source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+  #           fi
+  #
+  #
+  #     show_eza_tree() {
+  #     	level_arg=''${1:-2}
+  #     	eza --tree --level="$level_arg" --long --icons --git
+  #     }
+  #
+  #     alias lz='show_eza_tree'
+  #
+  #           # uncomment if you want to customize your LS_COLORS
+  #           # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
+  #           #LS_COLORS='...'
+  #           #export LS_COLORS
+  #   '';
+  # };
+  # users.defaultUserShell = pkgs.zsh;
+  # system.userActivationScripts.zshrc ="touch .zshrc"; # to avoid being prompted to generate the config for first time
 
-    shellAliases = {
-      ll = "ls -l";
-      edit = "sudo -e";
-      update = "sudo nixos-rebuild switch --flake /etc/nixos";
-      ftm = "~/tmux-sessionizer.sh";
-    };
-
-    ohMyZsh = { # "ohMyZsh" without Home Manager
-      enable = true;
-      plugins = [ "git" ];
-      # theme = "robbyrussell";
-      # theme = "powerlevel10k";
-    };
-    histSize = 10000;
-    histFile = "$HOME/.zsh_history";
-    setOptions = [ "HIST_IGNORE_ALL_DUPS" ];
-    promptInit = ''
-            # this act as your ~/.zshrc but for all users (/etc/zshrc)
-            source "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme"
-            # source /etc/powerlevel10k/p10k.zsh
-
-            # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-            # Initialization code that may require console input (password prompts, [y/n]
-            # confirmations, etc.) must go above this block; everything else may go below.
-            if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-              source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-            fi
-
-
-      show_eza_tree() {
-      	level_arg=''${1:-2}
-      	eza --tree --level="$level_arg" --long --icons --git
-      }
-
-      alias lz='show_eza_tree'
-
-            # uncomment if you want to customize your LS_COLORS
-            # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
-            #LS_COLORS='...'
-            #export LS_COLORS
-    '';
-  };
-  users.defaultUserShell = pkgs.zsh;
-  system.userActivationScripts.zshrc =
-    "touch .zshrc"; # to avoid being prompted to generate the config for first time
   # environment.shells = pkgs.zsh; # https://wiki.nixos.org/wiki/Zsh#GDM_does_not_show_user_when_zsh_is_the_default_shell
   # environment.loginShellInit = ''
   #   # equivalent to .profile
   #   # https://search.nixos.org/options?show=environment.loginShellInit
   # '';
-
-  # programs.tmux = {
-  #   enable = true;
-  #   # extraConfig = ''
-  #   #     set-option -g default-shell "''${pkgs.zsh}";
-  #   #   '';
-  #   plugins = with pkgs; [
-  #   	pkgs.tmuxPlugins.tilish
-  #   ];
-  # };
 
   programs.nix-ld.enable = true;
   programs.nix-ld.libraries = (with pkgs; [ ])
@@ -205,12 +194,14 @@
     vim
     neovim
     tree-sitter
+    tree
 
     yay
 
     bat
     unzip
     google-chrome
+    firefox
     git
     lazygit
     ghostty
@@ -225,7 +216,7 @@
     nautilus
     gnome-themes-extra
     # gnome-control-center
-    nwg-look
+    # nwg-look
     evince
 
     nodejs
@@ -266,13 +257,13 @@
     inputs.walker.packages.${pkgs.system}.default
 
     # tmux
-    zellij
+    # zellij
 
-    zsh
-    oh-my-zsh
-    zsh-autosuggestions
-    zsh-history
-    zsh-powerlevel10k
+    # zsh
+    # oh-my-zsh
+    # zsh-autosuggestions
+    # zsh-history
+    # zsh-powerlevel10k
 
     fd
     jq

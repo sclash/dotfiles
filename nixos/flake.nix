@@ -1,9 +1,12 @@
 {
-  description = "My first flake!";
+  description = "NixOS asergi cofniguration";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
+    nixpkgs-master.url = "github:nixos/nixpkgs";
+    nix-snapd.url = "github:nix-community/nix-snapd";
+    nix-snapd.inputs.nixpkgs.follows = "nixpkgs";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 

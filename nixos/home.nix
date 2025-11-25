@@ -16,7 +16,7 @@
 # in 
 {
 
-  imports = [ ./tmux/tmux.nix ./swaync.nix ];
+  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # home.sessionVariables = {
