@@ -7,6 +7,6 @@
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableTransience = true;
-    settings = builtins.readFile "${my-dotfiles}/nixos/starship/starship.toml";
+    # settings = builtins.readFile "${my-dotfiles}/nixos/starship/starship.toml";
   };
 }

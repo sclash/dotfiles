@@ -25,7 +25,7 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura starship atuin ])
+  home.packages = (with pkgs; [ eza zathura atuin ])
     ++ (with pkgs-unstable; [ ]);
 
   home.file = {
@@ -74,6 +74,12 @@
     #    };
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
+    ".config/starship" = {
+      source = "${my-dotfiles}/starship";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
     ".config/ghostty" = {
       source = "${my-dotfiles}/ghostty";
       executable = false;
