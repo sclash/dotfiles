@@ -43,7 +43,19 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
-  fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+  # fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+  fonts = {
+    enableDefaultFonts = true;
+    packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+    fontconfig = {
+      enable = true;
+      defaultFonts = {
+        monospace = [ "JetBrainsMono Nerd Font" ];
+        sansSerif = [ "JetBrainsMono Nerd Font" ];
+        serif = [ "JetBrainsMono Nerd Font" ];
+      };
+    };
+  };
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
@@ -122,9 +134,7 @@
   # services.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.root = {
-		shell = pkgs.zsh;
-	};
+  users.users.root = { shell = pkgs.zsh; };
 
   users.users.asergi = {
     isNormalUser = true;
@@ -133,12 +143,12 @@
   };
 
   programs.zsh = {
-		enable = true;
-		promptInit = ''
-            	eval "$(starship init zsh)"
-             	eval "$(atuin init zsh)"
-		'';
-	};
+    enable = true;
+    promptInit = ''
+                  	eval "$(starship init zsh)"
+                   	eval "$(atuin init zsh)"
+      		'';
+  };
   # programs.zsh = {
   #   enable = true;
   #   enableCompletion = true;
