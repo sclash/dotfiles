@@ -7,6 +7,7 @@
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+    initExtra = "	eval \"$(starship init zsh)\"\n";
     # initExtra = ''
     #   [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
     # '';
