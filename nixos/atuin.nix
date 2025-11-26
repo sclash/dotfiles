@@ -1,11 +1,11 @@
 { config, lib, pkgs, unstable-pkgs, my-dotfiles, ... }:
 
 {
-  programs.starship = {
+
+  programs.atuin = {
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableTransience = true;
-    configPath = "${config.xdg.configHome}/starship/starship.toml";
+    # configPath = "${config.xdg.configHome}/starship/starship.toml";
   };
 }

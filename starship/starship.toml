@@ -5,7 +5,7 @@
 add_newline = false 
 
 format = """
- ➜\
+$os\
 $directory\
 ${custom.giturl}\
 $git_branch\
@@ -15,7 +15,9 @@ $line_break\
 $character
 """
 
-right_format = """$all"""
+
+# right_format = """$all"""
+right_format = """$username@$hostname$all"""
 
 palette = "catppuccin_mocha"
 
@@ -80,6 +82,7 @@ crust = "#11111b"
 # mantle = "#181825"
 # crust = "#11111b"
 
+
 [os.symbols]
 NixOS = " "
 Windows = "󰍲"
@@ -103,27 +106,36 @@ Redhat = "󱄛"
 RedHatEnterprise = "󱄛"
 
 [username]
-#show_always = true
-#style_user = "bg:surface0 fg:text"
-#style_root = "bg:surface0 fg:text"
-#format = '[ $user ]($style)'
+show_always = true
+# style_user = "fg:text"
+style_user = "sapphire"
+# style_root = "fg:text bold red"
+format = '[$user]($style)'
+
+[hostname]
+ssh_only = false
+ssh_symbol = '🌐 '
+style = "sapphire"
+format = '[$hostname$ssh_symbol]($style) '
 
 [directory]
 style = "sapphire"
 format = "[ $path ]($style)"
-#truncation_length = 4
-#truncation_symbol = "…/"
+truncation_length = 4
+# truncation_symbol = "…/"
+truncation_symbol = "~/"
 
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Hack" = "󰲋 "
+# [directory.substitutions]
+# "Documents" = "󰈙 "
+# "Downloads" = " "
+# "Music" = "󰝚 "
+# "Pictures" = " "
+# "hack" = "󰲋 "
 
 [os]
 disabled = false
-style = "bg:surface0 fg:text"
+# style = "bg:surface0 fg:text"
+style = "fg:text"
 
 [custom.giturl]
 # disabled = true
@@ -137,7 +149,7 @@ elif [[ "$GIT_REMOTE" =~ "gitlab" ]]; then
 elif [[ "$GIT_REMOTE" =~ "bitbucket" ]]; then
     GIT_REMOTE_SYMBOL=" "
 elif [[ "$GIT_REMOTE" =~ "git" ]]; then
-    GIT_REMOTE_SYMBOL=" "
+    GIT_REMOTE_SYMBOL=" "
 else
     GIT_REMOTE_SYMBOL=" "
 fi
@@ -159,38 +171,41 @@ format = ' [($all_status$ahead_behind )]($style)'
 symbol = ""
 format = '[ $symbol( $version) ]($style)'
 
-# [bun]
-# symbol = ""
-# format = '[ $symbol( $version) ]($style)'
+[bun]
+symbol = ""
+format = '[ $symbol( $version) ]($style)'
 
 [c]
 symbol = " "
-format = '[[ $symbol( $version) ]]($style)'
+format = '[ $symbol( $version) ]($style)'
 
-# [zig]
-# symbol = " "
-# format = '[[ $symbol( $version) ]]($style)'
+[zig]
+symbol = "  "
+format = '[ $symbol( $version) ]($style)'
 
-# [rust]
-# symbol = ""
-# format = '[[ $symbol( $version) ]]($style)'
+[rust]
+symbol = "󱘗"
+format = '[ $symbol( $version) ]($style)'
 
 [golang]
 symbol = ""
 format = '[ $symbol( $version) ]($style)'
 detect_files = ["go.mod"]
 
-# [python]
-# symbol = ""
-# format = '[[ $symbol( $version) ]]($style)'
+[python]
+symbol = ""
+format = '[ $symbol( $version) ]($style)'
 
 [docker_context]
 symbol = ""
 format = '[ $symbol( $context) ]($style)'
 
+[nix_shell]
+symbol = " "
+format = '[ $symbol( $context) ]($style)'
 
 [time]
-disabled = false
+disabled = true
 time_format = "%R"
 style = "bg:peach"
 format = '[[  $time ](fg:mantle bg:foam)]($style)'
@@ -200,9 +215,10 @@ disabled = true
 
 [character]
 disabled = false
-success_symbol = '[𝘹](bold fg:green)'
+# success_symbol = '[](bold fg:green)'
+success_symbol = '[➜](bold fg:green)'
 error_symbol = '[𝘹](bold fg:red)'
-vimcmd_symbol = '[](bold fg:creen)'
+vimcmd_symbol = '[](bold fg:red)'
 vimcmd_replace_one_symbol = '[](bold fg:purple)'
 vimcmd_replace_symbol = '[](bold fg:purple)'
 vimcmd_visual_symbol = '[](bold fg:lavender)'

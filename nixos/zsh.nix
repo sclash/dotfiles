@@ -9,9 +9,9 @@
     autocd = true;
     syntaxHighlighting.enable = true;
     initExtra = ''
-            	eval "$(starship init zsh)"
-             	eval "$(atuin init zsh)"
-      		'';
+                  	# eval "$(starship init zsh)"
+                   # 	eval "$(atuin init zsh)"
+            		'';
     # initExtra = ''
     #   [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
     # '';

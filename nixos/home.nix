@@ -16,7 +16,7 @@
 # in 
 {
 
-  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix ./starship.nix ];
+  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix ./starship.nix ./atuin.nix ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # home.sessionVariables = {
@@ -75,32 +75,43 @@
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
     ".config/starship" = {
-      source = "${my-dotfiles}/starship";
+      # source = "${my-dotfiles}/starship";
+      source = "/home/asergi/dotfiles/starship";
+      executable = false;
+      force = true;
+      recursive = true;
+    };
+    ".config/atuin" = {
+      # source = "${my-dotfiles}/starship";
+      source = "/home/asergi/dotfiles/atuin";
       executable = false;
       force = true;
       recursive = true;
     };
     ".config/ghostty" = {
-      source = "${my-dotfiles}/ghostty";
+      # source = "${my-dotfiles}/ghostty";
+      source = "/home/asergi/dotfiles/ghostty";
       executable = false;
       force = true;
       recursive = true;
     };
     ".config/hypr" = {
-      source = "${my-dotfiles}/hypr";
-      # source = "/home/asergi/dotfiles/hypr";
+      # source = "${my-dotfiles}/hypr";
+      source = "/home/asergi/dotfiles/hypr";
       executable = false;
       force = true;
       recursive = true;
     };
     ".config/waybar" = {
-      source = "${my-dotfiles}/waybar";
+      # source = "${my-dotfiles}/waybar";
+      source = "/home/asergi/dotfiles/waybar";
       executable = false;
       force = true;
       recursive = true;
     };
     ".config/swaync" = {
-      source = "${my-dotfiles}/swaync";
+      # source = "${my-dotfiles}/swaync";
+      source = "/home/asergi/dotfiles/swaync";
       executable = false;
       force = true;
       recursive = true;

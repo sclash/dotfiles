@@ -122,12 +122,23 @@
   # services.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
+  users.users.root = {
+		shell = pkgs.zsh;
+	};
+
   users.users.asergi = {
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
     # packages = with pkgs; [ tree ];
   };
 
+  programs.zsh = {
+		enable = true;
+		promptInit = ''
+            	eval "$(starship init zsh)"
+             	eval "$(atuin init zsh)"
+		'';
+	};
   # programs.zsh = {
   #   enable = true;
   #   enableCompletion = true;
@@ -176,7 +187,6 @@
   #           #export LS_COLORS
   #   '';
   # };
-  programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
   # system.userActivationScripts.zshrc ="touch .zshrc"; # to avoid being prompted to generate the config for first time
 
@@ -271,6 +281,7 @@
     fd
     jq
     starship
+    atuin
   ])
 
     ++
