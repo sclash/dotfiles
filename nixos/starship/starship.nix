@@ -4,8 +4,8 @@
 
   programs.starship = {
     enable = true;
-    enableBashIntegrasion = true;
-    enableZshIntegrasion = true;
+    enableBashIntegration = true;
+    enableZshIntegration = true;
     enableTranscience = true;
     settings = builtins.readFile "${my-dotfiles}/nixos/starship/starship.toml";
   };
