@@ -62,7 +62,8 @@ tooltip {
     all:unset;
     padding: 0px 5px;
     /* color: alpha(@color9,.4); */
-    color: rgba(0,0,0, 0.1);
+    /* color: rgba(0,0,0, 0.1); */
+	color: rgba(89,89,89, 0.67);
     transition: all .2s ease;
 }
 #workspaces button:hover {
@@ -78,7 +79,8 @@ tooltip {
     text-shadow: 0px 0px 2px rgba(0, 0, 0, .5);
 }
 #workspaces button.empty {
-    color: rgba(0,0,0,0);
+    /* color: rgba(0,0,0,0); */
+	color: rgba(89,89,89, 0.67);
     border: none;
     text-shadow: 0px 0px 1.5px rgba(0, 0, 0, .2);
 }
@@ -89,7 +91,9 @@ tooltip {
     transition: all 1s ease;
 }
 #workspaces button.empty.active {
-    color: @color9;
+    /* color: @color9; */
+	color: rgba(89,89,89,0.67);
+	/* color: rgba(595959AA) */
     border: none;
     text-shadow: 0px 0px 2px rgba(0, 0, 0, .5);
 }
