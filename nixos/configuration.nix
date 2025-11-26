@@ -13,8 +13,7 @@
     # ./tmux.nix
     inputs.walker.nixosModules.default
   ];
-	  home-manager.users.asergi = import ./home.nix;
-
+  home-manager.users.asergi = import ./home.nix;
 
   programs.neovim.enable = true;
   programs.neovim.defaultEditor = true;
@@ -280,6 +279,8 @@
       ripgrep
       fzf
       universal-ctags
+
+      hygg
 
       gemini-cli
 

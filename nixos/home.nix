@@ -16,7 +16,7 @@
 # in 
 {
 
-  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix];
+  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix ./starship/starship.nix ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # home.sessionVariables = {
@@ -25,7 +25,8 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura ]) ++ (with pkgs-unstable; [ hygg ]);
+  home.packages = (with pkgs; [ eza zathura starship atuin ])
+    ++ (with pkgs-unstable; [ ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;

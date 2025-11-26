@@ -8,20 +8,13 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     # initExtra = ''
-    #   # Check if the file exists before sourcing it
-    #   [[ ! -f ''${./p10k.zsh;} ]] || source ''${./p10k.zsh}
+    #   [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
     # '';
-    initExtra = ''
-      [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-    '';
-    # initExtra = ''
-    #   source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-    # '';
-    plugins = [{
-      name = "powerlevel10k";
-      src = pkgs.zsh-powerlevel10k;
-      file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-    }];
+    # plugins = [{
+    #   name = "powerlevel10k";
+    #   src = pkgs.zsh-powerlevel10k;
+    #   file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+    # }];
 
     shellAliases = {
       ll = "ls -l";
@@ -33,9 +26,6 @@
     history.ignoreAllDups = true;
     history.path = "$HOME/.zsh_history";
     history.size = 10000;
-    # histSize = 10000;
-    # histFile = "$HOME/.zsh_history";
-    # setOptions = [ "HIST_IGNORE_ALL_DUPS" ];
     initContent = ''
       show_eza_tree() {
       	level_arg=''${1:-2}
@@ -49,11 +39,11 @@
             #LS_COLORS='...'
             #export LS_COLORS
     '';
-    oh-my-zsh = { # "ohMyZsh" without Home Manager
-      enable = true;
-      plugins = [ "git" ];
-      # theme = "powerlevel10k";
-    };
+    # oh-my-zsh = { # "ohMyZsh" without Home Manager
+    #   enable = true;
+    #   plugins = [ "git" ];
+    #   # theme = "powerlevel10k";
+    # };
   };
 }
 
