@@ -190,7 +190,7 @@ format = '[ $symbol( $context) ]($style)'
 
 
 [time]
-disabled = falase
+disabled = false
 time_format = "%R"
 style = "bg:peach"
 format = '[[  $time ](fg:mantle bg:foam)]($style)'
