@@ -74,12 +74,12 @@
     #    };
 
     # ".config/ghostty".source = ~/dotfiles/ghostty;
-    ".config/starship" = {
-      source = "${my-dotfiles}/starship";
-      executable = false;
-      force = true;
-      recursive = true;
-    };
+    # ".config/starship" = {
+    #   source = "${my-dotfiles}/starship";
+    #   executable = false;
+    #   force = true;
+    #   recursive = true;
+    # };
     ".config/ghostty" = {
       source = "${my-dotfiles}/ghostty";
       executable = false;

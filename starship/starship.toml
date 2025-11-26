@@ -81,6 +81,7 @@ crust = "#11111b"
 # crust = "#11111b"
 
 [os.symbols]
+NixOS = " "
 Windows = "󰍲"
 Ubuntu = "󰕈"
 SUSE = ""
@@ -121,8 +122,8 @@ format = "[ $path ]($style)"
 "Hack" = "󰲋 "
 
 [os]
-disabled = true
-#style = "bg:surface0 fg:text"
+disabled = false
+style = "bg:surface0 fg:text"
 
 [custom.giturl]
 # disabled = true
@@ -189,7 +190,7 @@ format = '[ $symbol( $context) ]($style)'
 
 
 [time]
-disabled = true
+disabled = falase
 time_format = "%R"
 style = "bg:peach"
 format = '[[  $time ](fg:mantle bg:foam)]($style)'
