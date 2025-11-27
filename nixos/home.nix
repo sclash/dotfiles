@@ -25,7 +25,7 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ])
+  home.packages = (with pkgs; [ eza zathura atuin ncdu])
     ++ (with pkgs-unstable; [ ]);
 
   home.file = {
