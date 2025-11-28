@@ -10,6 +10,8 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    nixd.url = "github:nix-community/nixd";
+
     # my-dotfiles.url = "https://github.com/sclash/dotfiles";
     # my-dotifiles.inputs = { ref = "master"; };
     # my-dotfiles.url = "github:sclash/dotfiles";
@@ -41,8 +43,8 @@
   };
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, ashell, ... }:
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, elephant
-    , walker, my-dotfiles, neovimrc, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, nixd
+    , elephant, walker, my-dotfiles, neovimrc, ... }:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
@@ -58,12 +60,18 @@
             home-manager.nixosModules.home-manager
 
             {
+              nixpkgs.overlays = [ nixd.overlays.default ];
+              environment.systemPackages = with pkgs-unstable; [ nixd ];
+            }
+
+            {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.asergi = ./home.nix;
               home-manager.extraSpecialArgs = {
                 inherit my-dotfiles;
                 inherit neovimrc;
+                inherit pkgs-unstable;
               };
 
               # Optionally, use home-manager.extraSpecialArgs to pass

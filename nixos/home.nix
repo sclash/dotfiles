@@ -26,7 +26,7 @@
   # --- Packages ---
   # Install user-specific packages
   home.packages = (with pkgs; [ eza zathura atuin ncdu])
-    ++ (with pkgs-unstable; [ ]);
+    ++ (with pkgs-unstable; [nixd ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
@@ -41,6 +41,7 @@
     # ".config/tmux".source = "${my-dotfiles}/tmux";
     ".config/nvim" = {
       source = "${neovimrc}";
+      # source = "/home/asergi/neovimrc";
       executable = false;
       recursive = true;
       force = true;

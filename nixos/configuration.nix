@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, inputs, pkgs, pkgs-unstable, home-manager, ... }:
+{ config, lib, inputs, pkgs, pkgs-unstable, home-manager, nixd, ... }:
 
 {
   imports = [ # Include the results of the hardware scan.
@@ -90,7 +90,7 @@
 
   programs.hyprland = {
     enable = true;
-		package = pkgs-unstable.hyprland;
+    package = pkgs-unstable.hyprland;
     # withUWSM = true;
     xwayland.enable = true;
   };
@@ -298,6 +298,7 @@
     ++
 
     (with pkgs-unstable; [
+
       ripgrep
       fzf
       universal-ctags
