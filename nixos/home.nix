@@ -1,4 +1,4 @@
-{ config, pkgs, pkgs-unstable, my-dotfiles, neovimrc, ... }:
+{ config, pkgs, neovimrc, my-dotfiles,... }:
 # let
 #   tpm = pkgs.fetchFromGitHub {
 #     owner = "tmux-plugins";
@@ -31,8 +31,8 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ncdu ])
-    ++ (with pkgs-unstable; [ ]);
+  home.packages = (with pkgs; [ eza zathura atuin ncdu ]);
+    # ++ (with pkgs-unstable; [ ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;

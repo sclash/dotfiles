@@ -2,16 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, inputs, nixpkgs, nixpkgs-unstable, home-manager, nixd, ... }:
-    let
-      system = "x86_64-linux";
-      lib = nixpkgs.lib;
-      pkgs = nixpkgs.legacyPackages.${system};
-      pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
-      username = "asergi";
-    in 
-	
-
+{ config, lib, inputs, pkgs, pkgs-unstable,  nixd, ... }:
 {
   imports = [ # Include the results of the hardware scan.
     # ./hardware-configuration.nix
@@ -23,7 +14,7 @@
     inputs.nixd.nixosModules
   ];
 
-  home-manager.users.asergi = import ./home.nix;
+  # home-manager.users.asergi = import ./home.nix;
 
   # programs.nixd = {
   #   enable = true;
@@ -338,7 +329,7 @@
       # inputs.nixd.packages.${pkgs.system}.default
     ]);
 
-  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+  # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
