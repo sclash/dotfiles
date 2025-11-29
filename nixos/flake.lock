@@ -35,6 +35,26 @@
     },
     "flake-parts": {
       "inputs": {
+        "nixpkgs-lib": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1763759067,
+        "narHash": "sha256-LlLt2Jo/gMNYAwOgdRQBrsRoOz7BPRkzvNaI/fzXi2Q=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "2cccadc7357c0ba201788ae99c4dfa90728ef5e0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_2": {
+      "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
@@ -51,7 +71,7 @@
         "type": "github"
       }
     },
-    "flake-parts_2": {
+    "flake-parts_3": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib_2"
       },
@@ -124,11 +144,11 @@
     "neovimrc": {
       "flake": false,
       "locked": {
-        "lastModified": 1764413094,
-        "narHash": "sha256-poW9CIgKACAd5imlhQaFY9mu0jNeCAA/Myv2bJpFUGA=",
+        "lastModified": 1764421070,
+        "narHash": "sha256-ruvFFa763AVjtaADQvDqq0NxOtztksm/QXy5mXxOGTM=",
         "owner": "sclash",
         "repo": "neovimrc",
-        "rev": "ca5feb31926d43b65d9e2d3ee8b007dab90099f8",
+        "rev": "af0f62e302499d49d5d23287597ea3690d9842ca",
         "type": "github"
       },
       "original": {
@@ -141,7 +161,7 @@
     "nix-snapd": {
       "inputs": {
         "flake-compat": "flake-compat",
-        "flake-parts": "flake-parts",
+        "flake-parts": "flake-parts_2",
         "nixpkgs": [
           "nixpkgs"
         ]
@@ -162,7 +182,7 @@
     },
     "nixd": {
       "inputs": {
-        "flake-parts": "flake-parts_2",
+        "flake-parts": "flake-parts_3",
         "flake-root": "flake-root",
         "nixpkgs": "nixpkgs_2",
         "treefmt-nix": "treefmt-nix"
@@ -226,11 +246,11 @@
     },
     "nixpkgs-master": {
       "locked": {
-        "lastModified": 1764412820,
-        "narHash": "sha256-bZH9Ao7aZdHRxKwI0OmbfBWIIgaskJ6ootdyzYcliFU=",
+        "lastModified": 1764419413,
+        "narHash": "sha256-uw+W1zjmHp3Jk4VXZn6QLFBPqGFMTwcUsI95JB0KNx8=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "0c125795d60ec21fb0a5cc072f424a406751a35e",
+        "rev": "3cb7e2dac2110db4c9ca6fbae1f2c8ad0f90d2b6",
         "type": "github"
       },
       "original": {
@@ -304,6 +324,7 @@
     "root": {
       "inputs": {
         "elephant": "elephant",
+        "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "my-dotfiles": "my-dotfiles",
         "neovimrc": "neovimrc",

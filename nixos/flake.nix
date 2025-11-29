@@ -70,20 +70,20 @@
               environment.systemPackages = with pkgs; [ nixd ];
             }
 
-            # home-manager.nixosModules.home-manager
-            # {
-            #   home-manager.useGlobalPkgs = true;
-            #   home-manager.useUserPackages = true;
-            #   home-manager.users.asergi = ./home.nix;
-            #   home-manager.extraSpecialArgs = {
-            #     inherit my-dotfiles;
-            #     inherit neovimrc;
-            #     inherit pkgs-unstable;
-            #   };
-            #
-            #   # Optionally, use home-manager.extraSpecialArgs to pass
-            #   # arguments to home.nix
-            # }
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              # home-manager.users.asergi = ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit my-dotfiles;
+                inherit neovimrc;
+                inherit pkgs-unstable;
+              };
+
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
           ];
           specialArgs = {
             inherit username;
@@ -93,20 +93,9 @@
         };
       };
       homeConfigurations = {
-        "asergi@nixos-os" = inputs.home-manager.lib.homeMangerConfiguration {
+        "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
           modules = [
             ./home.nix
-
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.extraSpecialArgs = {
-                inherit my-dotfiles;
-                inherit neovimrc;
-                inherit pkgs-unstable;
-              };
-            }
           ];
 
         };
