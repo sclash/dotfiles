@@ -48,8 +48,8 @@
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
   #   , nixd, elephant, walker, my-dotfiles, neovimrc, ... }:
-  outputs = inputs@{ self, flake-parts, nixpkgs, nixpkgs-unstable, my-dotfiles
-    , neovimrc, nixd, ... }:
+  outputs = inputs@{ self, flake-parts, nixpkgs, nixpkgs-unstable, home-manager
+    , my-dotfiles, neovimrc, nixd, ... }:
 
     let
       system = "x86_64-linux";
@@ -78,20 +78,22 @@
                 environment.systemPackages = with pkgs; [ nixd ];
               }
 
-              # home-manager.nixosModules.home-manager
-              # {
-              #   home-manager.useGlobalPkgs = true;
-              #   home-manager.useUserPackages = true;
-              #   home-manager.users.asergi = ./home.nix;
-              #   home-manager.extraSpecialArgs = {
-              #     inherit my-dotfiles;
-              #     inherit neovimrc;
-              #     inherit pkgs-unstable;
-              #   };
-              #
-              #   # Optionally, use home-manager.extraSpecialArgs to pass
-              #   # arguments to home.nix
-              # }
+              home-manager.nixosModules.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.users.asergi = ./home.nix;
+                home-manager.extraSpecialArgs = {
+                  inherit my-dotfiles;
+                  inherit neovimrc;
+                  inherit pkgs-unstable;
+                };
+                # home-manager.backupCommand = "mv $source $target";
+                home-manager.backupCommand = "true";
+
+                # Optionally, use home-manager.extraSpecialArgs to pass
+                # arguments to home.nix
+              }
             ];
             specialArgs = {
               username = "asergi";
@@ -105,15 +107,14 @@
           "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
             pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
             # pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux;
+            imports = [ ./home.nix ];
             modules = [
               ./home.nix
               {
                 home.stateVersion = "25.05";
                 home.username = "asergi";
                 home.homeDirectory = "/home/asergi";
-                # nix.package = inputs.nixpkgs.legacyPackages.x86_64-linux.nix;
                 nix.package = pkgs.nix;
-
               }
             ];
             extraSpecialArgs = {

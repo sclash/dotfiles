@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, inputs, pkgs, pkgs-unstable,  nixd, ... }:
+{ config, lib, inputs, pkgs, pkgs-unstable, nixd, ... }:
 {
   imports = [ # Include the results of the hardware scan.
     # ./hardware-configuration.nix
@@ -21,6 +21,7 @@
   #   # packages = with pkgs-unstable; [ nixd ];
   #   # inputs.walker.packages.${pkgs.system}.default
   # };
+
 
   programs.neovim.enable = true;
   programs.neovim.defaultEditor = true;
