@@ -52,7 +52,10 @@
       pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       username = "asergi";
     in {
+
       nixosConfigurations = {
+        nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+
         nixos-os = lib.nixosSystem {
           inherit system;
           modules = [
@@ -61,7 +64,7 @@
 
             {
               nixpkgs.overlays = [ nixd.overlays.default ];
-              environment.systemPackages = with pkgs-unstable; [ nixd ];
+              environment.systemPackages = with pkgs; [ nixd ];
             }
 
             {

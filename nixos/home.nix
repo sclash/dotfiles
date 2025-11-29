@@ -23,10 +23,11 @@
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
 
+
   # --- Packages ---
   # Install user-specific packages
   home.packages = (with pkgs; [ eza zathura atuin ncdu])
-    ++ (with pkgs-unstable; [nixd ]);
+    ++ (with pkgs-unstable; []);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;

@@ -12,8 +12,16 @@
     /etc/nixos/hardware-configuration.nix
     # ./tmux.nix
     inputs.walker.nixosModules.default
+    inputs.nixd.nixosModules
   ];
+
   home-manager.users.asergi = import ./home.nix;
+
+  # programs.nixd = {
+  #   enable = true;
+  #   # packages = with pkgs-unstable; [ nixd ];
+  #   # inputs.walker.packages.${pkgs.system}.default
+  # };
 
   programs.neovim.enable = true;
   programs.neovim.defaultEditor = true;
@@ -139,9 +147,11 @@
 
   users.users.asergi = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
+    # shell = pkgs.zsh;
     # packages = with pkgs; [ tree ];
   };
+
 
   programs.zsh = {
     enable = true;
@@ -219,6 +229,7 @@
     neovim
     tree-sitter
     tree
+    # nixd
 
     yay
 
@@ -279,6 +290,7 @@
     # inputs.elephant.packages.${pkgs.system}.default
 
     inputs.walker.packages.${pkgs.system}.default
+    inputs.nixd.packages.${pkgs.system}.default
 
     # tmux
     # zellij
@@ -311,11 +323,14 @@
       python3
       bun
       go
-      rustup
+      # rustup
       rustc
+      cargo
       zig
-
+      # inputs.nixd.packages.${pkgs.system}.default
     ]);
+
+  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
