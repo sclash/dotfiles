@@ -7,10 +7,6 @@
     nixpkgs-master.url = "github:nixos/nixpkgs";
     nix-snapd.url = "github:nix-community/nix-snapd";
     nix-snapd.inputs.nixpkgs.follows = "nixpkgs";
-
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
-
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -47,8 +43,8 @@
   };
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, ashell, ... }:
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
-    , nixd, elephant, walker, my-dotfiles, neovimrc, ... }:
+  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, home-manager, nixd
+    , elephant, walker, my-dotfiles, neovimrc, ... }:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
@@ -64,51 +60,32 @@
           inherit system;
           modules = [
             ./configuration.nix
+            home-manager.nixosModules.home-manager
 
             {
               nixpkgs.overlays = [ nixd.overlays.default ];
               environment.systemPackages = with pkgs; [ nixd ];
             }
 
-            # home-manager.nixosModules.home-manager
-            # {
-            #   home-manager.useGlobalPkgs = true;
-            #   home-manager.useUserPackages = true;
-            #   home-manager.users.asergi = ./home.nix;
-            #   home-manager.extraSpecialArgs = {
-            #     inherit my-dotfiles;
-            #     inherit neovimrc;
-            #     inherit pkgs-unstable;
-            #   };
-            #
-            #   # Optionally, use home-manager.extraSpecialArgs to pass
-            #   # arguments to home.nix
-            # }
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.asergi = ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit my-dotfiles;
+                inherit neovimrc;
+                inherit pkgs-unstable;
+              };
+
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
           ];
           specialArgs = {
             inherit username;
             inherit pkgs-unstable;
             inherit inputs;
           };
-        };
-      };
-      homeConfigurations = {
-        "asergi@nixos-os" = inputs.home-manager.lib.homeMangerConfiguration {
-          modules = [
-            ./home.nix
-
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.extraSpecialArgs = {
-                inherit my-dotfiles;
-                inherit neovimrc;
-                inherit pkgs-unstable;
-              };
-            }
-          ];
-
         };
       };
     };
