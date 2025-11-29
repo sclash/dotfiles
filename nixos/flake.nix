@@ -111,9 +111,12 @@
                 home.stateVersion = "25.05";
                 home.username = "asergi";
                 home.homeDirectory = "/home/asergi";
+                # nix.package = inputs.nixpkgs.legacyPackages.x86_64-linux.nix;
+                nix.package = pkgs.nix;
+
               }
             ];
-            specialArgs = {
+            extraSpecialArgs = {
               inherit my-dotfiles;
               inherit neovimrc;
               # inherit pkgs;
