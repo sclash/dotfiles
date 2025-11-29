@@ -16,18 +16,23 @@
 # in 
 {
 
-  imports = [ ./tmux/tmux.nix ./swaync.nix ./zsh.nix ./starship.nix ./atuin.nix ];
+  imports = [
+    ./programs/tmux/tmux.nix
+    ./programs/swaync.nix
+    ./programs/zsh.nix
+    ./programs/starship.nix
+    ./programs/atuin.nix
+  ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
 
-
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ncdu])
-    ++ (with pkgs-unstable; []);
+  home.packages = (with pkgs; [ eza zathura atuin ncdu ])
+    ++ (with pkgs-unstable; [ ]);
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
