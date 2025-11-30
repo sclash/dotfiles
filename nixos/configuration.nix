@@ -255,6 +255,7 @@
     evince
 
     nodejs
+
     gcc
     glibc
     llvmPackages_latest.lldb
