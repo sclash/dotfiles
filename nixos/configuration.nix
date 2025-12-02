@@ -258,10 +258,10 @@
 
     gcc
     glibc
-    llvmPackages_latest.lldb
-    llvmPackages_latest.libllvm
-    llvmPackages_latest.libcxx
-    llvmPackages_latest.clang
+    # llvmPackages_latest.lldb
+    # llvmPackages_latest.libllvm
+    # llvmPackages_latest.libcxx
+    # llvmPackages_latest.clang
     clang
     clang-tools
     libclang
