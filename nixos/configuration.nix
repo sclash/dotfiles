@@ -252,6 +252,7 @@
     evince
 
     nodejs
+    nodePackages.typescript
 
     gcc
     glibc
