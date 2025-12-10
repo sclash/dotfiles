@@ -107,7 +107,7 @@
           "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
             pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
             # pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux;
-            imports = [ ./home.nix ];
+            # imports = [ ./home.nix ];
             modules = [
               ./home.nix
               {
