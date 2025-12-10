@@ -31,7 +31,7 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser ]);
+  home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser icu]);
   # ++ (with pkgs-unstable; [ ]);
 
 
