@@ -34,6 +34,18 @@
   home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser ]);
   # ++ (with pkgs-unstable; [ ]);
 
+
+  programs.git = {
+    enable = true;
+    settings = {
+      user.name = "sclash";
+      user.email = "andrea.sergi1@gmail.com";
+      github.user = "sclash";
+      init.defaultBranch = "main";
+      color.ui = true;
+    };
+  };
+
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
     # ".config/zellij".source = ~/dotfiles/zellij;

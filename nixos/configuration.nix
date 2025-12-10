@@ -234,7 +234,7 @@
     unzip
     google-chrome
     firefox
-    git
+    # git
     lazygit
     ghostty
     btop
