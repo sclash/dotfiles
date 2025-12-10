@@ -31,9 +31,8 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser icu]);
+  home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser icu glow ]);
   # ++ (with pkgs-unstable; [ ]);
-
 
   programs.git = {
     enable = true;
