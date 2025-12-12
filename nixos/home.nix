@@ -31,7 +31,17 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [ eza zathura atuin ncdu tor-browser icu glow ]);
+  home.packages = (with pkgs; [
+    eza
+    zathura
+    atuin
+    ncdu
+    tor-browser
+    icu
+    glow
+    nodejs
+    nodePackages_latest.typescript
+  ]);
   # ++ (with pkgs-unstable; [ ]);
 
   programs.git = {

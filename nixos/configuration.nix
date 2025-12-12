@@ -251,8 +251,8 @@
     # nwg-look
     evince
 
-    nodejs
-    nodePackages.typescript
+    # nodejs
+    # nodePackages.typescript
 
     gcc
     glibc
