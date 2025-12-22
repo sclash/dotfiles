@@ -21,6 +21,8 @@
   #   # inputs.walker.packages.${pkgs.system}.default
   # };
 
+  documentation.dev.enable = true;
+
   programs.neovim.enable = true;
   programs.neovim.defaultEditor = true;
   environment.variables.SUDO_EDITOR = "nvim";
@@ -254,12 +256,12 @@
     # nodejs
     # nodePackages.typescript
 
-    gcc
-    glibc
     # llvmPackages_latest.lldb
     # llvmPackages_latest.libllvm
     # llvmPackages_latest.libcxx
     # llvmPackages_latest.clang
+    gcc
+    glibc
     clang
     clang-tools
     libclang
@@ -267,6 +269,8 @@
     bear
     gdb
     valgrind
+
+    lua
 
     dbus
 

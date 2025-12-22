@@ -32,6 +32,8 @@
   # --- Packages ---
   # Install user-specific packages
   home.packages = (with pkgs; [
+    man-pages
+    man-pages-posix
     eza
     zathura
     atuin
@@ -54,6 +56,8 @@
       color.ui = true;
     };
   };
+
+  programs.man = { enable = true; };
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
