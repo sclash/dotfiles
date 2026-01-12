@@ -238,7 +238,6 @@
     firefox
     # git
     lazygit
-    ghostty
     btop
     htop
     wget
@@ -314,6 +313,7 @@
 
     (with pkgs-unstable; [
 
+      ghostty
       ripgrep
       fzf
       universal-ctags
