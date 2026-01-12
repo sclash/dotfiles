@@ -81,7 +81,9 @@
     enable = true;
     settings = rec {
       initial_session = {
-        command = "hyprland > /dev/null 2>&1";
+        # command = "hyprland > /dev/null 2>&1";
+        command = "start-hyprland";
+        # command = "uwsm start hyprland";
         user = "asergi";
         shell = pkgs.zsh;
       };
