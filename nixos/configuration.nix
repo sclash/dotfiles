@@ -269,6 +269,7 @@
     libgcc
     bear
     gdb
+    gnumake
     valgrind
 
     lua
