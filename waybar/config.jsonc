@@ -4,8 +4,8 @@
 	"reload_style_on_change": true,
 	"modules-left": [
 		"clock",
-		"tray",
 		"hyprland/language",
+		"tray",
 	],
 	"modules-center": [
 		"hyprland/workspaces",
@@ -39,8 +39,8 @@
 		"format": "{}",
 		// "format-en": "|| ⌨ US",
 		// "format-en": "|| ⌨ IT",
-		"format-en": "|| ⌨ US 🇺🇸",
-		"format-it": "|| ⌨ IT 🇮🇹",
+		"format-en": "|| ⌨ US 🇺🇸 || ",
+		"format-it": "|| ⌨ IT 🇮🇹 || ",
 		"on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
 	},
 	"custom/notification": {

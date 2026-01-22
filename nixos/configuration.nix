@@ -286,6 +286,7 @@
     hyprpicker
     hyprpaper
     hyprlock
+    wlr-randr
     pywal
     swaynotificationcenter
 

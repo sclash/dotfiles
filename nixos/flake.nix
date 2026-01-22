@@ -111,7 +111,7 @@
             modules = [
               ./home.nix
               {
-                home.stateVersion = "25.05";
+                home.stateVersion = "25.11";
                 home.username = "asergi";
                 home.homeDirectory = "/home/asergi";
                 nix.package = pkgs.nix;

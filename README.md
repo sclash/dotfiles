@@ -6,11 +6,11 @@ The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://
 
 
 - [NixOs](#NixOS)
-    - [Installation](#nixos-installation)
-    - [Network](#nixos-network)
+    - [Installation](README#Installation)
+    - [Network](#Network)
     - [Dotfiles](#dotfiles)
 - [Alacritty](#alacritty)
-- [i3](#i3-window-manger)
+- [i3](<README#i3 Window Manger>)
     - [Dependencies](#i3-dependencies)
     - [Installation](#i3-installation)
         - [Debian](#installation-debian)

@@ -22,6 +22,7 @@
     ./programs/zsh.nix
     ./programs/starship.nix
     ./programs/atuin.nix
+    ./programs/obs.nix
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -40,9 +41,10 @@
     ncdu
     tor-browser
     icu
-    glow
     nodejs
     nodePackages_latest.typescript
+    glow
+    vlc
   ]);
   # ++ (with pkgs-unstable; [ ]);
 
