@@ -37,6 +37,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  programs.wshowkeys.enable = true;
+
   networking.hostName = "nixos-os"; # Define your hostname.
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -149,10 +151,12 @@
 
   users.users.asergi = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "docker" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "input" "wheel" "docker" ]; # Enable ‘sudo’ for the user.
     # shell = pkgs.zsh;
     # packages = with pkgs; [ tree ];
   };
+
+  virtualisation.docker.enable = true;
 
   programs.zsh = {
     enable = true;
@@ -280,6 +284,8 @@
     bat
 
     docker
+    docker-compose
+    docker-compose-language-service
 
     sway
     waybar

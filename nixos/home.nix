@@ -45,6 +45,7 @@
     nodePackages_latest.typescript
     glow
     vlc
+    wshowkeys
   ]);
   # ++ (with pkgs-unstable; [ ]);
 
