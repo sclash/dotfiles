@@ -239,7 +239,12 @@
     yay
 
     bat
+    zip
     unzip
+
+    chromium
+    chromedriver
+    undetected-chromedriver
     google-chrome
     firefox
     # git
@@ -327,10 +332,6 @@
       ripgrep
       fzf
       universal-ctags
-
-      hygg
-
-      gemini-cli
 
       uv
       python3

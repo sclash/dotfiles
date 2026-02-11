@@ -23,6 +23,7 @@
     ./programs/starship.nix
     ./programs/atuin.nix
     ./programs/obs.nix
+    ./programs/pandoc.nix
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -45,7 +46,9 @@
     nodePackages_latest.typescript
     glow
     vlc
-    wshowkeys
+    hygg
+    flameshot
+    gemini-cli
   ]);
   # ++ (with pkgs-unstable; [ ]);
 
