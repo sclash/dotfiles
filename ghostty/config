@@ -103,12 +103,12 @@ keybind = ctrl+alt+k=goto_split:up
 keybind = ctrl+alt+j=goto_split:down
 
 
+# # Key table definition
+keybind = vim/
 
 # Entry point
 keybind = alt+v=activate_key_table:vim
 #
-# # Key table definition
-keybind = vim
 #
 # # Line movement
 keybind = vim/j=scroll_page_lines:1
