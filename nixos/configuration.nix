@@ -44,6 +44,8 @@
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable =
     true; # Easiest to use and most distros use this by default.
+  networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
+  services.strongswan.enable = true;
 
   # Set your time zone.
   time.timeZone = "Europe/Amsterdam";

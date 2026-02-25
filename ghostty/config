@@ -79,6 +79,28 @@ keybind = ctrl+alt+up=next_tab
 # keybind = ctrl+alt+h=goto_split:left
 # keybind = ctrl+alt+k=goto_split:up
 # keybind = ctrl+alt+j=goto_split:down
+## Split window
+#
+#
+keybind = alt+t=toggle_tab_overview
+
+keybind = ctrl+b+%=new_split:left
+keybind = ctrl+b+"=new_split:down
+
+
+## zoom in split
+keybind = ctrl+b+z=toggle_split_zoom
+## resize split
+keybind = ctrl+shift+h=resize_split:left,10
+keybind = ctrl+shift+l=resize_split:right,10
+keybind = ctrl+shift+j=resize_split:down,10
+keybind = ctrl+shift+k=resize_split:down,10
+## restore split
+keybind = ctrl+shift+r=reset_window_size
+keybind = ctrl+shift+e=equalize_splits
+
+
+## go_to_split
 keybind = ctrl+alt+l=goto_split:right
 keybind = ctrl+alt+h=goto_split:left
 keybind = ctrl+alt+k=goto_split:up
@@ -86,46 +108,47 @@ keybind = ctrl+alt+j=goto_split:down
 
 
 # Entry point
-# keybind = alt+v=activate_key_table:vim
+keybind = alt+v=activate_key_table:vim
 #
 # # Key table definition
-# keybind = vim/
+keybind = vim/
 #
 # # Line movement
-# keybind = vim/j=scroll_page_lines:1
-# keybind = vim/k=scroll_page_lines:-1
+keybind = vim/j=scroll_page_lines:1
+keybind = vim/k=scroll_page_lines:-1
 #
 # # Page movement
-# keybind = vim/ctrl+d=scroll_page_down
-# keybind = vim/ctrl+u=scroll_page_up
-# keybind = vim/ctrl+f=scroll_page_down
-# keybind = vim/ctrl+b=scroll_page_up
-# keybind = vim/shift+j=scroll_page_down
-# keybind = vim/shift+k=scroll_page_up
+keybind = vim/ctrl+d=scroll_page_down
+keybind = vim/ctrl+u=scroll_page_up
+keybind = vim/ctrl+f=scroll_page_down
+keybind = vim/ctrl+b=scroll_page_up
+keybind = vim/shift+j=scroll_page_down
+keybind = vim/shift+k=scroll_page_up
 #
 # # Jump to top/bottom
-# keybind = vim/g>g=scroll_to_top
-# keybind = vim/shift+g=scroll_to_bottom
+keybind = vim/g>g=scroll_to_top
+keybind = vim/shift+g=scroll_to_bottom
 #
 # # Search (if you want vim-style search entry)
-# keybind = vim/slash=start_search
-# keybind = vim/n=navigate_search:next
+keybind = vim/slash=start_search
+keybind = vim/n=navigate_search:next
+keybind = vim/N=navigate_search:previous
 #
 # # Copy mode / selection
 # # Note we're missing a lot of actions here to make this more full featured.
-# keybind = vim/v=copy_to_clipboard
-# keybind = vim/y=copy_to_clipboard
+keybind = vim/v=copy_to_clipboard
+keybind = vim/y=copy_to_clipboard
 #
 # # Command Palette
-# keybind = vim/shift+semicolon=toggle_command_palette
+keybind = vim/shift+semicolon=toggle_command_palette
 #
 # # Exit
-# keybind = vim/escape=deactivate_key_table
-# keybind = vim/q=deactivate_key_table
-# keybind = vim/i=deactivate_key_table
+keybind = vim/escape=deactivate_key_table
+keybind = vim/q=deactivate_key_table
+keybind = vim/i=deactivate_key_table
 #
 # # Catch unbound keys
-# keybind = vim/catch_all=ignore
+keybind = vim/catch_all=ignore
 
 # If this is `true`, the titlebar will be hidden when the window is maximized,
 # and shown when the titlebar is unmaximized. GTK only.
