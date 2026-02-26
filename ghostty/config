@@ -145,7 +145,7 @@ keybind = ctrl+alt+j=goto_split:down
 # keybind = vim/i=deactivate_key_table
 #
 # # Catch unbound keys
-keybind = vim/catch_all=ignore
+# keybind = vim/catch_all=ignore
 
 # If this is `true`, the titlebar will be hidden when the window is maximized,
 # and shown when the titlebar is unmaximized. GTK only.
