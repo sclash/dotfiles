@@ -24,6 +24,7 @@
     ./programs/atuin.nix
     ./programs/obs.nix
     ./programs/pandoc.nix
+    ./programs/claude-code.nix
   ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -49,6 +50,14 @@
     hygg
     flameshot
     gemini-cli
+
+    impala
+    neofetch
+    bluetui
+    lazydocker
+    lazysql
+    lazyssh
+    lazycli
   ]);
   # ++ (with pkgs-unstable; [ ]);
 
