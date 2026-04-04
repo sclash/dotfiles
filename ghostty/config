@@ -37,7 +37,6 @@ font-family = "JetBrainsMono Nerd Font"
 font-style = "SemiBold"
 font-thicken = true
 font-size = 13
-gtk-dpi = 96
 
 background = #000000
 background-opacity = 0.7
