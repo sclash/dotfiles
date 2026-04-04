@@ -1,9 +1,9 @@
-{ config, lib, pkgs, pkgs-unstable, ... }:
+{ config, lib, pkgs, pkgs-master, ... }:
 
 {
   programs.claude-code = {
     enable = true;
-    package = pkgs-unstable.claude-code;
+    package = pkgs-master.claude-code;
     mcpServers = {
       nixos = {
         type = "stdio";

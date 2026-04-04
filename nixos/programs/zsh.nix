@@ -8,11 +8,6 @@
     autosuggestion.enable = true;
     autocd = true;
     syntaxHighlighting.enable = true;
-    initExtra = ''
-		# eval "$(starship init zsh)"
-          	# eval "$(atuin init zsh)"
-		# bindkey -v
-      		'';
     # initExtra = ''
     #   [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
     # '';

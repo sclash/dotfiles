@@ -11,7 +11,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
-    home-manager.url = "github:nix-community/home-manager";
+    home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nixd.url = "github:nix-community/nixd";
@@ -48,7 +48,7 @@
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
   #   , nixd, elephant, walker, my-dotfiles, neovimrc, ... }:
-  outputs = inputs@{ self, flake-parts, nixpkgs, nixpkgs-unstable, home-manager
+  outputs = inputs@{ self, flake-parts, nixpkgs, nixpkgs-unstable, nixpkgs-master, home-manager
     , my-dotfiles, neovimrc, nixd, ... }:
 
     let
@@ -57,6 +57,10 @@
       pkgs = nixpkgs.legacyPackages.${system};
       # pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       pkgs-unstable = import nixpkgs-unstable { # <-- changed
+        inherit system;
+        config.allowUnfree = true;
+      };
+      pkgs-master = import nixpkgs-master {
         inherit system;
         config.allowUnfree = true;
       };
@@ -73,7 +77,6 @@
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
           nixos-os = inputs.nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
             modules = [
               ./configuration.nix
 
@@ -91,6 +94,7 @@
                   inherit my-dotfiles;
                   inherit neovimrc;
                   inherit pkgs-unstable;
+                  inherit pkgs-master;
                 };
                 # home-manager.backupCommand = "mv $source $target";
                 home-manager.backupCommand = "true";
