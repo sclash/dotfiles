@@ -55,7 +55,11 @@
       system = "x86_64-linux";
       lib = nixpkgs.lib;
       pkgs = nixpkgs.legacyPackages.${system};
-      pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
+      # pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
+      pkgs-unstable = import nixpkgs-unstable { # <-- changed
+        inherit system;
+        config.allowUnfree = true;
+      };
       username = "asergi";
 
     in flake-parts.lib.mkFlake { inherit inputs; } {

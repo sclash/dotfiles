@@ -58,6 +58,8 @@
     lazysql
     lazyssh
     lazycli
+
+    mcp-nixos
   ]);
   # ++ (with pkgs-unstable; [ ]);
 

@@ -41,9 +41,10 @@
 
   networking.hostName = "nixos-os"; # Define your hostname.
   # Pick only one of the below networking options.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  networking.networkmanager.enable =
-    true; # Easiest to use and most distros use this by default.
+  # networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
+  networking.wireless.iwd.enable = true;  # Enables wireless support via wpa_supplicant.
+  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
+  networking.networkmanager.wifi.backend = "iwd"; 
   networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
   services.strongswan.enable = true;
 
@@ -240,6 +241,7 @@
 
     yay
 
+
     bat
     zip
     unzip
@@ -248,6 +250,7 @@
     chromedriver
     undetected-chromedriver
     google-chrome
+
     firefox
     # git
     lazygit
