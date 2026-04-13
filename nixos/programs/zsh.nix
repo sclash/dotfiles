@@ -28,6 +28,8 @@
     history.path = "$HOME/.zsh_history";
     history.size = 10000;
     initContent = ''
+	# [[ -f ~/.secrets/github_token ]] && export GITHUB_PERSONAL_ACCESS_TOKEN=$(cat ~/.secrets/github_token)
+
       show_eza_tree() {
       	level_arg=''${1:-2}
       	eza --tree --level="$level_arg" --long --icons --git

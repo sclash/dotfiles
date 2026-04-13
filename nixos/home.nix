@@ -1,4 +1,10 @@
-{ config, pkgs, neovimrc, my-dotfiles, ... }:
+{
+  config,
+  pkgs,
+  neovimrc,
+  my-dotfiles,
+  ...
+}:
 # let
 #   tpm = pkgs.fetchFromGitHub {
 #     owner = "tmux-plugins";
@@ -13,7 +19,7 @@
 #     rev = "f095bce2e15e8652eb2b0be28d1417f59ebe19c2";
 #     # sha256 = "01ribl326n6n0qcq68a8pllbrz6mgw55kxhf9mjdc5vw01zjcvw5";
 #   };
-# in 
+# in
 {
 
   imports = [
@@ -24,43 +30,58 @@
     ./programs/atuin.nix
     ./programs/obs.nix
     ./programs/pandoc.nix
-    ./programs/claude-code.nix
+    ./programs/claude-code/claude-code.nix
   ];
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (with pkgs; [
-    man-pages
-    man-pages-posix
-    eza
-    zathura
-    atuin
-    ncdu
-    tor-browser
-    icu
-    nodejs
-    nodePackages_latest.typescript
-    glow
-    vlc
-    hygg
-    flameshot
-    gemini-cli
+  home.packages = (
+    with pkgs;
+    [
+      man-pages
+      man-pages-posix
+      eza
+      zathura
+      atuin
+      ncdu
+      tor-browser
+      icu
+      nodejs
+      nodePackages_latest.typescript
+      glow
+      vlc
+      hygg
+      flameshot
+      gemini-cli
 
-    impala
-    neofetch
-    bluetui
-    lazydocker
-    lazysql
-    lazyssh
-    lazycli
+      impala
+      neofetch
+      bluetui
+      lazydocker
+      lazysql
+      lazyssh
+      lazycli
 
-    mcp-nixos
-  ]);
+      # for Claude-Code
+      mcp-nixos
+      rust-analyzer
+      pyright
+      gopls
+      lua-language-server
+      typescript-language-server
+      vue-language-server
+      tailwindcss-language-server
+      markitdown-mcp
+    ]
+  );
   # ++ (with pkgs-unstable; [ ]);
 
   programs.git = {
@@ -74,7 +95,9 @@
     };
   };
 
-  programs.man = { enable = true; };
+  programs.man = {
+    enable = true;
+  };
 
   home.file = {
     # ".zshrc".source = ~/dotfiles/zshrc/.zshrc;
