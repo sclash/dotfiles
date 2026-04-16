@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  pkgs-unstable,
   neovimrc,
   my-dotfiles,
   ...
@@ -79,10 +80,9 @@
       typescript-language-server
       vue-language-server
       tailwindcss-language-server
-      markitdown-mcp
     ]
-  );
-  # ++ (with pkgs-unstable; [ ]);
+  )
+  ++ (with pkgs-unstable; [ markitdown-mcp ]);
 
   programs.git = {
     enable = true;

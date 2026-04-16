@@ -87,7 +87,7 @@ in
         ];
       };
       markitdown = {
-        args = [ "--stdio" ];
+        args = [ "--http" ];
         command = "markitdown-mcp";
       };
     };
