@@ -45,6 +45,9 @@ in
     enable = true;
     package = pkgs-master.claude-code;
     mcpServers = {
+      markitdown = {
+        command = "markitdown-mcp";
+      };
       nixos = {
         type = "stdio";
         command = "nix";
@@ -85,10 +88,6 @@ in
           "/home/asergi/dotfiles"
           "/home/asergi/hacking"
         ];
-      };
-      markitdown = {
-        args = [ "--http" ];
-        command = "markitdown-mcp";
       };
     };
     lspServers = {

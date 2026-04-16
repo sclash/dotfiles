@@ -44,9 +44,8 @@
 
   # --- Packages ---
   # Install user-specific packages
-  home.packages = (
-    with pkgs;
-    [
+  home.packages =
+    (with pkgs; [
       man-pages
       man-pages-posix
       eza
@@ -80,9 +79,10 @@
       typescript-language-server
       vue-language-server
       tailwindcss-language-server
-    ]
-  )
-  ++ (with pkgs-unstable; [ markitdown-mcp ]);
+      python313Packages.markitdown
+
+    ])
+    ++ (with pkgs-unstable; [ markitdown-mcp ]);
 
   programs.git = {
     enable = true;
