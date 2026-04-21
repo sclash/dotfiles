@@ -39,11 +39,22 @@ let
     rev = "d6286730878816b82dfd5c245d34fab0241d41c7";
     sha256 = "1p530wcvc3mwmvv73r1xbsqz1s69hqgpbvpnd69bwn47hl9y16nl";
   };
+  caveman = pkgs.fetchFromGitHub {
+    owner = "JuliusBrussee";
+    repo = "caveman";
+    rev = "84cc3c14fa1e10182adaced856e003406ccd250d";
+    sha256 = "0s9ppf7qs5g5h7hrik4rlfdakwnkryp9mrggdpjdd1kbgicniqrk";
+  };
 in
 {
   programs.claude-code = {
     enable = true;
     package = pkgs-master.claude-code;
+    settings = {
+      env = {
+        CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
+      };
+    };
     mcpServers = {
       markitdown = {
         command = "markitdown-mcp";
@@ -181,6 +192,7 @@ in
         firecrawl
         claude-mem
         context-mode
+        caveman
         ;
     };
     plugins = [

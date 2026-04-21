@@ -73,6 +73,7 @@
       # for Claude-Code
       mcp-nixos
       rust-analyzer
+      rtk
       pyright
       gopls
       lua-language-server
