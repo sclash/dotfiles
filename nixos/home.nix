@@ -48,6 +48,7 @@
     (with pkgs; [
       man-pages
       man-pages-posix
+      gh
       eza
       zathura
       atuin
