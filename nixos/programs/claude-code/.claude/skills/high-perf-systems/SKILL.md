@@ -6,6 +6,7 @@ description: Use when designing performance-critical systems, hot paths, embedde
 # High-Performance Systems Engineering
 
 Discipline for performance-critical paths. Hardware-engineer mindset: deterministic, bounded, performance-aware.
+Design systems like hardware engineers — deterministic, bounded, and performance-aware.
 
 ## Logical Interfaces (Safety + Performance)
 

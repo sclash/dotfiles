@@ -10,9 +10,11 @@
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
+    # flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
 
     # home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.url = "github:nix-community/home-manager";
+    # home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nixd.url = "github:nix-community/nixd";
@@ -120,10 +122,11 @@
             modules = [
               ./home.nix
               {
-                home.stateVersion = "25.11";
+                # home.stateVersion = "25.11";
                 home.username = "asergi";
                 home.homeDirectory = "/home/asergi";
                 nix.package = pkgs.nix;
+                # nix.package = pkgs-unstable.nix;
               }
             ];
             extraSpecialArgs = {

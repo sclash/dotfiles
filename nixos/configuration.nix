@@ -2,12 +2,22 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, inputs, pkgs, pkgs-unstable, nixd, ... }: {
-  imports = [ # Include the results of the hardware scan.
-    # ./hardware-configuration.nix
+{
+  config,
+  lib,
+  inputs,
+  pkgs,
+  pkgs-unstable,
+  nixd,
+  ...
+}:
+{
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
 
     # builtins.readFile "/etc/nixos/hardware-configuration.nix"
-    /etc/nixos/hardware-configuration.nix
+    # /etc/nixos/hardware-configuration.nix
     # ./tmux.nix
     inputs.walker.nixosModules.default
     inputs.nixd.nixosModules
@@ -29,9 +39,13 @@
   environment.variables.EDITOR = "nvim";
   environment.variables.VISUAL = "nvim";
 
-  programs.sway = { enable = true; };
+  programs.sway = {
+    enable = true;
+  };
 
-  programs.walker = { enable = true; };
+  programs.walker = {
+    enable = true;
+  };
   nixpkgs.config.allowUnfree = true;
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -41,18 +55,21 @@
 
   networking.hostName = "nixos-os"; # Define your hostname.
   # Pick only one of the below networking options.
-  # networking.wireless.enable = false;  # Enables wireless support via wpa_supplicant.
-  networking.wireless.iwd.enable =
-    true; # Enables wireless support via wpa_supplicant.
-  networking.networkmanager.enable =
-    true; # Easiest to use and most distros use this by default.
+  networking.wireless.enable = false; # Disables wireless support via wpa_supplicant.
+  # networking.wireless.iwd.enable = true; # Enables wireless support via wpa_supplicant.
+  networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
+  networking.networkmanager.wifi.powersave = false;
+  networking.networkmanager.wifi.scanRandMacAddress = false;
   networking.networkmanager.wifi.backend = "iwd";
   networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
   services.strongswan.enable = true;
 
   # Set your time zone.
   time.timeZone = "Europe/Amsterdam";
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -111,7 +128,9 @@
     # withUWSM = true;
     xwayland.enable = true;
   };
-  programs.hyprlock = { enable = true; };
+  programs.hyprlock = {
+    enable = true;
+  };
   security.pam.services.hyprlock.enable = true;
 
   # Optional: set GTK theme globally via environment variables
@@ -152,11 +171,17 @@
   # services.libinput.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.root = { shell = pkgs.zsh; };
+  users.users.root = {
+    shell = pkgs.zsh;
+  };
 
   users.users.asergi = {
     isNormalUser = true;
-    extraGroups = [ "input" "wheel" "docker" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [
+      "input"
+      "wheel"
+      "docker"
+    ]; # Enable ‘sudo’ for the user.
     # shell = pkgs.zsh;
     # packages = with pkgs; [ tree ];
   };
@@ -228,128 +253,132 @@
   # '';
 
   programs.nix-ld.enable = true;
-  programs.nix-ld.libraries = (with pkgs; [ ])
+  programs.nix-ld.libraries =
+    (with pkgs; [ ])
 
     ++
 
-    (with pkgs-unstable; [ uv ]);
+      (with pkgs-unstable; [ uv ]);
 
-  environment.systemPackages = (with pkgs; [
-    vim
-    neovim
-    tree-sitter
-    tree
-    # nixd
+  environment.systemPackages =
+    (with pkgs; [
+      vim
+      neovim
+      tree-sitter
+      tree
+      # nixd
 
-    yay
+      yay
 
-    bat
-    zip
-    unzip
+      bat
+      zip
+      unzip
 
-    chromium
-    chromedriver
-    undetected-chromedriver
-    google-chrome
+      chromium
+      chromedriver
+      undetected-chromedriver
+      google-chrome
 
-    firefox
-    # git
-    nix-prefetch-git
-    lazygit
-    btop
-    htop
-    wget
-    # kitty
-    xorg.xrandr
-    # gtkd
-    pkg-config
-    # wofi
-    nautilus
-    gnome-themes-extra
-    # gnome-control-center
-    # nwg-look
-    evince
+      firefox
+      # git
+      nix-prefetch-git
+      lazygit
+      btop
+      htop
+      wget
+      # kitty
+      xorg.xrandr
+      # gtkd
+      pkg-config
+      # wofi
+      nautilus
+      gnome-themes-extra
+      # gnome-control-center
+      # nwg-look
+      evince
 
-    # nodejs
-    # nodePackages.typescript
+      # nodejs
+      # nodePackages.typescript
 
-    # llvmPackages_latest.lldb
-    # llvmPackages_latest.libllvm
-    # llvmPackages_latest.libcxx
-    # llvmPackages_latest.clang
-    gcc
-    glibc
-    clang
-    clang-tools
-    libclang
-    libgcc
-    bear
-    gdb
-    gnumake
-    valgrind
+      # llvmPackages_latest.lldb
+      # llvmPackages_latest.libllvm
+      # llvmPackages_latest.libcxx
+      # llvmPackages_latest.clang
+      gcc
+      glib
+      glibc
+      clang
+      clang-tools
+      libclang
+      libgcc
+      bear
+      gdb
+      gnumake
+      valgrind
 
-    lua
+      lua
 
-    dbus
+      dbus
 
-    zoxide
-    bat
+      zoxide
+      bat
 
-    docker
-    docker-compose
-    docker-compose-language-service
+      docker
+      docker-compose
+      docker-compose-language-service
 
-    sway
-    waybar
-    hyprpicker
-    hyprpaper
-    hyprlock
-    wlr-randr
-    pywal
-    swaynotificationcenter
+      sway
+      waybar
+      hyprpicker
+      hyprpaper
+      hyprlock
+      wlr-randr
+      pywal
+      swaynotificationcenter
 
-    gvfs
-    libnotify
-    # inputs.ashell.defaultPackage.${pkgs.system}
-    # inputs.elephant.packages.${pkgs.system}.default
+      gvfs
+      libnotify
+      # inputs.ashell.defaultPackage.${pkgs.system}
+      # inputs.elephant.packages.${pkgs.system}.default
 
-    inputs.walker.packages.${pkgs.system}.default
-    inputs.nixd.packages.${pkgs.system}.default
+      inputs.walker.packages.${pkgs.system}.default
+      inputs.nixd.packages.${pkgs.system}.default
 
-    # tmux
-    # zellij
+      # tmux
+      # zellij
 
-    # zsh
-    # oh-my-zsh
-    # zsh-autosuggestions
-    # zsh-history
-    # zsh-powerlevel10k
+      # zsh
+      # oh-my-zsh
+      # zsh-autosuggestions
+      # zsh-history
+      # zsh-powerlevel10k
 
-    fd
-    jq
-    starship
-    atuin
-  ])
+      fd
+      jq
+      starship
+      atuin
+      xclip
+    ])
 
     ++
 
-    (with pkgs-unstable; [
+      (with pkgs-unstable; [
 
-      ghostty
-      ripgrep
-      fzf
-      universal-ctags
+        ghostty
+        ripgrep
+        fzf
+        universal-ctags
 
-      uv
-      python3
-      bun
-      go
-      # rustup
-      rustc
-      cargo
-      zig
-      # inputs.nixd.packages.${pkgs.system}.default
-    ]);
+        uv
+        python3
+        bun
+        go
+        # rustup
+        rustc
+        cargo
+        zig
+        # inputs.nixd.packages.${pkgs.system}.default
+      ]);
 
   # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 

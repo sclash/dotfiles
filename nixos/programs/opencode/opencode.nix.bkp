@@ -1,0 +1,55 @@
+{
+  config,
+  lib,
+  pkgs,
+  pkgs-master,
+  ...
+}:
+{
+  programs.opencode = {
+    enable = true;
+    package = pkgs-master.opencode;
+    enableMcpIntegration = true;
+    themes = "catpuccin";
+    settings = {
+	provider = {
+		"llama.cpp"= {
+			npm= "@ai-sdk/openai-compatible";
+			name= "llama-server (vast.ai)";
+			options= {
+				baseURL= "";
+			};
+			models= {
+				"unsloth/Qwen3.6-27B-GGUF"= {
+					name= "Qwen3.6-27B";
+				};
+			};
+		};
+	};
+	lsp= {
+		tailwind= {
+			command= [
+				"npx"
+				"-p"
+				"@tailwindcss/language-server"
+				"-y"
+				"tailwindcss-language-server"
+				"--stdio"
+			];
+			extensions= [
+				".css"
+				".htmx"
+				".vue"
+				".htmx"
+				".jsx"
+				".tsx"
+			];
+		};
+	};
+    };
+    rules = { };
+    tools = { };
+    agents = { };
+    skills = { };
+  };
+}

@@ -32,6 +32,9 @@
     ./programs/obs.nix
     ./programs/pandoc.nix
     ./programs/claude-code/claude-code.nix
+    ./programs/mcpservers.nix
+    ./programs/zathura.nix
+    ./programs/opencode/opencode.nix
   ];
 
   nix.settings.experimental-features = [
@@ -41,6 +44,9 @@
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
+  home.sessionPath = [
+    "$HOME/.local/bin"
+  ];
 
   # --- Packages ---
   # Install user-specific packages
@@ -50,7 +56,6 @@
       man-pages-posix
       gh
       eza
-      zathura
       atuin
       ncdu
       tor-browser
@@ -74,7 +79,6 @@
       # for Claude-Code
       mcp-nixos
       rust-analyzer
-      rtk
       pyright
       gopls
       lua-language-server
@@ -82,9 +86,13 @@
       vue-language-server
       tailwindcss-language-server
       python313Packages.markitdown
+      playwright
 
     ])
-    ++ (with pkgs-unstable; [ markitdown-mcp ]);
+    ++ (with pkgs-unstable; [
+      markitdown-mcp
+      rtk
+    ]);
 
   programs.git = {
     enable = true;

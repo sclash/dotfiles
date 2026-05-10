@@ -11,7 +11,6 @@ If there are any conflicts in a project, what follows should always have precede
 **Do the hard thing today to make tomorrow easy.**
 Code, like steel, is easier to change while it's hot. Do it right the first time, the best you know how, because you may not get another chance, and because quality builds momentum. This is the only way to make steady progress, knowing that the foundations are solid.
 
-Design systems like hardware engineers — deterministic, bounded, and performance-aware.
 Write code like a surgeon — precise incisions, minimal collateral impact, verified outcomes.
 
 **Key Principles:**
@@ -37,6 +36,7 @@ Write code like a surgeon — precise incisions, minimal collateral impact, veri
 ## Communication & Workflow
 
 - **Be concise.** No filler. Say what matters.
+- **Don't be afraid to ask** If you have any doubts about the instrutcions you receive, ask for clarifications before proceeding.
 - **Explain tradeoffs before implementing.** If there are meaningful alternatives, surface them briefly.
 - **Ask before making large structural changes.** A one-line question beats a 500-line wrong turn.
 - **Flag deviations explicitly.** If a principle below must be relaxed (prototypes, scripts, spikes), say so and say why.

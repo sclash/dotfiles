@@ -3,6 +3,7 @@
   lib,
   pkgs,
   pkgs-master,
+  pkgs-unstable,
   ...
 }:
 
@@ -21,23 +22,23 @@ let
     rev = "main";
     sha256 = "0yhvgwadr54njmyn82yxvf8sfwkwr8aw5myv7l7aw2q1aglrgihl";
   };
-  firecrawl = pkgs.fetchFromGitHub {
-    owner = "firecrawl";
-    repo = "firecrawl-claude-plugin";
-    rev = "main";
-    sha256 = "151z0696z32027zkqyy2hvmnhdnf9k7zd2wddgybnnyk3s431244";
-  };
+  # firecrawl = pkgs.fetchFromGitHub {
+  #   owner = "firecrawl";
+  #   repo = "firecrawl-claude-plugin";
+  #   rev = "main";
+  #   sha256 = "151z0696z32027zkqyy2hvmnhdnf9k7zd2wddgybnnyk3s431244";
+  # };
   claude-mem = pkgs.fetchFromGitHub {
     owner = "thedotmack";
     repo = "claude-mem";
-    rev = "cde4faae2f33f92d2092ca87537b17b837fdcfb7";
+    rev = "main";
     sha256 = "1iarxmaaml4xqpz84cx8lz3finmiiacmrdcx2p61ikygai0gwh2a";
   };
   context-mode = pkgs.fetchFromGitHub {
     owner = "mksglu";
     repo = "context-mode";
-    rev = "d6286730878816b82dfd5c245d34fab0241d41c7";
-    sha256 = "1p530wcvc3mwmvv73r1xbsqz1s69hqgpbvpnd69bwn47hl9y16nl";
+    rev = "main";
+    sha256 = "061kz73r12wclyzn95kv5vk94khvr9054i26fik7mfvjqj7xs6hi";
   };
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
@@ -49,8 +50,11 @@ in
 {
   programs.claude-code = {
     enable = true;
+    # package = pkgs-unstable.claude-code;
     package = pkgs-master.claude-code;
     settings = {
+      theme = "dark";
+      teammateMode = "tmux";
       env = {
         CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
       };
@@ -61,12 +65,7 @@ in
       };
       nixos = {
         type = "stdio";
-        command = "nix";
-        args = [
-          "run"
-          "github:utensils/mcp-nixos"
-          "--"
-        ];
+        command = "mcp-nixos";
       };
       chrome-devtools = {
         type = "stdio";
@@ -189,7 +188,7 @@ in
       inherit
         claude-plugins-official
         superpowers
-        firecrawl
+        # firecrawl
         claude-mem
         context-mode
         caveman
@@ -212,9 +211,10 @@ in
       "${claude-plugins-official}/plugins/ralph-loop"
       "${claude-plugins-official}/external_plugins/playwright"
       superpowers
-      firecrawl
+      # firecrawl
       claude-mem
       context-mode
+      caveman
     ];
   };
 }
