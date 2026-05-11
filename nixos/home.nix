@@ -158,45 +158,57 @@
     # ".config/ghostty".source = ~/dotfiles/ghostty;
     ".config/starship" = {
       # source = "${my-dotfiles}/starship";
-      source = "/home/asergi/dotfiles/starship";
-      executable = false;
+      # source = "/home/asergi/dotfiles/starship";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/starship";
       force = true;
-      recursive = true;
     };
     ".config/atuin" = {
       # source = "${my-dotfiles}/starship";
-      source = "/home/asergi/dotfiles/atuin";
-      executable = false;
+      # source = "/home/asergi/dotfiles/atuin";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/atuin";
       force = true;
-      recursive = true;
     };
     ".config/ghostty" = {
       # source = "${my-dotfiles}/ghostty";
-      source = "/home/asergi/dotfiles/ghostty";
-      executable = false;
+      # source = "/home/asergi/dotfiles/ghostty";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/ghostty";
       force = true;
-      recursive = true;
     };
     ".config/hypr" = {
       # source = "${my-dotfiles}/hypr";
-      source = "/home/asergi/dotfiles/hypr";
-      executable = false;
+      # source = "/home/asergi/dotfiles/hypr";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/hypr";
       force = true;
-      recursive = true;
     };
     ".config/waybar" = {
       # source = "${my-dotfiles}/waybar";
-      source = "/home/asergi/dotfiles/waybar";
-      executable = false;
+      # source = "/home/asergi/dotfiles/waybar";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/waybar";
       force = true;
-      recursive = true;
     };
     ".config/swaync" = {
       # source = "${my-dotfiles}/swaync";
-      source = "/home/asergi/dotfiles/swaync";
-      executable = false;
+      # source = "/home/asergi/dotfiles/swaync";
+      # executable = false;
+      # force = true;
+      # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
       force = true;
-      recursive = true;
     };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
