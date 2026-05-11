@@ -2,7 +2,8 @@
   description = "NixOS asergi cofniguration";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-25.11";
+    # nixpkgs.url = "nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:nixos/nixpkgs";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
     nixpkgs-master.url = "github:nixos/nixpkgs";
     nix-snapd.url = "github:nix-community/nix-snapd";
@@ -22,6 +23,7 @@
     # my-dotfiles.url = "https://github.com/sclash/dotfiles";
     # my-dotifiles.inputs = { ref = "master"; };
     # my-dotfiles.url = "github:sclash/dotfiles";
+
     my-dotfiles = {
       url = "github:sclash/dotfiles?ref=home-manager";
       # url = "https://github.com/sclash/dotfiles?ref=master";
@@ -40,7 +42,9 @@
     # url = "github:MalpenZibo/ashell";
     #    };
     #
-    elephant = { url = "github:abenz1267/elephant"; };
+    elephant = {
+      url = "github:abenz1267/elephant";
+    };
 
     walker = {
       url = "github:abenz1267/walker";
@@ -51,15 +55,28 @@
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
   #   , nixd, elephant, walker, my-dotfiles, neovimrc, ... }:
-  outputs = inputs@{ self, flake-parts, nixpkgs, nixpkgs-unstable, nixpkgs-master, home-manager
-    , my-dotfiles, neovimrc, nixd, ... }:
+  outputs =
+    inputs@{
+      self,
+      flake-parts,
+      nixpkgs,
+      nixpkgs-unstable,
+      nixpkgs-master,
+      home-manager,
+      my-dotfiles,
+      neovimrc,
+      nixd,
+      ...
+    }:
 
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
       pkgs = nixpkgs.legacyPackages.${system};
       # pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
-      pkgs-unstable = import nixpkgs-unstable { # <-- changed
+      # pkgs-master = nixpkgs-master.legacyPackages.${system};
+      pkgs-unstable = import nixpkgs-unstable {
+        # <-- changed
         inherit system;
         config.allowUnfree = true;
       };
@@ -69,7 +86,8 @@
       };
       username = "asergi";
 
-    in flake-parts.lib.mkFlake { inherit inputs; } {
+    in
+    flake-parts.lib.mkFlake { inherit inputs; } {
       debug = true;
       systems = [ system ];
       perSystem = { config, ... }: { };
@@ -78,12 +96,12 @@
 
         nixosConfigurations = {
           nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
-
           nixos-os = inputs.nixpkgs.lib.nixosSystem {
             modules = [
               ./configuration.nix
 
               {
+                # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
                 nixpkgs.overlays = [ nixd.overlays.default ];
                 environment.systemPackages = with pkgs; [ nixd ];
               }
@@ -122,7 +140,8 @@
             modules = [
               ./home.nix
               {
-                # home.stateVersion = "25.11";
+                home.stateVersion = "25.11";
+                # home.stateVersion = "25.05";
                 home.username = "asergi";
                 home.homeDirectory = "/home/asergi";
                 nix.package = pkgs.nix;

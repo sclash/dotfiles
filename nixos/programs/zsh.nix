@@ -1,4 +1,11 @@
-{ config, lib, pkgs, unstable-pkgs, my-dotfiles, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstable-pkgs,
+  # my-dotfiles,
+  ...
+}:
 
 {
 
@@ -28,19 +35,19 @@
     history.path = "$HOME/.zsh_history";
     history.size = 10000;
     initContent = ''
-	# [[ -f ~/.secrets/github_token ]] && export GITHUB_PERSONAL_ACCESS_TOKEN=$(cat ~/.secrets/github_token)
+      	# [[ -f ~/.secrets/github_token ]] && export GITHUB_PERSONAL_ACCESS_TOKEN=$(cat ~/.secrets/github_token)
 
-      show_eza_tree() {
-      	level_arg=''${1:-2}
-      	eza --tree --level="$level_arg" --long --icons --git
-      }
+            show_eza_tree() {
+            	level_arg=''${1:-2}
+            	eza --tree --level="$level_arg" --long --icons --git
+            }
 
-      alias lz='show_eza_tree'
+            alias lz='show_eza_tree'
 
-            # uncomment if you want to customize your LS_COLORS
-            # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
-            #LS_COLORS='...'
-            #export LS_COLORS
+                  # uncomment if you want to customize your LS_COLORS
+                  # https://manpages.ubuntu.com/manpages/plucky/en/man5/dir_colors.5.html
+                  #LS_COLORS='...'
+                  #export LS_COLORS
     '';
     # oh-my-zsh = { # "ohMyZsh" without Home Manager
     #   enable = true;
@@ -49,4 +56,3 @@
     # };
   };
 }
-

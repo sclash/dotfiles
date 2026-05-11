@@ -50,7 +50,6 @@ in
 {
   programs.claude-code = {
     enable = true;
-    # package = pkgs-unstable.claude-code;
     package = pkgs-master.claude-code;
     settings = {
       theme = "dark";

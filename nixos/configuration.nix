@@ -12,14 +12,18 @@
   ...
 }:
 {
+  disabledModules = [
+    "services/misc/elephant.nix"
+  ];
   imports = [
     # Include the results of the hardware scan.
-    ./hardware-configuration.nix
+    # ./hardware-configuration.nix
 
     # builtins.readFile "/etc/nixos/hardware-configuration.nix"
-    # /etc/nixos/hardware-configuration.nix
+    /etc/nixos/hardware-configuration.nix
     # ./tmux.nix
     inputs.walker.nixosModules.default
+    # inputs.elephant.nixosModules.default
     inputs.nixd.nixosModules
   ];
 

@@ -61,7 +61,7 @@
       tor-browser
       icu
       nodejs
-      nodePackages_latest.typescript
+      typescript
       glow
       vlc
       hygg
@@ -69,7 +69,7 @@
       gemini-cli
 
       impala
-      neofetch
+      fastfetch
       bluetui
       lazydocker
       lazysql

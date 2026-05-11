@@ -37,7 +37,9 @@
     # url = "github:MalpenZibo/ashell";
     #    };
     #
-    elephant = { url = "github:abenz1267/elephant"; };
+    elephant = {
+      url = "github:abenz1267/elephant";
+    };
 
     walker = {
       url = "github:abenz1267/walker";
@@ -46,60 +48,73 @@
 
   };
 
-  outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
-    , nixd, elephant, walker, my-dotfiles, neovimrc, ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      nixpkgs-unstable,
+      flake-parts,
+      home-manager,
+      nixd,
+      elephant,
+      walker,
+      my-dotfiles,
+      neovimrc,
+      ...
+    }:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
       pkgs = nixpkgs.legacyPackages.${system};
       pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       username = "asergi";
-    in {
+    in
+    {
 
-        nixosConfigurations = {
-          nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+      nixosConfigurations = {
+        nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
-          nixos-os = inputs.nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            modules = [
-              ./configuration.nix
+        nixos-os = inputs.nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            ./configuration.nix
 
-              {
-                nixpkgs.overlays = [ nixd.overlays.default ];
-                environment.systemPackages = with pkgs; [ nixd ];
-              }
+            {
+              nixpkgs.overlays = [ nixd.overlays.default ];
+              environment.systemPackages = with pkgs; [ nixd ];
+            }
 
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                # home-manager.users.asergi = ./home.nix;
-                home-manager.extraSpecialArgs = {
-                  inherit my-dotfiles;
-                  inherit neovimrc;
-                  inherit pkgs-unstable;
-                };
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              # home-manager.users.asergi = ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit my-dotfiles;
+                inherit neovimrc;
+                inherit pkgs-unstable;
+              };
 
-                # Optionally, use home-manager.extraSpecialArgs to pass
-                # arguments to home.nix
-              }
-            ];
-            specialArgs = {
-		username = "asergi";
-              inherit pkgs-unstable;
-              inherit inputs;
-            };
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
+          ];
+          specialArgs = {
+            username = "asergi";
+            inherit pkgs-unstable;
+            inherit inputs;
           };
         };
-
-    homeConfigurations = {
-      "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
-        modules = [
-          ./home.nix
-        ];
-
       };
-    };
 
-  };
+      homeConfigurations = {
+        "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
+          modules = [
+            ./home.nix
+          ];
+
+        };
+      };
+
+    };
 }

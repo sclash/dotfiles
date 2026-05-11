@@ -1,11 +1,18 @@
-{ config, lib, pkgs, unstable-pkgs, my-dotfiles, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  unstable-pkgs,
+  # my-dotfiles,
+  ...
+}:
 
 {
 
   programs.zathura = {
     enable = true;
-		options = {
-			selection-clipboard = "clipboard";
-		};
+    options = {
+      selection-clipboard = "clipboard";
+    };
   };
 }
