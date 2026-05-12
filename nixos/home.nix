@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   pkgs-unstable,
   neovimrc,
@@ -167,12 +168,12 @@
     };
     ".config/atuin" = {
       # source = "${my-dotfiles}/starship";
-      # source = "/home/asergi/dotfiles/atuin";
-      # executable = false;
-      # force = true;
-      # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/atuin";
+      source = "/home/asergi/dotfiles/atuin";
+      executable = false;
       force = true;
+      recursive = true;
+      # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/atuin";
+      # force = true;
     };
     ".config/ghostty" = {
       # source = "${my-dotfiles}/ghostty";
@@ -203,17 +204,26 @@
     };
     ".config/swaync" = {
       # source = "${my-dotfiles}/swaync";
-      # source = "/home/asergi/dotfiles/swaync";
-      # executable = false;
-      # force = true;
-      # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
+      source = "/home/asergi/dotfiles/swaync";
+      executable = false;
       force = true;
+      recursive = true;
+      # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
+      # force = true;
     };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
     # ".config/waybar".source = "${my-dotfiles}/waybar";
   };
+
+  home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore ["linkGeneration"] ''
+    for dir in hypr ghostty waybar starship; do
+      target="$HOME/.config/$dir"
+      if [ -d "$target" ] && [ ! -L "$target" ]; then
+        rm -rf "$target"
+      fi
+    done
+  '';
 
   home.stateVersion = "25.05"; # Did you read the comment?
 }
