@@ -51,6 +51,13 @@
       };
 
       lsp = {
+        zig = {
+          command = [ "zls" ];
+          extensions = [
+            ".zig"
+            ".zon"
+          ];
+        };
         tailwind = {
           command = [
             "npx"

@@ -13,14 +13,20 @@ let
   claude-plugins-official = pkgs.fetchFromGitHub {
     owner = "anthropics";
     repo = "claude-plugins-official";
-    rev = "main";
-    sha256 = "1bj6s86a8mdpg7f7fy2ifmchpc73vmh5bpsyqb2xzfy4grryfncs";
+    rev = "bef2b9b246e2072d167a71b7a8d65718ec55d2ef";
+    sha256 = "1y83wgp737di6d4ldqll2n2svgsyq0d0qp09q0cs8llbhpyq7nfk";
   };
   superpowers = pkgs.fetchFromGitHub {
     owner = "obra";
     repo = "superpowers";
-    rev = "main";
-    sha256 = "0yhvgwadr54njmyn82yxvf8sfwkwr8aw5myv7l7aw2q1aglrgihl";
+    rev = "f2cbfbefebbfef77321e4c9abc9e949826bea9d7";
+    sha256 = "0g1j8k8kqm6zpjb5gdlzcc6r4gm3398mgmrdgmab5wsim0xynkfw";
+  };
+  ecc = pkgs.fetchFromGitHub {
+    owner = "affaan-m";
+    repo = "ECC";
+    rev = "1e8c7e7994223e0ff337d1626cd08e04a1ae67ed";
+    sha256 = "0fpj9rb8yhmqqfnz9qan6p2hxdg3rmx1ja3sy8pxv63c5bfi7icr";
   };
   # firecrawl = pkgs.fetchFromGitHub {
   #   owner = "firecrawl";
@@ -31,20 +37,26 @@ let
   claude-mem = pkgs.fetchFromGitHub {
     owner = "thedotmack";
     repo = "claude-mem";
-    rev = "main";
-    sha256 = "1iarxmaaml4xqpz84cx8lz3finmiiacmrdcx2p61ikygai0gwh2a";
+    rev = "37d24944af5f4afaa0de2b0bd0034bb432f2b714";
+    sha256 = "1kx2sh1sbshalnl25r1q67ggr01884a2j8v88gs074hnf0ml97pa";
   };
   context-mode = pkgs.fetchFromGitHub {
     owner = "mksglu";
     repo = "context-mode";
-    rev = "main";
-    sha256 = "061kz73r12wclyzn95kv5vk94khvr9054i26fik7mfvjqj7xs6hi";
+    rev = "55b51d31db397de04912a8d6953a094f4c388368";
+    sha256 = "1lrk91hr7g6lhh221cfcp9c6xmxy0fvd3pr088cvv3jc74zdnqms";
   };
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
     rev = "84cc3c14fa1e10182adaced856e003406ccd250d";
     sha256 = "0s9ppf7qs5g5h7hrik4rlfdakwnkryp9mrggdpjdd1kbgicniqrk";
+  };
+  wshobson-agents = pkgs.fetchFromGitHub {
+    owner = "wshobson";
+    repo = "agents";
+    rev = "08ded5e7b0fe57e7f40194775885eba539c3d8e7";
+    sha256 = "0wh6ffb495zkakg5gr22na6dqa9jkgcjc74zkqrhpxr4xc4cnwfs";
   };
 in
 {
@@ -100,6 +112,12 @@ in
       };
     };
     lspServers = {
+      zig = {
+        command = "zls";
+        extensionToLanguage = {
+          ".zig" = "zig";
+        };
+      };
       go = {
         args = [ "serve" ];
         command = "gopls";
@@ -189,8 +207,10 @@ in
         superpowers
         # firecrawl
         claude-mem
+        ecc
         context-mode
         caveman
+        wshobson-agents
         ;
     };
     plugins = [
@@ -208,12 +228,16 @@ in
       "${claude-plugins-official}/plugins/playground"
       "${claude-plugins-official}/plugins/learning-output-style"
       "${claude-plugins-official}/plugins/ralph-loop"
+      # "${claude-plugins-official}/plugins/data-engineering"
       "${claude-plugins-official}/external_plugins/playwright"
       superpowers
       # firecrawl
       claude-mem
       context-mode
       caveman
+      wshobson-agents
+      "${wshobson-agents}/plugins/data-engineering"
+      ecc
     ];
   };
 }

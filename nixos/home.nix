@@ -81,6 +81,7 @@
       mcp-nixos
       rust-analyzer
       pyright
+      zls
       gopls
       lua-language-server
       typescript-language-server
@@ -216,7 +217,7 @@
     # ".config/waybar".source = "${my-dotfiles}/waybar";
   };
 
-  home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore ["linkGeneration"] ''
+  home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
     for dir in hypr ghostty waybar starship; do
       target="$HOME/.config/$dir"
       if [ -d "$target" ] && [ ! -L "$target" ]; then
