@@ -38,7 +38,7 @@ local notifications = "swaync-client -t -sw"
 
 
 hl.on("hyprland.start", function ()
-		hl.exec_cmd("hyrplock")
+		hl.exec_cmd("hyprlock")
 		hl.exec_cmd("waybar")
 		hl.exec_cmd("hyprpaper")
 		hl.exec_cmd("elephant")
