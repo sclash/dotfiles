@@ -547,23 +547,28 @@
   # resolve correctly relative to the config directory.
   home.file = {
     ".config/opencode/prompts" = {
-      source = "/home/asergi/dotfiles/opencode/prompts";
-      recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/prompts";
+      force = true;
+      # recursive = true;
     };
     ".config/opencode/commands" = {
-      source = "/home/asergi/dotfiles/opencode/commands";
-      recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/commands";
+      force = true;
+      # recursive = true;
     };
     ".config/opencode/instructions" = {
-      source = "/home/asergi/dotfiles/opencode/instructions";
-      recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/instructions";
+      force = true;
+      # recursive = true;
     };
     ".config/opencode/skills" = {
-      source = "/home/asergi/dotfiles/opencode/skills";
-      recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/skills";
+      force = true;
+      # recursive = true;
     };
     ".config/opencode/AGENTS.md" = {
-      source = "/home/asergi/dotfiles/opencode/AGENTS.md";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/AGENTS.md";
+      force = true;
     };
   };
 }
