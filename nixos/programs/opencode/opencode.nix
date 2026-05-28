@@ -547,7 +547,7 @@
   # resolve correctly relative to the config directory.
   home.file = {
     ".config/opencode/opencode.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/opencode.json";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/opencode.json";
       force = true;
     };
     # ".config/opencode/agents" = {
@@ -555,6 +555,11 @@
     #   force = true;
     #   # recursive = true;
     # };
+    ".config/opencode/scripts" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/scripts";
+      force = true;
+      # recursive = true;
+    };
     ".config/opencode/prompts" = {
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/prompts";
       force = true;
