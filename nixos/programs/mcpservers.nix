@@ -19,14 +19,16 @@
 
       playwright = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "npx";
         args = [ "@playwright/mcp@latest" ];
       };
 
       shadcn-vue = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "bunx";
         args = [ "--bun" "shadcn-vue@latest" "mcp" ];
       };
@@ -40,7 +42,8 @@
 
       chrome-devtools = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "npx";
         args = [
           "-y"
@@ -50,7 +53,8 @@
 
       github = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "npx";
         args = [
           "-y"
@@ -76,6 +80,7 @@
 
       context-mode = {
         type = "local";
+        enabled = true;
         command = "npx";
         args = [
           "-y"

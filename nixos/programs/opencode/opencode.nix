@@ -87,17 +87,17 @@
       instructions = [
         "AGENTS.md"
         "instructions/INSTRUCTIONS.md"
-        "skills/tdd-workflow/SKILL.md"
-        "skills/security-review/SKILL.md"
-        "skills/coding-standards/SKILL.md"
-        "skills/frontend-patterns/SKILL.md"
-        "skills/frontend-slides/SKILL.md"
-        "skills/backend-patterns/SKILL.md"
-        "skills/e2e-testing/SKILL.md"
-        "skills/verification-loop/SKILL.md"
-        "skills/api-design/SKILL.md"
-        "skills/strategic-compact/SKILL.md"
-        "skills/eval-harness/SKILL.md"
+        # "skills/tdd-workflow/SKILL.md"
+        # "skills/security-review/SKILL.md"
+        # "skills/coding-standards/SKILL.md"
+        # "skills/frontend-patterns/SKILL.md"
+        # "skills/frontend-slides/SKILL.md"
+        # "skills/backend-patterns/SKILL.md"
+        # "skills/e2e-testing/SKILL.md"
+        # "skills/verification-loop/SKILL.md"
+        # "skills/api-design/SKILL.md"
+        # "skills/strategic-compact/SKILL.md"
+        # "skills/eval-harness/SKILL.md"
       ];
 
       agent = {
@@ -546,28 +546,41 @@
   # so that {file:prompts/...}, {file:commands/...}, and instructions
   # resolve correctly relative to the config directory.
   home.file = {
+    # ".config/opencode/opencode.json" = {
+    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/opencode.json";
+    #   force = true;
+    # };
+    # ".config/opencode/agenst" = {
+    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agenst";
+    #   force = true;
+    #   # recursive = true;
+    # };
     ".config/opencode/prompts" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/prompts";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/prompts";
       force = true;
       # recursive = true;
     };
     ".config/opencode/commands" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/commands";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/commands";
       force = true;
       # recursive = true;
     };
     ".config/opencode/instructions" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/instructions";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/instructions";
       force = true;
       # recursive = true;
     };
     ".config/opencode/skills" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/skills";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills";
       force = true;
       # recursive = true;
     };
     ".config/opencode/AGENTS.md" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/AGENTS.md";
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/AGENTS.md";
+      force = true;
+    };
+    ".config/opencode/CLAUDE.md" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/CLAUDE.md";
       force = true;
     };
   };

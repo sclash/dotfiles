@@ -283,7 +283,7 @@
       undetected-chromedriver
       google-chrome
 
-      firefox
+      firefox-bin
       # git
       nix-prefetch-git
       lazygit
