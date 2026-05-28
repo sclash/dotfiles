@@ -546,12 +546,12 @@
   # so that {file:prompts/...}, {file:commands/...}, and instructions
   # resolve correctly relative to the config directory.
   home.file = {
-    # ".config/opencode/opencode.json" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/opencode.json";
-    #   force = true;
-    # };
-    # ".config/opencode/agenst" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agenst";
+    ".config/opencode/opencode.json" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/opencode/opencode.json";
+      force = true;
+    };
+    # ".config/opencode/agents" = {
+    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agents";
     #   force = true;
     #   # recursive = true;
     # };

@@ -232,7 +232,12 @@
 				"write": true,
 				"edit": true,
 				"bash": true
+			},
+			"permission": {
+				"playwrigth_*": "allow",
+				"chrome-devtools_*": "allow"
 			}
+			
 		},
 		"doc-updater": {
 			"description": "Documentation and codemap specialist. Use for updating codemaps and documentation.",
@@ -472,7 +477,7 @@
 			"description": "Generate and run E2E tests with Playwright",
 			"template": "{file:commands/e2e.md}\n\n$ARGUMENTS",
 			"agent": "e2e-runner",
-			"subtask": true
+			"subtask": true,
 		},
 		"refactor-clean": {
 			"description": "Remove dead code and consolidate duplicates",
