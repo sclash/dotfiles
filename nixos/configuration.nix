@@ -200,6 +200,11 @@
                    	eval "$(atuin init zsh)"
       		'';
   };
+  programs.wireshark = {
+    enable = true;
+    usbmon.enable = true;
+    dumpcap.enable = true;
+  };
   # programs.zsh = {
   #   enable = true;
   #   enableCompletion = true;
