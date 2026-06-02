@@ -67,7 +67,7 @@
       vlc
       hygg
       flameshot
-      flameggraph
+      flamegraph
       gemini-cli
 
       impala
