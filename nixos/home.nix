@@ -32,6 +32,7 @@
     ./programs/atuin.nix
     ./programs/obs.nix
     ./programs/pandoc.nix
+    ./programs/wireshark.nix
     ./programs/claude-code/claude-code.nix
     ./programs/mcpservers.nix
     ./programs/zathura.nix
@@ -67,6 +68,7 @@
       vlc
       hygg
       flameshot
+      flameggraph
       gemini-cli
 
       impala

@@ -185,6 +185,7 @@
       "input"
       "wheel"
       "docker"
+      "wireshark"
     ]; # Enable ‘sudo’ for the user.
     # shell = pkgs.zsh;
     # packages = with pkgs; [ tree ];
@@ -317,6 +318,8 @@
       libgcc
       bear
       gdb
+      rr
+      perf
       gnumake
       valgrind
 
