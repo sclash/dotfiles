@@ -81,7 +81,7 @@ keybind = ctrl+alt+up=next_tab
 # keybind = ctrl+alt+j=goto_split:down
 #
 #
-keybind = alt+t=toggle_tab_overview
+# keybind = alt+t=toggle_tab_overview
 
 ## Split window (use simpler key combos)
 keybind = ctrl+shift+backslash=new_split:right

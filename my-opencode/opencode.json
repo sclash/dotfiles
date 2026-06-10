@@ -1,5 +1,7 @@
 {
 	"$schema": "https://opencode.ai/config.json",
+	"model": "opencode/deepseek-v4-flash-free",
+	"small_model": "opencode/deepseek-v4-flash-free",
 	"provider": {
 		"llama.cpp": {
 			"npm": "@ai-sdk/openai-compatible",
@@ -11,6 +13,11 @@
 				"unsloth/Qwen3.6-27B-GGUF": {
 					"name": "Qwen3.6-27B"
 				}
+			}
+		},
+		"openrouter": {
+			"models": {
+				"moonshotai/kimi-k2.6:free": {}
 			}
 		}
 	},
@@ -28,7 +35,6 @@
 				".css",
 				".htmx",
 				".vue",
-				".htmx",
 				".jsx",
 				".tsx"
 			]
@@ -143,304 +149,277 @@
 		"build": {
 			"description": "Primary coding agent for development work",
 			"mode": "primary",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
-			"tools": {
-				"write": true,
-				"edit": true,
-				"bash": true,
-				"read": true,
-				"changed-files": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"planner": {
 			"description": "Expert planning specialist for complex features and refactoring. Use for implementation planning, architectural changes, or complex refactoring.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/planner.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"architect": {
 			"description": "Software architecture specialist for system design, scalability, and technical decision-making.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/architect.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"code-reviewer": {
 			"description": "Expert code review specialist. Reviews code for quality, security, and maintainability. Use immediately after writing or modifying code.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/code-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"security-reviewer": {
 			"description": "Security vulnerability detection and remediation specialist. Use after writing code that handles user input, authentication, API endpoints, or sensitive data.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/security-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": true,
-				"edit": true
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "allow",
+				"edit": "allow"
 			}
 		},
 		"tdd-guide": {
 			"description": "Test-Driven Development specialist enforcing write-tests-first methodology. Use when writing new features, fixing bugs, or refactoring code. Ensures 80%+ test coverage.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/tdd-guide.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"build-error-resolver": {
 			"description": "Build and TypeScript error resolution specialist. Use when build fails or type errors occur. Fixes build/type errors only with minimal diffs.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/build-error-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"e2e-runner": {
 			"description": "End-to-end testing specialist using Playwright. Generates, maintains, and runs E2E tests for critical user flows.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/e2e-runner.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
-			},
 			"permission": {
-				"playwrigth_*": "allow",
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow",
+				"playwright_*": "allow",
 				"chrome-devtools_*": "allow"
 			}
-			
 		},
 		"doc-updater": {
 			"description": "Documentation and codemap specialist. Use for updating codemaps and documentation.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/doc-updater.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"refactor-cleaner": {
 			"description": "Dead code cleanup and consolidation specialist. Use for removing unused code, duplicates, and refactoring.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/refactor-cleaner.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"go-reviewer": {
 			"description": "Expert Go code reviewer specializing in idiomatic Go, concurrency patterns, error handling, and performance.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/go-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"go-build-resolver": {
 			"description": "Go build, vet, and compilation error resolution specialist. Fixes Go build errors with minimal changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/go-build-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"database-reviewer": {
 			"description": "PostgreSQL database specialist for query optimization, schema design, security, and performance. Incorporates Supabase best practices.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/database-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"cpp-reviewer": {
 			"description": "Expert C++ code reviewer specializing in memory safety, modern C++ idioms, concurrency, and performance. Use for all C++ code changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/cpp-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"cpp-build-resolver": {
 			"description": "C++ build, CMake, and compilation error resolution specialist. Fixes build errors, linker issues, and template errors with minimal changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/cpp-build-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"docs-lookup": {
 			"description": "Documentation specialist using Context7 MCP to fetch current library and API documentation with code examples.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/docs-lookup.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"harness-optimizer": {
 			"description": "Analyze and improve the local agent harness configuration for reliability, cost, and throughput.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/harness-optimizer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"edit": true
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"edit": "allow",
+				"write": "deny"
 			}
 		},
 		"java-reviewer": {
 			"description": "Expert Java and Spring Boot code reviewer specializing in layered architecture, JPA patterns, security, and concurrency.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/java-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"java-build-resolver": {
 			"description": "Java/Maven/Gradle build, compilation, and dependency error resolution specialist. Fixes build errors with minimal changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/java-build-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"kotlin-reviewer": {
 			"description": "Kotlin and Android/KMP code reviewer. Reviews Kotlin code for idiomatic patterns, coroutine safety, Compose best practices.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/kotlin-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"kotlin-build-resolver": {
 			"description": "Kotlin/Gradle build, compilation, and dependency error resolution specialist. Fixes Kotlin build errors with minimal changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/kotlin-build-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		},
 		"loop-operator": {
 			"description": "Operate autonomous agent loops, monitor progress, and intervene safely when loops stall.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/loop-operator.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"edit": true
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"edit": "allow",
+				"write": "deny"
 			}
 		},
 		"python-reviewer": {
 			"description": "Expert Python code reviewer specializing in PEP 8 compliance, Pythonic idioms, type hints, security, and performance.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/python-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"rust-reviewer": {
 			"description": "Expert Rust code reviewer specializing in idiomatic Rust, ownership, lifetimes, concurrency, and performance.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/rust-reviewer.txt}",
-			"tools": {
-				"read": true,
-				"bash": true,
-				"write": false,
-				"edit": false
+			"permission": {
+				"read": "allow",
+				"bash": "allow",
+				"write": "deny",
+				"edit": "deny"
 			}
 		},
 		"rust-build-resolver": {
 			"description": "Rust build, Cargo, and compilation error resolution specialist. Fixes Rust build errors with minimal changes.",
 			"mode": "subagent",
-			"model": "llama.cpp/unsloth/Qwen3.6-27B-GGUF",
 			"prompt": "{file:prompts/agents/rust-build-resolver.txt}",
-			"tools": {
-				"read": true,
-				"write": true,
-				"edit": true,
-				"bash": true
+			"permission": {
+				"read": "allow",
+				"write": "allow",
+				"edit": "allow",
+				"bash": "allow"
 			}
 		}
 	},
@@ -479,7 +458,7 @@
 			"description": "Generate and run E2E tests with Playwright",
 			"template": "{file:commands/e2e.md}\n\n$ARGUMENTS",
 			"agent": "e2e-runner",
-			"subtask": true,
+			"subtask": true
 		},
 		"refactor-clean": {
 			"description": "Remove dead code and consolidate duplicates",

@@ -318,9 +318,9 @@
       gcc
       glib
       glibc
-      clang
-      clang-tools
-      libclang
+      llvmPackages.clang
+      llvmPackages.clang-tools
+      llvmPackages.libclang
       libgcc
       bear
       gdb

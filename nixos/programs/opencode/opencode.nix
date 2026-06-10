@@ -550,6 +550,10 @@
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/opencode.json";
       force = true;
     };
+    ".local/share/opencode/auth.json" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/openrouter-auth.json";
+      force = true;
+    };
     # ".config/opencode/agents" = {
     #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agents";
     #   force = true;
