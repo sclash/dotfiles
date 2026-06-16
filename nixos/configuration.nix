@@ -311,16 +311,17 @@
       # nodejs
       # nodePackages.typescript
 
-      # llvmPackages_latest.lldb
-      # llvmPackages_latest.libllvm
-      # llvmPackages_latest.libcxx
-      # llvmPackages_latest.clang
+      # llvmPackages.clang
+      # llvmPackages.clang-tools
+      # llvmPackages.libclang
+
+      llvmPackages_latest.lldb
+      llvmPackages_latest.libllvm
+      llvmPackages_latest.libcxx
+      llvmPackages_latest.clang
       gcc
       glib
       glibc
-      llvmPackages.clang
-      llvmPackages.clang-tools
-      llvmPackages.libclang
       libgcc
       bear
       gdb
