@@ -74,6 +74,10 @@
     "nix-command"
     "flakes"
   ];
+  # Cap build parallelism to avoid OOM on 7.6GB RAM.
+  # max-jobs = concurrent derivations; cores = threads per derivation.
+  nix.settings.max-jobs = 2;
+  nix.settings.cores = 4;
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
