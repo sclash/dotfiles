@@ -564,6 +564,11 @@
       force = true;
       # recursive = true;
     };
+    ".config/opencode/agents" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agents";
+      force = true;
+      # recursive = true;
+    };
     ".config/opencode/prompts" = {
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/prompts";
       force = true;
