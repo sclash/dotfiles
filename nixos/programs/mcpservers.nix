@@ -16,7 +16,11 @@
         command = "markitdown-mcp";
         args = [ ];
       };
-
+      openrouter = {
+        type = "remote";
+        enabled = true;
+        url = "https://mcp.openrouter.ai/mcp";
+      };
       playwright = {
         type = "local";
         enabled = false;
@@ -24,13 +28,16 @@
         command = "npx";
         args = [ "@playwright/mcp@latest" ];
       };
-
       shadcn-vue = {
         type = "local";
         enabled = false;
         disabled = true;
         command = "bunx";
-        args = [ "--bun" "shadcn-vue@latest" "mcp" ];
+        args = [
+          "--bun"
+          "shadcn-vue@latest"
+          "mcp"
+        ];
       };
 
       nixos = {
