@@ -11,8 +11,11 @@
 
   programs.pandoc = {
     enable = true;
+    package = pkgs.pandoc;
     defaults = {
       pdf-engine = "xelatex";
     };
   };
+
+  home.packages = [ pkgs.texlive.combined.scheme-small ];
 }
