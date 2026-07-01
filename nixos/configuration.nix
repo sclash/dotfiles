@@ -376,6 +376,7 @@
       starship
       atuin
       xclip
+      wl-clipboard
     ])
 
     ++
