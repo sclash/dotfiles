@@ -331,6 +331,7 @@
       gdb
       rr
       perf
+      hyperfine
       gnumake
       valgrind
 
