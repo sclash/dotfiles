@@ -95,6 +95,7 @@
     ++ (with pkgs-unstable; [
       markitdown-mcp
       rtk
+      zennotes-desktop
     ]);
 
   programs.git = {
