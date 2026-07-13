@@ -239,5 +239,10 @@ in
       "${wshobson-agents}/plugins/data-engineering"
       ecc
     ];
+
+    # ".claude/skills/explore-codebase" = {
+    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.claude/explore-codebase";
+    #   force = true;
+    # };
   };
 }

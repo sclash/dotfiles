@@ -48,6 +48,7 @@
   home.sessionPath = [
     "$HOME/.local/bin"
   ];
+  home.enableNixpkgsReleaseCheck = false;
 
   # --- Packages ---
   # Install user-specific packages
