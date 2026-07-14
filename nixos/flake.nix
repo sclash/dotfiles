@@ -2,8 +2,8 @@
   description = "NixOS asergi cofniguration";
 
   inputs = {
-    # nixpkgs.url = "nixpkgs/nixos-26.05";
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "nixpkgs/nixos-26.05";
+    # nixpkgs.url = "github:nixos/nixpkgs";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
     nixpkgs-master.url = "github:nixos/nixpkgs";
     nix-snapd.url = "github:nix-community/nix-snapd";

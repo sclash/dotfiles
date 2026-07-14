@@ -89,12 +89,12 @@
       typescript-language-server
       vue-language-server
       tailwindcss-language-server
-      python313Packages.markitdown
+      # python313Packages.markitdown
       playwright
 
     ])
     ++ (with pkgs-unstable; [
-      markitdown-mcp
+      # markitdown-mcp
       rtk
       zennotes-desktop
     ]);

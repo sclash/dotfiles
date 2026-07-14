@@ -72,7 +72,12 @@ in
     };
     mcpServers = {
       markitdown = {
-        command = "markitdown-mcp";
+        type = "stdio";
+        command = "nix";
+        args = [
+          "run"
+          "nixpkgs#markitdown-mcp"
+        ];
       };
       nixos = {
         type = "stdio";
