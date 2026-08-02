@@ -13,20 +13,20 @@ let
   claude-plugins-official = pkgs.fetchFromGitHub {
     owner = "anthropics";
     repo = "claude-plugins-official";
-    rev = "bef2b9b246e2072d167a71b7a8d65718ec55d2ef";
-    sha256 = "1y83wgp737di6d4ldqll2n2svgsyq0d0qp09q0cs8llbhpyq7nfk";
+    rev = "d620fb7d8349b66bbe281ea74cd346287abb6a48";
+    sha256 = "14340nvprnam4ri51wcjdzrsxc9xd0sl2syj12gid1p1xak29ma5";
   };
   superpowers = pkgs.fetchFromGitHub {
     owner = "obra";
     repo = "superpowers";
-    rev = "f2cbfbefebbfef77321e4c9abc9e949826bea9d7";
-    sha256 = "0g1j8k8kqm6zpjb5gdlzcc6r4gm3398mgmrdgmab5wsim0xynkfw";
+    rev = "44c9b2d6e889982ac18c27d05a19fefe335194e1";
+    sha256 = "0xsx1ns30l084j3wqlmsmd54jcdnbi9npz0ccvws1nnbncfpwyby";
   };
   ecc = pkgs.fetchFromGitHub {
     owner = "affaan-m";
     repo = "ECC";
-    rev = "1e8c7e7994223e0ff337d1626cd08e04a1ae67ed";
-    sha256 = "0fpj9rb8yhmqqfnz9qan6p2hxdg3rmx1ja3sy8pxv63c5bfi7icr";
+    rev = "e4e4163101f162881e628f300a9ca4e6a940bcea";
+    sha256 = "0r6dqb5wxd98w390famwn4j2z0fd3hxl2dz03423x6lb6s0hqlgf";
   };
   # firecrawl = pkgs.fetchFromGitHub {
   #   owner = "firecrawl";
@@ -37,26 +37,26 @@ let
   claude-mem = pkgs.fetchFromGitHub {
     owner = "thedotmack";
     repo = "claude-mem";
-    rev = "37d24944af5f4afaa0de2b0bd0034bb432f2b714";
-    sha256 = "1kx2sh1sbshalnl25r1q67ggr01884a2j8v88gs074hnf0ml97pa";
+    rev = "a90066f9cf82cc936dd2d841319bb6b19658f7d4";
+    sha256 = "1rl03shf7afi5d4rw2nbji9zjrcn0djjqi3998cdzi0jgi6qj637";
   };
   context-mode = pkgs.fetchFromGitHub {
     owner = "mksglu";
     repo = "context-mode";
-    rev = "55b51d31db397de04912a8d6953a094f4c388368";
-    sha256 = "1lrk91hr7g6lhh221cfcp9c6xmxy0fvd3pr088cvv3jc74zdnqms";
+    rev = "e27c14331179507978fcc8fb75a2318ae647bf4a";
+    sha256 = "1md12lsha4js4dbmvgl2yphr3b2rhha8y3rzp97m658wmql2lh33";
   };
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
-    rev = "84cc3c14fa1e10182adaced856e003406ccd250d";
-    sha256 = "0s9ppf7qs5g5h7hrik4rlfdakwnkryp9mrggdpjdd1kbgicniqrk";
+    rev = "0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0";
+    sha256 = "0sjk5l6gy1rs7chjv18dzhhim6vvw6gm1p0x2akj0jgqgz3lg92n";
   };
   wshobson-agents = pkgs.fetchFromGitHub {
     owner = "wshobson";
     repo = "agents";
-    rev = "08ded5e7b0fe57e7f40194775885eba539c3d8e7";
-    sha256 = "0wh6ffb495zkakg5gr22na6dqa9jkgcjc74zkqrhpxr4xc4cnwfs";
+    rev = "0sjk5l6gy1rs7chjv18dzhhim6vvw6gm1p0x2akj0jgqgz3lg92n";
+    sha256 = "05axmkblh6hq0q3czsyalksiwq1z5gvllp18sa6c499fgmsl3fpz";
   };
 in
 {

@@ -118,7 +118,9 @@
                   inherit pkgs-master;
                 };
                 # home-manager.backupCommand = "mv $source $target";
-                home-manager.backupCommand = "true";
+                # home-manager.backupCommand = "false";
+                home-manager.backupFileExtension = "hm-backup";
+                home-manager.overwriteBackup = true;
 
                 # Optionally, use home-manager.extraSpecialArgs to pass
                 # arguments to home.nix
