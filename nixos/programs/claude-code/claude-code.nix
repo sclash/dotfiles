@@ -46,6 +46,13 @@ let
     rev = "e27c14331179507978fcc8fb75a2318ae647bf4a";
     sha256 = "1md12lsha4js4dbmvgl2yphr3b2rhha8y3rzp97m658wmql2lh33";
   };
+  # Upstream shipped a self-referential `plugins/context-mode -> ..` symlink
+  # that made opencode/claude recurse into an infinite symlink loop (ELOOP).
+  # Strip it so generated generations never carry the loop.
+  # context-mode-clean = pkgs.runCommand "context-mode-clean" { } ''
+  #   cp -r --no-preserve=all ${context-mode} $out
+  #   rm -f "$out/plugins/context-mode"
+  # '';
   caveman = pkgs.fetchFromGitHub {
     owner = "JuliusBrussee";
     repo = "caveman";
@@ -55,7 +62,7 @@ let
   wshobson-agents = pkgs.fetchFromGitHub {
     owner = "wshobson";
     repo = "agents";
-    rev = "0sjk5l6gy1rs7chjv18dzhhim6vvw6gm1p0x2akj0jgqgz3lg92n";
+    rev = "c4b82b0ad771190355eb8e204b1329732a18449a";
     sha256 = "05axmkblh6hq0q3czsyalksiwq1z5gvllp18sa6c499fgmsl3fpz";
   };
 in
@@ -213,6 +220,7 @@ in
         # firecrawl
         claude-mem
         ecc
+        # context-mode-clean
         context-mode
         caveman
         wshobson-agents
@@ -238,6 +246,7 @@ in
       superpowers
       # firecrawl
       claude-mem
+      # context-mode-clean
       context-mode
       caveman
       wshobson-agents
