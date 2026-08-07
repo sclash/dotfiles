@@ -43,7 +43,7 @@
 	"mcp": {
 		"markitdown": {
 			"type": "local",
-			"enabled": true,
+			"enabled": false,
 			"command": [
 				"nix",
 				"run",
@@ -53,7 +53,7 @@
 		"openrouter": {
 			"type": "remote",
 			"url": "https://mcp.openrouter.ai/mcp",
-			"enabled": true
+			"enabled": false
 		},
 		"playwright": {
 			"type": "local",
@@ -78,7 +78,7 @@
 		},
 		"nixos": {
 			"type": "local",
-			"enabled": true,
+			"enabled": false,
 			"command": [
 				"nix",
 				"run",
@@ -120,7 +120,7 @@
 			]
 		},
 		"context-mode": {
-			"enabled": true,
+			"enabled": false,
 			"type": "local",
 			"command": [
 				"npx",
@@ -137,18 +137,7 @@
 	],
 	"instructions": [
 		"AGENTS.md",
-		"instructions/INSTRUCTIONS.md",
-		"skills/tdd-workflow/SKILL.md",
-		"skills/security-review/SKILL.md",
-		"skills/coding-standards/SKILL.md",
-		"skills/frontend-patterns/SKILL.md",
-		"skills/frontend-slides/SKILL.md",
-		"skills/backend-patterns/SKILL.md",
-		"skills/e2e-testing/SKILL.md",
-		"skills/verification-loop/SKILL.md",
-		"skills/api-design/SKILL.md",
-		"skills/strategic-compact/SKILL.md",
-		"skills/eval-harness/SKILL.md"
+		"instructions/INSTRUCTIONS.md"
 	],
 	"agent": {
 		"build": {

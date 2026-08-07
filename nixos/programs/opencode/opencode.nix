@@ -8,7 +8,12 @@
 {
   programs.opencode = {
     enable = true;
-    package = pkgs-master.opencode;
+    package = (pkgs-master.opencode.overrideAttrs (old: {
+      installPhase = old.installPhase + ''
+        wrapProgram $out/bin/opencode \
+          --set OPENCODE_DISABLE_CLAUDE_CODE_SKILLS true
+      '';
+    }));
     # enableMcpIntegration = true;
     # settings = {
     #   provider = {
