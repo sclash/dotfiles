@@ -17,7 +17,7 @@
 		},
 		"openrouter": {
 			"models": {
-				"moonshotai/kimi-k2.6:free": {}
+				"moonshotai/kimi-k2.6:free": {},
 			}
 		}
 	},
@@ -286,6 +286,37 @@
 		}
 	},
 	"permission": {
-		"mcp_*": "ask"
+		"mcp_*": "ask",
+		"bash": {
+			"*": "allow",
+			"*pip install *": "ask",
+			"*pip3 install *": "ask",
+			"*python -m pip install *": "ask",
+			"*python3 -m pip install *": "ask",
+			"*uv tool *": "ask",
+			"*uv pip install *": "ask",
+			"*npm install -g *": "ask",
+			"*npm i -g *": "ask",
+			"*npm add -g *": "ask",
+			"*npm uninstall -g *": "ask",
+			"*npm update -g *": "ask",
+			"*pnpm add -g *": "ask",
+			"*pnpm install -g *": "ask",
+			"*yarn global *": "ask",
+			"*cargo install *": "ask",
+			"*go install *": "ask",
+			"*gem install *": "ask",
+			"*apt install *": "ask",
+			"*apt-get install *": "ask",
+			"*dnf install *": "ask",
+			"*brew install *": "ask",
+			"*pacman -S *": "ask",
+			"*yay -S *": "ask",
+			"*paru -S *": "ask",
+			"*nix-env *": "ask",
+			"*nix profile install *": "ask",
+			"*nix-channel --add *": "ask",
+			"*sudo *": "ask"
+		}
 	}
 }

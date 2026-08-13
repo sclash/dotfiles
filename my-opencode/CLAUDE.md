@@ -6,13 +6,17 @@ If there are any conflicts in a project, what follows should always have precede
 ---
 
 ## REMEBER
-You're using `NixOS` with develop features enabled. If the system does not currently meet requirements you should always prefer to creat a new isolated shell with a `flake.nix`
-to enter in with `nix develop --command bash`. But before doing this Always ask for my permission first. You have the `nixos` MCP to refer too for corret nix commands.
-
+You're using `NixOS` with develop features enabled. You have the `nixos` MCP to refer too for corret nix commands.
+- NixOs is declarative DO NOT EVER ACT in an imperative manner. (Refer to the [DO NOT EVER](#do-not-ever) section just below) 
+- If the system does not currently meet requirements you should NEVER make changes to the system. 
+- When absolutely necessary always prefer temporary solutions (pick the more convenient according to the use case):
+    But before doing this ALWAYS ask for my permission first.     
+    - use `npx`,`uvx`, `nixpkgs#<NIX_PACKAGE_NAME>`
+    - create a new isolated shell with a `flake.nix` to enter in with `nix develop --command bash`. 
 
 ## DO NOT EVER 
 - Make change to my system, configuration files, new software installation wihout my approval first.
-- Avoid global installations like `npm -g ...` or `python -m pip install ...`
+- Avoid global installations like `npm -g ...` or `python -m pip install ...` or `nix-env ...` `uv tool`
 
 ## Philosophy
 
