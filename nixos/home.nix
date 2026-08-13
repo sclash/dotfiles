@@ -70,6 +70,7 @@
       flameshot
       flamegraph
       gemini-cli
+      ffmpeg
 
       impala
       fastfetch
