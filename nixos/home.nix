@@ -80,18 +80,18 @@
       lazyssh
       lazycli
 
-      # for Claude-Code
-      mcp-nixos
-      rust-analyzer
-      pyright
-      zls
-      gopls
-      lua-language-server
-      typescript-language-server
-      vue-language-server
-      tailwindcss-language-server
+      ## for Claude-Code
+      # mcp-nixos
+      # rust-analyzer
+      # pyright
+      # zls
+      # gopls
+      # lua-language-server
+      # typescript-language-server
+      # vue-language-server
+      # tailwindcss-language-server
       # python313Packages.markitdown
-      playwright
+      # playwright
     ])
     ++ (with pkgs-unstable; [
       # markitdown-mcp
