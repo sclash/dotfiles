@@ -60,6 +60,14 @@
 				"arxiv-mcp-server"
 			]
 		},
+		"graphify": {
+			"type": "local",
+			"enabled": false,
+			"command": [
+				"graphify-mcp",
+				"./graphify-out/graph.json",
+			]
+		},
 		"openrouter": {
 			"type": "remote",
 			"url": "https://mcp.openrouter.ai/mcp",
