@@ -274,7 +274,9 @@
 
     ++
 
-      (with pkgs-unstable; [ uv ]);
+      (with pkgs-unstable; [
+        # uv
+      ]);
 
   environment.systemPackages =
     (with pkgs; [
@@ -390,7 +392,7 @@
         fzf
         universal-ctags
 
-        uv
+        # uv
         python3
         bun
         go

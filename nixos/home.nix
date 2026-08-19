@@ -28,6 +28,7 @@
     ./programs/tmux/tmux.nix
     ./programs/swaync.nix
     ./programs/zsh.nix
+    ./programs/uv/uv.nix
     ./programs/starship.nix
     ./programs/atuin.nix
     ./programs/obs.nix

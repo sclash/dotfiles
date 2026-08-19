@@ -50,6 +50,16 @@
 				"nixpkgs#markitdown-mcp"
 			]
 		},
+		"arxiv": {
+			"type": "local",
+			"enabled": false,
+			"command": [
+				"uvx",
+				"--from",
+				"arxiv-mcp-server[pdf]",
+				"arxiv-mcp-server"
+			]
+		},
 		"openrouter": {
 			"type": "remote",
 			"url": "https://mcp.openrouter.ai/mcp",
