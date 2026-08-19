@@ -81,8 +81,8 @@
       lazycli
 
       ## for Claude-Code
+      rust-analyzer
       # mcp-nixos
-      # rust-analyzer
       # pyright
       # zls
       # gopls
