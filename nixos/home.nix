@@ -127,10 +127,10 @@
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
     ".config/nvim" = {
-      source = "${neovimrc}";
+      source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
       # source = "/home/asergi/neovimrc";
-      executable = false;
-      recursive = true;
+      # executable = false;
+      # recursive = true;
       force = true;
     };
     # Example: symlink a script from the repo to ~/.local/bin
