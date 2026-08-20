@@ -306,7 +306,7 @@
 	"permission": {
 		"mcp_*": "ask",
 		"bash": {
-			"*": "allow",
+			"*": "ask",
 			"*pip install *": "ask",
 			"*pip3 install *": "ask",
 			"*python -m pip install *": "ask",
