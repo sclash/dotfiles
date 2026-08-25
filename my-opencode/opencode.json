@@ -17,7 +17,7 @@
 		},
 		"openrouter": {
 			"models": {
-				"moonshotai/kimi-k2.6:free": {},
+				"moonshotai/kimi-k2.6:free": {}
 			}
 		}
 	},
@@ -96,7 +96,7 @@
 		},
 		"nixos": {
 			"type": "local",
-			"enabled": false,
+			"enabled": true,
 			"command": [
 				"nix",
 				"run",
@@ -117,13 +117,12 @@
 			"type": "local",
 			"enabled": false,
 			"command": [
-				"npx",
-				"-y",
-				"@modelcontextprotocol/server-github"
-			],
-			"environment": {
-				"GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
-			}
+				"nix",
+				"run",
+				"nixpkgs#github-mcp-server",
+				"--",
+				"stdio"
+			]
 		},
 		"filesystem": {
 			"type": "local",
@@ -138,7 +137,7 @@
 			]
 		},
 		"context-mode": {
-			"enabled": false,
+			"enabled": true,
 			"type": "local",
 			"command": [
 				"npx",
@@ -306,7 +305,6 @@
 	"permission": {
 		"mcp_*": "ask",
 		"bash": {
-			"*": "ask",
 			"*pip install *": "ask",
 			"*pip3 install *": "ask",
 			"*python -m pip install *": "ask",

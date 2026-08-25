@@ -1,7 +1,7 @@
 # Agents guidelines
 
 > This file extends [./CLAUDE.md](./CLAUDE.md) with Agents specific contents.
-
+> This file extends [./contex-mode.md](./context-mode.md) with context-mode specific instructions
 
 ## Available Agents
 
