@@ -7,5 +7,9 @@
       owner = "asergi";
       mode = "0600";
     };
+    secrets.openrouter = {
+      owner = "asergi";
+      mode = "0600";
+    };
   };
 }

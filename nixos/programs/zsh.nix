@@ -35,9 +35,11 @@
     history.path = "$HOME/.zsh_history";
     history.size = 10000;
     initContent = ''
-      	# [[ -f ~/.secrets/github_token ]] && export GITHUB_PERSONAL_ACCESS_TOKEN=$(cat ~/.secrets/github_token)
 		if [ -f /run/secrets/github_pat ]; then
       			export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_pat)"
+    		fi
+		if [ -f /run/secrets/openrouter ]; then
+      			export OPENROUTER_API="$(cat /run/secrets/openrouter)"
     		fi
             show_eza_tree() {
             	level_arg=''${1:-2}

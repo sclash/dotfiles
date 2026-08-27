@@ -16,9 +16,7 @@
 			}
 		},
 		"openrouter": {
-			"models": {
-				"moonshotai/kimi-k2.6:free": {}
-			}
+			"api": "{file:/run/secrets/openrouter}"
 		}
 	},
 	"lsp": {
