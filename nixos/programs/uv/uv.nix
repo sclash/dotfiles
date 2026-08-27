@@ -33,7 +33,7 @@
   # so `uv tool install` cannot see cc or python3 when compiling sdists
   # (e.g. fastuuid via litellm). Prepend them before the uvTool step.
   home.activation.uvToolBuildEnv = lib.hm.dag.entryBefore [ "uvTool" ] ''
-    export PATH="${pkgs.gcc}/bin:${pkgs.python3}/bin:$PATH"
+    export PATH="${pkgs.git}/bin:${pkgs.gcc}/bin:${pkgs.python3}/bin:$PATH"
   '';
   ## Comment settings above and above this below to have the uv configuration outOfStore
   home.file = {

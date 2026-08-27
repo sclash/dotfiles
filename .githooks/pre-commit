@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+fail=0
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '^nixos/secrets/.*\.ya?ml$' || true); do
+  if [ -f "$f" ] && ! grep -q 'ENC\[' "$f"; then
+    echo "pre-commit: $f is not sops-encrypted (no ENC[ marker) — edit with: sops $f" >&2
+    fail=1
+  fi
+done
+exit $fail

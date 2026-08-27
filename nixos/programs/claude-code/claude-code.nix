@@ -105,12 +105,6 @@ in
           "-y"
           "@modelcontextprotocol/server-github"
         ];
-        env = {
-          ## To get the token github->settinsg->developer settings
-          GITHUB_PERSONAL_ACCESS_TOKEN = lib.strings.trim (
-            builtins.readFile /home/asergi/dotfiles/nixos/.secrets/github_token
-          );
-        };
       };
       filesystem = {
         command = "npx";

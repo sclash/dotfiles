@@ -20,6 +20,11 @@
 
     nixd.url = "github:nix-community/nixd";
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # my-dotfiles.url = "https://github.com/sclash/dotfiles";
     # my-dotifiles.inputs = { ref = "master"; };
     # my-dotfiles.url = "github:sclash/dotfiles";
@@ -66,6 +71,7 @@
       my-dotfiles,
       neovimrc,
       nixd,
+      sops-nix,
       ...
     }:
 
@@ -99,6 +105,7 @@
           nixos-os = inputs.nixpkgs.lib.nixosSystem {
             modules = [
               ./configuration.nix
+              inputs.sops-nix.nixosModules.sops
 
               {
                 # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];

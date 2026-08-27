@@ -37,6 +37,7 @@
     ./programs/mcpservers.nix
     ./programs/zathura.nix
     ./programs/opencode/opencode.nix
+    # ./programs/sops.nix
   ];
 
   nix.settings.experimental-features = [
@@ -127,10 +128,11 @@
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
     ".config/nvim" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
+      # source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
+      source = "${neovimrc}";
       # source = "/home/asergi/neovimrc";
-      # executable = false;
-      # recursive = true;
+      executable = false;
+      recursive = true;
       force = true;
     };
     # Example: symlink a script from the repo to ~/.local/bin

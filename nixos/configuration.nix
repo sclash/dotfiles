@@ -20,8 +20,9 @@
     # ./hardware-configuration.nix
 
     # builtins.readFile "/etc/nixos/hardware-configuration.nix"
-    /etc/nixos/hardware-configuration.nix
+    ./hardware-configuration.nix
     # ./tmux.nix
+    ./sops.nix
     inputs.walker.nixosModules.default
     # inputs.elephant.nixosModules.default
     inputs.nixd.nixosModules
@@ -285,9 +286,8 @@
       neovim
       tree-sitter
       tree
+      sops
       # nixd
-
-      yay
 
       bat
       zip

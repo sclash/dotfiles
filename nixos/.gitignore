@@ -1,4 +1,5 @@
-.secrets/
+secrets/*
+!secrets/secrets.yaml
 docs/
 .claude/
 .opencode/

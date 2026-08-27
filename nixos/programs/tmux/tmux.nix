@@ -33,7 +33,7 @@
       # tokyo-night-tmux
     ];
     # extraConfig = builtins.readFile "${my-dotfiles}/nixos/tmux/tmux.conf";
-    extraConfig = builtins.readFile "${config.home.homeDirectory}/dotfiles/nixos/programs/tmux/tmux.conf";
+    extraConfig = builtins.readFile ./tmux.conf;
     # extraConfig = builtins.readFile
     #   "${config.home.homeDirectory}/dotfiles/tmux/tmux-nix.conf";
     #  extraConfig = ''

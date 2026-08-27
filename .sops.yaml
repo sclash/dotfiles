@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: nixos/secrets/.*\.ya?ml$
+    age: age1ntvf6hjhdvgeunxtgwqqf7smlfsdu5l54t27ll8z306488he7q7qyk050s

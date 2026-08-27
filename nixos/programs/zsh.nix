@@ -27,7 +27,7 @@
     shellAliases = {
       ll = "ls -l";
       edit = "sudo -e";
-      update = "sudo nixos-rebuild switch --flake /etc/nixos";
+      update = "sudo nixos-rebuild switch --flake /home/asergi/dotfiles/nixos#nixos-os";
       ftm = "~/tmux-sessionizer.sh";
     };
 
@@ -36,7 +36,9 @@
     history.size = 10000;
     initContent = ''
       	# [[ -f ~/.secrets/github_token ]] && export GITHUB_PERSONAL_ACCESS_TOKEN=$(cat ~/.secrets/github_token)
-
+		if [ -f /run/secrets/github_pat ]; then
+      			export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_pat)"
+    		fi
             show_eza_tree() {
             	level_arg=''${1:-2}
             	eza --tree --level="$level_arg" --long --icons --git
