@@ -36,6 +36,13 @@
 				".jsx",
 				".tsx"
 			]
+		},
+		"quickshell": {
+			"command": ["qmlls"],
+			"extensions": [
+				"qml",
+				"qmljs",
+			]
 		}
 	},
 	"mcp": {

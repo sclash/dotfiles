@@ -84,6 +84,7 @@
       lazycli
 
       ## for Claude-Code
+      qt6.qtdeclarative
       rust-analyzer
       # mcp-nixos
       # pyright

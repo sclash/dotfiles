@@ -14,6 +14,8 @@
     systemd = {
       enable = true;
     };
+    systemd.target = "hyprland-session.target";
+    activeConfig = null;
   };
 
   home.file = {

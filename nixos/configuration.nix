@@ -44,7 +44,6 @@
   environment.variables.EDITOR = "nvim";
   environment.variables.VISUAL = "nvim";
 
-
   programs.walker = {
     enable = true;
   };
@@ -129,12 +128,14 @@
     # It must be in extraPortals for Hyprland to use it for settings.
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   };
-
+  # services.wayland.windowManager.hyprland.systemd.enable = true;
+  # wayland.windowManager.hyprland.systemd.enable = true;
   programs.hyprland = {
     enable = true;
     package = pkgs-unstable.hyprland;
-    # withUWSM = true;
-    xwayland.enable = true;
+    withUWSM = true;
+    # xwayland.enable = true;
+    systemd.setPath.enable = true;
   };
   programs.hyprlock = {
     enable = true;

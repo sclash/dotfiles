@@ -39,10 +39,10 @@ local notifications = "swaync-client -t -sw"
 
 hl.on("hyprland.start", function ()
 		hl.exec_cmd("hyprlock")
-		hl.exec_cmd("waybar")
+		-- hl.exec_cmd("waybar")
 		hl.exec_cmd("hyprpaper")
 		hl.exec_cmd("elephant")
-		hl.exec_cmd("swaync")
+		-- hl.exec_cmd("swaync")
 		hl.exec_cmd("swaync-client --daemon")
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'") --# for GTK4 apps
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'") --# for GTK3 apps
