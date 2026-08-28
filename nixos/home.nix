@@ -26,7 +26,7 @@
 
   imports = [
     ./programs/tmux/tmux.nix
-    ./programs/swaync.nix
+    # ./programs/swaync.nix
     ./programs/zsh.nix
     ./programs/uv/uv.nix
     ./programs/starship.nix
@@ -37,6 +37,7 @@
     ./programs/mcpservers.nix
     ./programs/zathura.nix
     ./programs/opencode/opencode.nix
+    ./programs/quickshell.nix
     # ./programs/sops.nix
   ];
 
@@ -211,31 +212,32 @@
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/hypr";
       force = true;
     };
-    ".config/waybar" = {
-      # source = "${my-dotfiles}/waybar";
-      # source = "/home/asergi/dotfiles/waybar";
-      # executable = false;
-      # force = true;
-      # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/waybar";
-      force = true;
-    };
-    ".config/swaync" = {
-      # source = "${my-dotfiles}/swaync";
-      source = "/home/asergi/dotfiles/swaync";
-      executable = false;
-      force = true;
-      recursive = true;
-      # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
-      # force = true;
-    };
+    # ".config/waybar" = {
+    #   # source = "${my-dotfiles}/waybar";
+    #   # source = "/home/asergi/dotfiles/waybar";
+    #   # executable = false;
+    #   # force = true;
+    #   # recursive = true;
+    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/waybar";
+    #   force = true;
+    # };
+    # ".config/swaync" = {
+    #   # source = "${my-dotfiles}/swaync";
+    #   source = "/home/asergi/dotfiles/swaync";
+    #   executable = false;
+    #   force = true;
+    #   recursive = true;
+    #   # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
+    #   # force = true;
+    # };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
     # ".config/waybar".source = "${my-dotfiles}/waybar";
   };
 
   home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
-    for dir in hypr ghostty waybar starship nvim; do
+    # for dir in hypr ghostty waybar starship nvim; do
+    for dir in hypr ghostty quickshell starship nvim; do
       target="$HOME/.config/$dir"
       if [ -d "$target" ] && [ ! -L "$target" ]; then
         rm -rf "$target"

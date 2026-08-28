@@ -44,9 +44,6 @@
   environment.variables.EDITOR = "nvim";
   environment.variables.VISUAL = "nvim";
 
-  programs.sway = {
-    enable = true;
-  };
 
   programs.walker = {
     enable = true;
@@ -350,14 +347,14 @@
       docker-compose
       docker-compose-language-service
 
-      sway
-      waybar
+      # sway
+      # waybar
       hyprpicker
       hyprpaper
       hyprlock
       wlr-randr
       pywal
-      swaynotificationcenter
+      # swaynotificationcenter
 
       gvfs
       libnotify
