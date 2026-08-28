@@ -127,14 +127,25 @@
     # ".config/tmux".source = builtins.path { path = "${my-dotfiles}/tmux"; };
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
+
     ".config/nvim" = {
-      source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
-      # source = "${neovimrc}";
-      # source = "/home/asergi/neovimrc";
+      # source = "${my-dotfiles}/starship";
+      # source = "/home/asergi/dotfiles/starship";
       # executable = false;
+      # force = true;
       # recursive = true;
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/neovimrc";
       force = true;
     };
+    # ".config/nvim" = {
+    #   source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
+    #   # source = "${neovimrc}";
+    #   # source = "/home/asergi/neovimrc";
+    #   # executable = false;
+    #   # recursive = true;
+    #   force = true;
+    # };
+
     # Example: symlink a script from the repo to ~/.local/bin
     # home.file.".local/bin/myscript" = {
     #   source = "${my-scripts}/myscript.sh";

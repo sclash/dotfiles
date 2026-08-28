@@ -3,7 +3,9 @@
 This respository contains all the dotfiles, the steps needed, and any useful references for customizng Tmux, i3wm, alacritty and zsh in a Linux (Debian / Arch) environment.
 
 The dotfiles for neovim are contained in a separate Repo: [ neovimrc ]( https://github.com/sclash/neovimrc )
+which is included as a submodule
 
+***IMPORTANT: *** to clone to repo `git clone --recurse-submodules git@github.com:sclasch/dotfiles.git`
 
 - [NixOs](#NixOS)
     - [Installation](README#Installation)

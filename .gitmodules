@@ -1,0 +1,3 @@
+[submodule "neovimrc"]
+	path = neovimrc
+	url = https://github.com/sclash/neovimrc.git
