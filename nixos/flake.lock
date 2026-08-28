@@ -126,23 +126,6 @@
         "type": "github"
       }
     },
-    "neovimrc": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1786579850,
-        "narHash": "sha256-dgvhhk1zKP7efZrL9+5Kr3CnvJr1NDFQQsXhuSpn6hs=",
-        "owner": "sclash",
-        "repo": "neovimrc",
-        "rev": "f9e398b8f2cfe68961335b74f64392016b4f07a1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "sclash",
-        "ref": "master",
-        "repo": "neovimrc",
-        "type": "github"
-      }
-    },
     "nix-snapd": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -233,11 +216,11 @@
     },
     "nixpkgs-master": {
       "locked": {
-        "lastModified": 1787925250,
-        "narHash": "sha256-HzUGOIYdIP0UvUoWtZhNEjxfbx7bsZl1xd6LEO4QaFA=",
+        "lastModified": 1787937475,
+        "narHash": "sha256-33ximeJvuOwsO4tU3OS/kyoTo/NUMw1sivJDKztNy+g=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "84b31b66a21b75f072501f67531aaf7558805f4b",
+        "rev": "742284693973f42e25c118400d633e52202221d2",
         "type": "github"
       },
       "original": {
@@ -309,7 +292,6 @@
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "my-dotfiles": "my-dotfiles",
-        "neovimrc": "neovimrc",
         "nix-snapd": "nix-snapd",
         "nixd": "nixd",
         "nixpkgs": "nixpkgs_3",

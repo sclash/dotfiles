@@ -113,8 +113,8 @@
     settings = rec {
       initial_session = {
         # command = "hyprland > /dev/null 2>&1";
-        command = "start-hyprland";
-        # command = "uwsm start hyprland";
+        # command = "start-hyprland";
+        command = "uwsm start hyprland.desktop";
         user = "asergi";
         shell = pkgs.zsh;
       };

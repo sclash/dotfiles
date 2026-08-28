@@ -3,7 +3,7 @@
   lib,
   pkgs,
   pkgs-unstable,
-  neovimrc,
+  # neovimrc,
   my-dotfiles,
   ...
 }:

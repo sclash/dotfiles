@@ -38,11 +38,11 @@
       # ref = "master";  # track master branch
     };
 
-    neovimrc = {
-      url = "github:sclash/neovimrc?ref=master";
-      # url = "https://github.com/sclash/neovimrc?ref=master";
-      flake = false; # if the repo is not a flake
-    };
+    # neovimrc = {
+    #   url = "github:sclash/neovimrc?ref=master";
+    #   # url = "https://github.com/sclash/neovimrc?ref=master";
+    #   flake = false; # if the repo is not a flake
+    # };
     #    ashell = {
     # url = "github:MalpenZibo/ashell";
     #    };
@@ -69,7 +69,7 @@
       nixpkgs-master,
       home-manager,
       my-dotfiles,
-      neovimrc,
+      # neovimrc,
       nixd,
       sops-nix,
       ...
@@ -120,7 +120,7 @@
                 home-manager.users.asergi = ./home.nix;
                 home-manager.extraSpecialArgs = {
                   inherit my-dotfiles;
-                  inherit neovimrc;
+                  # inherit neovimrc;
                   inherit pkgs-unstable;
                   inherit pkgs-master;
                 };
@@ -159,7 +159,7 @@
             ];
             extraSpecialArgs = {
               inherit my-dotfiles;
-              inherit neovimrc;
+              # inherit neovimrc;
               # inherit pkgs;
               # inherit pkgs-unstable;
             };

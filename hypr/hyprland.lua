@@ -23,7 +23,8 @@ hl.monitor({
 local terminal = "ghostty"
 local fileManager = "nautilus"
 local browser = "google-chrome-stable"
-local waybar = "pkill waybar || waybar"
+-- local waybar = "pkill waybar || waybar"
+local quickshell = "pkill quickshell || quickshell"
 local hyprpaper  = "pkill hyprpaper || hyprpaper"
 local menu = "walker"
 local lock = "hyprlock"
@@ -40,10 +41,11 @@ local notifications = "swaync-client -t -sw"
 hl.on("hyprland.start", function ()
 		hl.exec_cmd("hyprlock")
 		-- hl.exec_cmd("waybar")
+		-- hl.exec_cmd("quickshell")
 		hl.exec_cmd("hyprpaper")
 		hl.exec_cmd("elephant")
 		-- hl.exec_cmd("swaync")
-		hl.exec_cmd("swaync-client --daemon")
+		-- hl.exec_cmd("swaync-client --daemon")
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'") --# for GTK4 apps
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'") --# for GTK3 apps
 	end
@@ -356,7 +358,7 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({action = "toggle"}))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.layout(notifications))    -- dwindle only
-hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(waybar))
+hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(quickshell))
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd(hyprpaper))
 
 -- bind = $mainMod, Return, exec, $terminal
