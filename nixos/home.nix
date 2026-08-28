@@ -128,11 +128,11 @@
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
     ".config/nvim" = {
-      # source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
-      source = "${neovimrc}";
+      source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
+      # source = "${neovimrc}";
       # source = "/home/asergi/neovimrc";
-      executable = false;
-      recursive = true;
+      # executable = false;
+      # recursive = true;
       force = true;
     };
     # Example: symlink a script from the repo to ~/.local/bin
@@ -224,7 +224,7 @@
   };
 
   home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
-    for dir in hypr ghostty waybar starship; do
+    for dir in hypr ghostty waybar starship nvim; do
       target="$HOME/.config/$dir"
       if [ -d "$target" ] && [ ! -L "$target" ]; then
         rm -rf "$target"
