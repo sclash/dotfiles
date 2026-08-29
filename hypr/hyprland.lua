@@ -346,7 +346,7 @@ local down = "j" -- Sets "Windows" key as main modifier ]]
 
 -- # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 -- bind = $mainMod, Q, exec, $terminal
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
+-- hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))

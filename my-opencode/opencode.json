@@ -38,11 +38,8 @@
 			]
 		},
 		"quickshell": {
-			"command": ["qmlls"],
-			"extensions": [
-				"qml",
-				"qmljs",
-			]
+			"command": ["qmlls", "-E"],
+			"extensions": [".qml", ".qmljs"]
 		}
 	},
 	"mcp": {
