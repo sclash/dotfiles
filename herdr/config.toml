@@ -17,17 +17,23 @@ focus_pane_right = "alt+l"
 split_vertical = "prefix+%"
 split_horizontal = 'prefix+"'
 
-detach = "prefix+q"
+detach = "prefix+d"
 
 new_tab = "prefix+c"
 previous_tab = "alt+d"
 next_tab = "alt+u"
-close_pane = "prefix+d"
 
 resize_pane_left = "prefix+alt+h"
 resize_pane_down = "prefix+alt+j"
 resize_pane_up = "prefix+alt+k"
 resize_pane_right = "prefix+alt+l"
+
+next_workspace = "prefix+tab"
+previous_workspace = "prefix+shift+tab"
+
+focus_agent = "prefix+alt+1..9"
+next_agent = "alt+tab"
+previous_agent = "alt+shift+tab"
 
 # Notes on non-binding tmux settings (already herdr defaults, no config needed):
 #   set -g mouse on                -> [ui] mouse_capture = true (default)
