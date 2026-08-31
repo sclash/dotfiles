@@ -38,6 +38,7 @@
     ./programs/zathura.nix
     ./programs/opencode/opencode.nix
     ./programs/quickshell.nix
+    ./programs/herdr.nix
     # ./programs/sops.nix
   ];
 

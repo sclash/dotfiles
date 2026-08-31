@@ -1,0 +1,39 @@
+# herdr configuration
+# Keybindings ported from ~/.tmux.conf
+
+[theme]
+# tmux: set -g @plugin 'catppuccin/tmux' (@catppuccin_flavor "mocha")
+name = "catppuccin"
+
+[keys]
+
+# prefix = "ctrl+b"
+
+focus_pane_left = "alt+h"
+focus_pane_down = "alt+j"
+focus_pane_up = "alt+k"
+focus_pane_right = "alt+l"
+
+split_vertical = "prefix+%"
+split_horizontal = 'prefix+"'
+
+detach = "prefix+d"
+
+new_tab = "prefix+c"
+previous_tab = "alt+d"
+next_tab = "alt+u"
+close_pane = "ctrl+d"
+
+resize_pane_left = "prefix+alt+h"
+resize_pane_down = "prefix+alt+j"
+resize_pane_up = "prefix+alt+k"
+resize_pane_right = "prefix+alt+l"
+
+# Notes on non-binding tmux settings (already herdr defaults, no config needed):
+#   set -g mouse on                -> [ui] mouse_capture = true (default)
+#   set-window-option mode-keys vi -> navigate mode uses h/j/k/l by default
+
+[ui]
+
+sidebar_collapsed_mode = "hidden"
+mouse_capture = false

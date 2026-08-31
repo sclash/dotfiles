@@ -1,0 +1,72 @@
+{
+  "version": 3,
+  "workspaces": [
+    {
+      "id": "wF",
+      "custom_name": null,
+      "identity_cwd": "/home/asergi/dotfiles/herdr",
+      "public_pane_numbers": {
+        "22": 1,
+        "24": 3,
+        "26": 5
+      },
+      "next_public_pane_number": 6,
+      "public_tab_numbers": [
+        1,
+        3,
+        5
+      ],
+      "next_public_tab_number": 6,
+      "tabs": [
+        {
+          "custom_name": null,
+          "layout": {
+            "Pane": 22
+          },
+          "panes": {
+            "22": {
+              "cwd": "/home/asergi/dotfiles/herdr"
+            }
+          },
+          "zoomed": false,
+          "focused": 22,
+          "root_pane": 22
+        },
+        {
+          "custom_name": "oc",
+          "layout": {
+            "Pane": 24
+          },
+          "panes": {
+            "24": {
+              "cwd": "/home/asergi/dotfiles/herdr"
+            }
+          },
+          "zoomed": false,
+          "focused": 24,
+          "root_pane": 24
+        },
+        {
+          "custom_name": "nixos",
+          "layout": {
+            "Pane": 26
+          },
+          "panes": {
+            "26": {
+              "cwd": "/home/asergi/dotfiles"
+            }
+          },
+          "zoomed": false,
+          "focused": 26,
+          "root_pane": 26
+        }
+      ],
+      "active_tab": 2
+    }
+  ],
+  "active": 0,
+  "selected": 0,
+  "sidebar_width": 26,
+  "sidebar_section_split": 0.5,
+  "collapsed_space_keys": []
+}
