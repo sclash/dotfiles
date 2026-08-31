@@ -17,12 +17,12 @@ focus_pane_right = "alt+l"
 split_vertical = "prefix+%"
 split_horizontal = 'prefix+"'
 
-detach = "prefix+d"
+detach = "prefix+q"
 
 new_tab = "prefix+c"
 previous_tab = "alt+d"
 next_tab = "alt+u"
-close_pane = "ctrl+d"
+close_pane = "prefix+d"
 
 resize_pane_left = "prefix+alt+h"
 resize_pane_down = "prefix+alt+j"
