@@ -44,4 +44,3 @@ previous_agent = "alt+shift+tab"
 
 sidebar_collapsed_mode = "hidden"
 mouse_capture = false
-show_agent_labels_on_pane_borders = true

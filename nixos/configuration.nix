@@ -85,7 +85,11 @@
   # fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
   fonts = {
     enableDefaultPackages = true;
-    packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
+    packages = with pkgs; [
+      nerd-fonts.jetbrains-mono
+      noto-fonts
+      noto-fonts-color-emoji
+    ];
     fontconfig = {
       enable = true;
       defaultFonts = {

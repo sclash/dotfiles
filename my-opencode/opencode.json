@@ -16,7 +16,9 @@
 			}
 		},
 		"openrouter": {
-			"api": "{file:/run/secrets/openrouter}"
+			"options": {
+				"apiKey": "{file:/run/secrets/openrouter}"
+			},
 		}
 	},
 	"lsp": {
