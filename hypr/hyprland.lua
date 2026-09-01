@@ -28,7 +28,7 @@ local quickshell = "pkill quickshell || quickshell"
 local hyprpaper  = "pkill hyprpaper || hyprpaper"
 local menu = "walker"
 local lock = "hyprlock"
-local notifications = "swaync-client -t -sw"
+local notifications = ""
 
 -------------------
 --- MY PROGRAMS 
