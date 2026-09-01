@@ -1,15 +1,62 @@
-# Desktop environment
+# Desktop Environment — Bar Left (Workspaces) — Refined Spec
 
-We're using hyprland.
+> Parent: [`Bar.md`](../../bar/Bar.md) · Service: `Quickshell.Hyprland`
 
-The rightmost part of the bar should display our hyprland desktop environment.
+---
 
-- The sytiling should be similar to what's the waybar legacy config.
-- `dots` for the desktops environments. white if its active, nearly gray if its' not.
-- There should be at least three dots. Even if less than three are in use. if three
-are in use a fourth should appear, with the inactive styling.
+## 1. Purpose
 
-- If possible each desktop environment should have an associated app tray which displays the
-icons of the applications currently open in that desktop environment.
+Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-navigate and per-workspace app indicators when feasible. Anchors the bar's spatial model.
 
+## 2. Display
 
+* **Glyph:** `Icons.workspaceDot` (``) — Waybar `hyprland/workspaces.format: {icon}`.
+* **States:**
+
+  | State | Colour | Notes |
+  |---|---|---|
+  | **Active** | `Theme.fg` (`#ffffff`) | `text-shadow: 0 0 2px rgba(0,0,0,0.5)` (Waybar `#workspaces button.active`) |
+  | **Inactive, occupied** | `Theme.fgDim` (`rgba(89,89,89,0.67)`) | |
+  | **Empty, persistent** | `Theme.fgDim` at same opacity | still rendered if `persistent-workspaces` |
+  | **Hover** | `rgba(0,0,0,0)` with glow `text-shadow` | Waybar `button:hover` semantics — replicated as `Theme.fg` brightening |
+
+* **Ordering:** strictly numeric ascending (Waybar `persistent-workspaces: {"*":[1]}` ensures at least workspace 1 exists; this spec extends to **at least 3 dots** always).
+* **Count rule (normative):**
+
+  ```
+  let n = max(3, maxOccupiedId, focusedId)
+  // if workspaces 1,2,4 are occupied and 3 is empty, show 1..4 (4 dots)
+  // if only 1,2 occupied, show 1..3 (3 dots)
+  // if 1..5 occupied, show 1..6 (one extra empty dot as affordance)
+  ```
+  In other words: **at least 3 dots; if exactly k are occupied, show k+1 up to the max id; never show fewer than the highest id.**
+* **Per-dot interaction:** `MouseArea { onClicked: Hyprland.dispatch("workspace " + id) }`.
+* **Font size:** `10px` equivalent (Waybar workspace buttons use `padding: 0 5px` with dot glyph ~10px). Use `font.pixelSize: 10` for the dot, with `spacing: Theme.gapS` between dots.
+
+## 3. Optional Enhancement — Per-Workspace App Tray
+
+> "If possible each desktop environment should have an associated app tray" (original spec).
+
+* If feasible, beneath or beside each dot render a **micro-row of app icons** for windows on that workspace (`Hyprland.toplevels` filtered by `workspace.id`).
+* Use `Hyprland.Toplevel.icon` or `DesktopEntry` icon; fallback to `wayland` glyph.
+* If this adds layout instability or performance cost, **defer** — the primary spec is the dots. The app-tray-on-workspace is **nice-to-have**, not a blocker.
+
+## 4. Data Source
+
+* `Quickshell.Hyprland.workspaces` (list of `HyprlandWorkspace { id, name, focused, active }`)
+* `Quickshell.Hyprland.focusedWorkspace` for active highlight.
+* Event-driven — no polling. `Hyprland` singleton emits `workspacesChanged`, `focusedWorkspaceChanged`.
+
+## 5. Error Handling
+
+* Hyprland IPC disconnected → dots dimmed, tooltip "Hyprland unavailable". Retries via `Hyprland` reconnect timer (Quickshell handles internally).
+* Workspaces list empty at startup → render 3 dim dots as placeholder.
+
+## 6. Acceptance
+
+* [ ] At least 3 dots always; extra dot appears when k workspaces are occupied.
+* [ ] Active workspace is white; others are `Theme.fgDim`.
+* [ ] Clicking a dot dispatches `hyprctl dispatch workspace <id>` and focus follows.
+* [ ] No polling; updates are event-driven via `Quickshell.Hyprland`.
+* [ ] Per-workspace app icons appear if implemented, otherwise gracefully absent.
+* [ ] No hard-coded colours — all via `Theme.*`.
