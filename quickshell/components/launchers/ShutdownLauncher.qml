@@ -55,20 +55,17 @@ PanelWindow {
                     delegate: Rectangle {
                         required property var modelData
                         required property int index
-                        // Orphan Logout spans full width centered — fixes 2-col 5-item asymmetry
-                        Layout.fillWidth: true
+                        Layout.fillWidth: (index === 4) ? false : true
                         Layout.columnSpan: (index === 4) ? 2 : 1
-                        Layout.preferredWidth: (index === 4) ? grid.width : -1
-                        Layout.maximumWidth: (index === 4) ? 260 : 9999
-                        Layout.alignment: (index === 4) ? Qt.AlignHCenter : Qt.AlignLeft
+                        Layout.preferredWidth: (index === 4) ? 240 : -1
+                        Layout.alignment: Qt.AlignHCenter
                         Layout.preferredHeight: 92
                         radius: Theme.roundingItem
-                        // omarchy quattro: normal transparent, hover selection, selected muted, plane ON accent tint
                         color: {
                             if (modelData.isPlane && planeActive) return Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14)
                             if (grid.currentIndex===index) return Theme.bgActive
                             if (ma.containsMouse) return Theme.bgHover
-                            return "transparent"
+                            return Theme.bgBar
                         }
                         border.color: {
                             if (grid.currentIndex===index) {
