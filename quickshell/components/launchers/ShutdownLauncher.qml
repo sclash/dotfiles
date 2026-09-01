@@ -22,9 +22,11 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 
+    // One big box, icons left-to-right
     Rectangle {
         id: card
-        width: 720
+        width: 620
+        height: mainCol.implicitHeight + Theme.padL * 2
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
@@ -44,19 +46,17 @@ PanelWindow {
             RowLayout {
                 id: row
                 Layout.fillWidth: true
-                spacing: Theme.gapM
+                spacing: Theme.gapS
 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===0 ? Theme.bgActive : sleepMA.containsMouse ? Theme.bgHover : Theme.bgBar
-                    border.color: root.currentIndex===0 ? Theme.accent : Theme.border
-                    border.width: root.currentIndex===0 ? 2 : 1
+                    color: root.currentIndex===0 ? Theme.bgActive : (sleepMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===0 ? Theme.accent : "transparent"
+                    border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
-                        Rectangle { width: 52; height: 52; radius: 14; color: Theme.bgBar; Layout.alignment: Qt.AlignHCenter
-                            Text { anchors.centerIn: parent; text: Icons.sleep; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg }
-                        }
+                        Text { text: Icons.sleep; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Sleep"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { visible: root.confirmIndex===0; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                     }
@@ -66,13 +66,11 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===1 ? Theme.bgActive : rebootMA.containsMouse ? Theme.bgHover : Theme.bgBar
-                    border.color: root.currentIndex===1 ? Theme.warning : Theme.border
-                    border.width: root.currentIndex===1 ? 2 : 1
+                    color: root.currentIndex===1 ? Theme.bgActive : (rebootMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===1 ? Theme.warning : "transparent"
+                    border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
-                        Rectangle { width: 52; height: 52; radius: 14; color: Theme.bgBar; Layout.alignment: Qt.AlignHCenter
-                            Text { anchors.centerIn: parent; text: Icons.reboot; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning }
-                        }
+                        Text { text: Icons.reboot; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Reboot"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { visible: root.confirmIndex===1; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                     }
@@ -82,13 +80,11 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===2 ? Theme.bgActive : shutdownMA.containsMouse ? Theme.bgHover : Theme.bgBar
-                    border.color: root.currentIndex===2 ? Theme.critical : Theme.border
-                    border.width: root.currentIndex===2 ? 2 : 1
+                    color: root.currentIndex===2 ? Theme.bgActive : (shutdownMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===2 ? Theme.critical : "transparent"
+                    border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
-                        Rectangle { width: 52; height: 52; radius: 14; color: Theme.bgBar; Layout.alignment: Qt.AlignHCenter
-                            Text { anchors.centerIn: parent; text: Icons.power; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.critical }
-                        }
+                        Text { text: Icons.power; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.critical; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Shutdown"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { visible: root.confirmIndex===2; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.critical; Layout.alignment: Qt.AlignHCenter }
                     }
@@ -98,13 +94,11 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: planeActive ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14) : (root.currentIndex===3 ? Theme.bgActive : planeMA.containsMouse ? Theme.bgHover : Theme.bgBar)
-                    border.color: planeActive ? Theme.accent : (root.currentIndex===3 ? Theme.accent : Theme.border)
-                    border.width: (planeActive || root.currentIndex===3) ? 2 : 1
-                    ColumnLayout { anchors.centerIn: parent; spacing: 6
-                        Rectangle { width: 52; height: 52; radius: 14; color: planeActive ? Theme.accent : Theme.bgBar; Layout.alignment: Qt.AlignHCenter
-                            Text { anchors.centerIn: parent; text: planeActive ? Icons.planeOn : Icons.planeOff; font.family: Theme.fontFamily; font.pixelSize: 26; color: planeActive ? Theme.bgLauncher : Theme.fg }
-                        }
+                    color: planeActive ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14) : (root.currentIndex===3 ? Theme.bgActive : (planeMA.containsMouse ? Theme.bgHover : "transparent"))
+                    border.color: planeActive ? Theme.accent : (root.currentIndex===3 ? Theme.accent : "transparent")
+                    border.width: 2
+                    ColumnLayout { anchors.centerIn: parent; spacing: 8
+                        Text { text: planeActive ? Icons.planeOn : Icons.planeOff; font.family: Theme.fontFamily; font.pixelSize: 26; color: planeActive ? Theme.accent : Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: planeActive ? "Plane ON" : "Plane"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: planeActive ? "tap to disable" : "airplane"; font.family: Theme.fontFamily; font.pixelSize: 9; color: planeActive ? Theme.accent : Theme.fgMuted; Layout.alignment: Qt.AlignHCenter }
                     }
@@ -114,13 +108,11 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===4 ? Theme.bgActive : logoutMA.containsMouse ? Theme.bgHover : Theme.bgBar
-                    border.color: root.currentIndex===4 ? Theme.warning : Theme.border
-                    border.width: root.currentIndex===4 ? 2 : 1
+                    color: root.currentIndex===4 ? Theme.bgActive : (logoutMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===4 ? Theme.warning : "transparent"
+                    border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
-                        Rectangle { width: 52; height: 52; radius: 14; color: Theme.bgBar; Layout.alignment: Qt.AlignHCenter
-                            Text { anchors.centerIn: parent; text: Icons.logout; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning }
-                        }
+                        Text { text: Icons.logout; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Logout"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { visible: root.confirmIndex===4; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                     }
