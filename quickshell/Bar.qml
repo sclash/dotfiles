@@ -19,38 +19,23 @@ Scope {
             screen: modelData
 
             anchors { top: true; left: true; right: true }
-            // Total height = bar pill (30) + vertical margins (5+5) ≈ 40, keep spec barHeight as pill height
-            implicitHeight: Theme.barHeight + 10
+            implicitHeight: Theme.barHeight
             color: "transparent"
             exclusionMode: ExclusionMode.Auto
 
-            // Pill — STYLE.md §4 single pill fallback with 3 groups inside
             Rectangle {
-                id: pill
-                anchors {
-                    left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom
-                    leftMargin: Theme.padL      // 10
-                    rightMargin: Theme.padL     // 10
-                    topMargin: 5
-                    bottomMargin: 5
-                }
-                radius: Theme.roundingBar
+                anchors.fill: parent
                 color: Theme.bgBar
-                border.width: Theme.borderWidth
-                border.color: Theme.border
-                // Shadow via layer (optional, matches waybar shadow range 4)
-                // layer.enabled: true not needed for simple rect
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: Theme.padM   // 7 — waybar modules-left padding
+                    anchors.leftMargin: Theme.padM
                     anchors.rightMargin: Theme.padM
                     spacing: Theme.gapM
 
-                    // Left — Workspaces + AppTray per Bar-App-Tray.md
                     RowLayout {
                         Layout.alignment: Qt.AlignVCenter
-                        spacing: Theme.gapS
+                        spacing: Theme.gapM
                         Workspaces { }
                         Rectangle {
                             visible: tray.visible
@@ -73,47 +58,39 @@ Scope {
 
                     RowLayout {
                         Layout.alignment: Qt.AlignVCenter
-                        spacing: Theme.gapS
+                        spacing: 2
 
                         PerfDrawer { }
 
-                        // Audio — uses AudioIcon component inside hover slot (STYLE.m)
                         Rectangle {
                             width: Theme.barIconSlot
                             height: Theme.barIconSlot
                             radius: Theme.roundingItem
                             color: audioMA.containsMouse ? Theme.bgHover : "transparent"
                             Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-                            // AudioIcon itself handles click+wheel; wrapper provides hover bg
-                            Item {
+                            RowLayout {
                                 anchors.centerIn: parent
-                                width: Theme.barIconSlot - 4; height: Theme.barIconSlot - 4
-                                clip: true
-                                // Use the dedicated component for logic, but keep visual consistent with bar slot
-                                RowLayout {
-                                    anchors.centerIn: parent
-                                    spacing: 2
-                                    Text {
-                                        text: {
-                                            if (!AudioService.available || !AudioService.hasSink) return Icons.audioMuted
-                                            if (AudioService.muted) return Icons.audioMuted
-                                            return Icons.audioVolume
-                                        }
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.barIconSize
-                                        color: {
-                                            if (!AudioService.available || !AudioService.hasSink) return Theme.critical
-                                            if (AudioService.muted) return Theme.fgDim
-                                            return Theme.fg
-                                        }
+                                spacing: 2
+                                Text {
+                                    text: {
+                                        if (!AudioService.available || !AudioService.hasSink) return Icons.audioMuted
+                                        if (AudioService.muted) return Icons.audioMuted
+                                        return Icons.audioVolume
                                     }
-                                    Text {
-                                        visible: AudioService.hasSink && !AudioService.muted
-                                        text: AudioService.hasSink ? AudioService.volume + "%" : ""
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 9
-                                        color: Theme.fgMuted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.barIconSize
+                                    color: {
+                                        if (!AudioService.available || !AudioService.hasSink) return Theme.critical
+                                        if (AudioService.muted) return Theme.fgDim
+                                        return Theme.fg
                                     }
+                                }
+                                Text {
+                                    visible: AudioService.hasSink && !AudioService.muted
+                                    text: AudioService.hasSink ? AudioService.volume + "%" : ""
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 9
+                                    color: Theme.fgMuted
                                 }
                             }
                             MouseArea {
@@ -127,7 +104,6 @@ Scope {
                                     else if (wheel.angleDelta.y < 0) AudioService.adjustVolume(-0.05)
                                 }
                             }
-                            // Tooltip via hover? simple text
                         }
 
                         Rectangle {

@@ -2,66 +2,66 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    // STYLE.md single source of truth — Waybar legacy + Omarchy icons
-    // Derived from waybar/style.css rgba(0,0,0,0.6) pills — see STYLE.md:29
-    property color bgBar:           "#00000099"   // rgba(0,0,0,0.60) — bar pill (STYLE 2.1)
-    property color bgBarAlt:        "#1e1e1e"
-    property color bgLauncher:      "#0f0f0fcc"  // STYLE 2.1
-    property color bgHover:         "#1e1e1e"
-    property color bgActive:        "#2a2a2a"
-    property color bgCritical:      "#f53c3c1a"  // critical wash
+    // Omarchy matte-black inspired — dark, warm accent, low chrome
+    // Derived from themes/matte-black/colors.toml + shell/commons
+    property color bgBar:           "#121212"      // background
+    property color bgBarAlt:        "#1e1e1e"      // lighter_background
+    property color bgLauncher:      "#1a1a1a"      // slightly lighter than bar for contrast
+    property color bgHover:         "#2a2a2a"      // selection
+    property color bgActive:        "#333333"      // muted
+    property color bgCritical:      "#631e1e"      // muted red wash
 
-    property color fg:              "#fafbfc"    // primary (STYLE fg)
-    property color fgMuted:         "#9aa0a6"
-    property color fgDim:           "#595959aa"  // inactive dot 0.67
+    property color fg:              "#bebebe"      // foreground
+    property color fgMuted:         "#8a8a8d"      // light_foreground
+    property color fgDim:           "#555555"      // dark_foreground
     property color fgBright:        "#eaeaea"
 
-    property color accent:          "#1189f2"    // temperature / links (STYLE accent)
-    property color accentAlt:       "#f59e0b"
-    property color success:         "#26A65B"   // charging / connected
-    property color warning:         "#ffbe61"   // 30-60% load
-    property color critical:        "#f53c3c"
-    property color border:          "#59595955"
-    property color borderActive:    "#ffffff1a"
-    property color shadow:          "#1a1a1aee"
-    property color overlay:         "#00000099"    // dim overlay for launchers
+    property color accent:          "#e68e0d"      // accent (orange)
+    property color accentAlt:       "#f59e0b"      // bright_blue
+    property color success:         "#FFC107"      // green
+    property color warning:         "#c63d3d"      // orange
+    property color critical:        "#D35F5F"      // red
+    property color border:          "#2a2a2a"
+    property color borderActive:    "#3a3a3a"
+    property color shadow:          "#0a0a0a"
+    property color overlay:         "#00000099"    // dim overlay
 
-    // Rounding & elevation — STYLE 2.2
-    property int roundingBar:       10            // waybar: 10px on .modules-*
-    property int roundingLauncher:  12
-    property int roundingItem:       8
-    property int borderWidth:        1
-    property int shadowRange:        4
-    property int shadowPower:        3
-    property real barOpacity:        0.60
+    // Rounding — Omarchy uses Style.cornerRadius (Hyprland rounding 7) but bar is flat
+    property int roundingBar:       0             // flat top bar, no pill
+    property int roundingLauncher:  16            // more rounded for floating cards
+    property int roundingItem:      10
+    property int borderWidth:       1
+    property int shadowRange:       16
+    property int shadowPower:       3
+    property real barOpacity:       1.0
 
-    // Spacing — STYLE 2.3 (waybar modules padding/margins)
+    // Spacing — Omarchy Style.spacing scale
     property int padXS:  4
-    property int padS:   5   // waybar modules padding: 0 5px
-    property int padM:   7   // waybar modules-left padding: 7px
-    property int padL:  10   // bar outer margins: 10px
-    property int gapS:   4
-    property int gapM:   8
-    property int gapL:  12
-    property int barHeight: 30
-    property int barIconSlot: 28
-    property int barIconSize: 16
+    property int padS:   6
+    property int padM:   10
+    property int padL:   16
+    property int gapS:   6
+    property int gapM:   10
+    property int gapL:   16
+    property int barHeight: 32
+    property int barIconSlot: 32
+    property int barIconSize: 18
 
-    // Typography — STYLE 2.4
-    property string fontFamily: "JetBrainsMonoNL Nerd Font Mono"
+    // Typography — Omarchy Style.font, JetBrainsMono
+    property string fontFamily: "JetBrainsMono Nerd Font"
     property string fontFamilyFallback: "JetBrains Mono"
-    property int fontSizeBar:       14   // waybar: 14px
-    property int fontSizeBarIcon:   16
-    property int fontSizeLauncher:  13
+    property int fontSizeBar:       15
+    property int fontSizeBarIcon:   18
+    property int fontSizeLauncher:  14
     property int fontSizeSmall:     11
     property int fontWeightNormal:  400
-    property int fontWeightMedium:  500
+    property int fontWeightMedium:  600
     property string dateFormat:     "ddd MMM dd  hh:mm:ss"
 
-    // Motion — STYLE 2.5
-    property int durationFast:     150
-    property int durationNormal:   300   // waybar hover: 0.3s
-    property int durationDrawer:   600   // waybar group/expand: 600ms
-    property string easingStandard: "easeOutQuint"  // 0.23,1,0.32,1
+    // Motion
+    property int durationFast:     120
+    property int durationNormal:   220
+    property int durationDrawer:   400
+    property string easingStandard: "easeOutCubic"
     property string easingEmphasis: "easeInOutCubic"
 }
