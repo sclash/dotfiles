@@ -34,10 +34,10 @@ Scope {
                     topMargin: 5
                     bottomMargin: 5
                 }
-                radius: Theme.roundingBar       // 10
-                color: Theme.bgBar              // #00000099
+                radius: Theme.roundingBar
+                color: Theme.bgBar
                 border.width: Theme.borderWidth
-                border.color: Theme.border      // #59595955
+                border.color: Theme.border
                 // Shadow via layer (optional, matches waybar shadow range 4)
                 // layer.enabled: true not needed for simple rect
 

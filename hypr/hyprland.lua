@@ -28,7 +28,7 @@ local quickshell = "pkill quickshell || quickshell"
 local hyprpaper  = "pkill hyprpaper || hyprpaper"
 local menu = "walker"
 local lock = "hyprlock"
-local notifications = ""
+local notifications = "swaync-client -t -sw"
 
 -------------------
 --- MY PROGRAMS 
@@ -346,15 +346,17 @@ local down = "j" -- Sets "Windows" key as main modifier ]]
 
 -- # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
 -- bind = $mainMod, Q, exec, $terminal
--- hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
+-- terminal on Return (Q reserved for shutdown launcher per SPECS.md)
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
+-- quickshell app launcher (replaces walker direct bind — backend still elephant/walker via AppLauncher)
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("quickshell ipc call launcher toggle app"))
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(lock))
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(browser))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
+-- perf drawer (was pseudo toggle — moved to SHIFT+P if needed)
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("quickshell ipc call perf toggle"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({action = "toggle"}))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.layout(notifications))    -- dwindle only
@@ -639,4 +641,17 @@ hl.define_submap("resize", function()
 
 end)
 --
--- ######___SIZE CHANGING END___        
+-- ######___SIZE CHANGING END___
+
+-- Quickshell launchers — SPECS.md 5.2 / AGENTIC-SETUP wave 4 (keyboard-driven)
+-- Must stay in sync with shell.qml IpcHandler target "launcher" and KeyLauncher bindings
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("quickshell ipc call launcher toggle control"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("quickshell ipc call launcher toggle network"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("quickshell ipc call launcher toggle bluetooth"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle audio"))
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell ipc call launcher toggle display"))
+hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle notification"))
+hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call launcher toggle shutdown"))
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
+hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("quickshell ipc call launcher closeAll"))
+-- NOTE: SUPER+R (app) and SUPER+P (perf) already bound above        
