@@ -378,7 +378,7 @@
       bluez-tools
       wireplumber
       networkmanager
-      rfkill
+      util-linux
       inputs.nixd.packages.${pkgs.system}.default
 
       # tmux
