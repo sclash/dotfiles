@@ -174,7 +174,15 @@
   services.pipewire = {
     enable = true;
     pulse.enable = true;
+    wireplumber.enable = true;
   };
+
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+  services.upower.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
@@ -363,6 +371,14 @@
       # inputs.elephant.packages.${pkgs.system}.default
 
       inputs.walker.packages.${pkgs.system}.default
+      inputs.elephant.packages.${pkgs.system}.default
+      lm_sensors
+      upower
+      bluez
+      bluez-tools
+      wireplumber
+      networkmanager
+      rfkill
       inputs.nixd.packages.${pkgs.system}.default
 
       # tmux
