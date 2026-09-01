@@ -28,19 +28,22 @@ relying on `pywal` colours at runtime (optional `pywal` integration later).
 ```qml
 // theme/Theme.qml — colours
 property color bgBar:           "#00000099"   // rgba(0,0,0,0.60) — bar pill
-property color bgLauncher:      "#0f0f0fcc"  // slightly lighter for contrast
+property color bgLauncher:      "#121212"  // same as bgBar
 property color bgHover:         "#1e1e1e"
 property color bgActive:        "#2a2a2a"
+property color bgSelected:      "#2e2e2e"   // selected rows — dark, subtle
+property color borderSelected:  "#4a4a4a"   // selected outline — muted grey
 property color bgCritical:      "#f53c3c1a"  // critical wash
 
 property color fg:              "#fAfBfC"    // primary text (waybar @color7)
 property color fgMuted:         "#9aa0a6"    // secondary / inactive
 property color fgDim:           "#595959aa"  // inactive workspace dot — waybar #595959aa
 
-property color accent:          "#1189f2"    // temperature / links
-property color success:         "#26A65B"    // charging / connected
-property color warning:         "#ffbe61"    // 30-60% load
-property color critical:        "#f53c3c"    // >80% or battery<20%
+property color accent:          "#eaeaea"    // white — active/focus states
+property color accentAlt:       "#8a8a8d"    // grey — secondary active
+property color success:         "#eaeaea"    // white — on/connected
+property color warning:         "#c63d3d"    // red — warning states
+property color critical:        "#D35F5F"    // red — critical states
 property color border:          "#59595955"  // subtle outline
 property color borderActive:    "#ffffff1a"
 property color shadow:          "#1a1a1aee"
@@ -54,10 +57,10 @@ property color shadow:          "#1a1a1aee"
 | `@color7` (`#fAfBfC`-ish) | `fg` |
 | `rgba(89,89,89,0.67)` (inactive dot) | `fgDim` |
 | `#ffffff` (active dot) | `fg` |
-| `#26A65B` (charging) | `success` |
-| `#ffbe61` (warning) | `warning` |
-| `#f53c3c` (critical/blink) | `critical` |
-| `#1189f2` (temperature) | `accent` |
+| `#eaeaea` (charging) | `success` |
+| `#c63d3d` (warning) | `warning` |
+| `#D35F5F` (critical/blink) | `critical` |
+| `#eaeaea` (active/focus) | `accent` |
 
 Provide a `QPalette` / `ThemeDerivation` hook for Omarchy themes that publish
 `~/.cache/wal/colors-waybar.css` later — if `@background`/`@color7` exist, blend
@@ -137,6 +140,8 @@ property string audioMuted:       "🔇"
 property string keyboard:         "⌨"
 property string notification:     ""
 property string batteryCharging:  "󰂄"
+property string batteryPlugged:   "󰚥" // nf-md-power_plug — AC connected
+property string notificationDnd:  "󰂠" // nf-md-bell_sleep — bell with zzz
 property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹" // index by capacity tier
 property string workspaceDot:     ""
 property string cpu:              "󰻠"
@@ -171,10 +176,10 @@ property string warning:          ""
 
 * **Window:** `PopupWindow` or `PanelWindow { exclusionMode: ExclusionMode.Ignore, focusable: true }` centered via `anchors.centerIn: parent` on the screen.
 * **Card:** `Rectangle { width: 560-640, radius: Theme.roundingLauncher, color: Theme.bgLauncher, border.color: Theme.borderActive, border.width: 1 }` with layer shadow.
-* **Rows:** `radius: Theme.roundingItem`, hover `Theme.bgHover`, selected `Theme.bgActive`, critical wash `Theme.bgCritical`.
+* **Rows:** `radius: Theme.roundingItem`, hover `Theme.bgHover`, selected `Theme.bgSelected`, critical wash `Theme.bgCritical`.
 * **Section headers:** `font.pixelSize: Theme.fontSizeSmall, color: Theme.fgMuted, textTransform: uppercase`.
-* **Search/filter field:** rounded input, `placeholderTextColor: Theme.fgMuted`, focus ring `border.color: Theme.accent`.
-* **Focus ring:** `Rectangle { border.color: Theme.accent; border.width: 1; visible: parent.activeFocus }`.
+* **Search/filter field:** rounded input, `placeholderTextColor: Theme.fgMuted`, focus ring `border.color: Theme.borderSelected`.
+* **Focus ring:** `Rectangle { border.color: Theme.borderSelected; border.width: 1; visible: parent.activeFocus }`.
 * **Scrollbar:** thin, `Theme.fgMuted` at 0.3 opacity, no arrows.
 * **Icons per row:** left-aligned Nerd glyph + label; right-aligned status/meta (signal %, address, etc.) in `fgMuted`.
 
@@ -186,12 +191,13 @@ property string warning:          ""
 |---|---|---|---|
 | Idle | `fg` | `bgBar`/`bgLauncher` | default |
 | Hover | `fg` (brighter) | `bgHover` | 300ms transition |
-| Active/selected | `fg` | `bgActive` | vim cursor row |
+| Active/selected | `fg` | `bgSelected` | vim cursor row |
 | Good (<30% load) | `fg` | — | no tint |
 | Warning (30–80%) | `warning` | — | Waybar thresholds |
 | Critical (>80%, battery<20%) | `critical` | `bgCritical` wash | blink if bar perf, solid if launcher |
 | Disabled / unavailable | `fgDim` | — | e.g., no Bluetooth adapter |
 | Charging | `success` | — | battery only |
+| Plugged (AC, not charging) | `fg` | — | battery only — plug glyph, no percent |
 
 ---
 

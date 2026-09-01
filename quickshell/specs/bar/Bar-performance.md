@@ -39,12 +39,12 @@ Each metric mirrors Waybar `format` + thresholds.
 * **Disk:** `used` in integer GB, `percentage_used` 0–100. Poll `statvfs` on `/`.
 * **CPU:** `usage` is overall % from `/proc/stat` delta; `load` is 1-min `loadavg` (Waybar shows both). Two-decimal load.
 * **Memory:** `used = MemTotal - MemAvailable` (GiB), `percentage = used / MemTotal * 100`.
-* **Temperature:** Waybar `critical-threshold: 80` and `#temperature` is `#1189f2` by default. Prefer the **hottest thermal zone** (`thermal_zone0` on most laptops) or `k10temp`/`coretemp` via `sensors`. Unit °C. If no sensor, render ` --°C` dimmed.
+* **Temperature:** Waybar `critical-threshold: 80` and `#temperature` is `#1189f2` by default. Prefer the `x86_pkg_temp` thermal zone (CPU die); fall back to the **hottest** numeric thermal zone (skip acpitz/INT3400 ambient zones — `thermal_zone0` is ambient on many laptops and reads ~20° while the CPU is hot). Unit °C. If no sensor, render ` --°C` dimmed.
 
 **Colour by state:**
 
-* `good` (<30): `Theme.fg` (except temperature which is `Theme.accent` `#1189f2` at idle, per `waybar/style.css#temperature`).
-* `warning` (30/60–80/90): `Theme.warning` `#ffbe61`.
+* `good` (<30): `Theme.fg` for all metrics (temperature included — `Theme.accent` is reserved for warnings/states elsewhere).
+* `warning` (30/60–80/90): `Theme.warning` (`#c63d3d`).
 * `critical` (>80/90): `Theme.critical` `#f53c3c` + `Theme.bgCritical` wash; for bar perf the Waybar `blink` animation is required (see `STYLE.md:6`): `SequentialAnimation on color { loops: Animation.Infinite }`.
 
 ## 4. Service Contract — `PerfService.qml`

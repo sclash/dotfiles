@@ -33,13 +33,21 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 * **Per-dot interaction:** `MouseArea { onClicked: Hyprland.dispatch("workspace " + id) }`.
 * **Font size:** `10px` equivalent (Waybar workspace buttons use `padding: 0 5px` with dot glyph ~10px). Use `font.pixelSize: 10` for the dot, with `spacing: Theme.gapS` between dots.
 
-## 3. Optional Enhancement — Per-Workspace App Tray
+## 3. Per-Workspace App Tray (Implemented)
 
 > "If possible each desktop environment should have an associated app tray" (original spec).
 
-* If feasible, beneath or beside each dot render a **micro-row of app icons** for windows on that workspace (`Hyprland.toplevels` filtered by `workspace.id`).
-* Use `Hyprland.Toplevel.icon` or `DesktopEntry` icon; fallback to `wayland` glyph.
-* If this adds layout instability or performance cost, **defer** — the primary spec is the dots. The app-tray-on-workspace is **nice-to-have**, not a blocker.
+* Inline to the **right of each dot**, a micro-row of app icons for windows on that workspace
+  (`Hyprland.toplevels` filtered by `workspace.id`, via `components/bar/Workspaces.qml`).
+* **Data source:** `Quickshell.Hyprland.toplevels` (`ObjectModel<HyprlandToplevel>`) — event-driven
+  via `openwindow` / `closewindow` / `movewindowv2` / `windowtitlev2` IPC events. **No polling.**
+* **Icon resolution:** `Quickshell.iconPath(toplevel.wayland.appId)`; fallback glyph `Icons.window`
+  when the appId is empty (XWayland) or the theme has no icon.
+* **States:** activated window icon at full opacity (`toplevel.activated`), others at 0.55;
+  hover shows `Theme.bgHover` wash + tooltip with the window title.
+* **Overflow:** max `Theme.wsAppIconMax` (3) icons per workspace; extra windows collapse into a `+n` count.
+* **Interaction:** click icon → `Hyprland.dispatch("focuswindow address:<address>")` (focus follows,
+  workspace switches if needed); click dot → switch workspace (unchanged).
 
 ## 4. Data Source
 
@@ -58,5 +66,7 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 * [ ] Active workspace is white; others are `Theme.fgDim`.
 * [ ] Clicking a dot dispatches `hyprctl dispatch workspace <id>` and focus follows.
 * [ ] No polling; updates are event-driven via `Quickshell.Hyprland`.
-* [ ] Per-workspace app icons appear if implemented, otherwise gracefully absent.
+* [x] Per-workspace app icons appear inline next to each dot, update live on open/close/move.
+* [x] Icon click focuses the window (`focuswindow address:`); dot click switches workspace.
+* [x] Fallback `Icons.window` glyph when no themed icon resolves.
 * [ ] No hard-coded colours — all via `Theme.*`.

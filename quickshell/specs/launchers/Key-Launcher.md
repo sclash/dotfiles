@@ -50,7 +50,7 @@ Reference popup: a filterable table of all `SUPER+<key>` bindings. Read-only, ke
 
 * Header row: `font.pixelSize: Theme.fontSizeSmall; color: Theme.fgMuted; text: "KEY · ACTION"` uppercase.
 * Key column: `color: Theme.accent` for the `SUPER+` prefix, `Theme.fg` for the key.
-* Row hover: `Theme.bgHover`; focused: `Theme.bgActive`.
+* Row hover: `Theme.bgHover`; focused: `Theme.bgSelected`.
 * Separator line between header and rows at `Theme.border`.
 
 ## 6. Acceptance

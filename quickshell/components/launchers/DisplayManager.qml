@@ -49,8 +49,8 @@ PanelWindow {
                     width: parent.width
                     height: 56
                     radius: Theme.roundingItem
-                    color: Theme.bgActive
-                    border.color: modelData.focused ? Theme.fg : Theme.border
+                    color: modelData.focused ? Theme.bgSelected : Theme.bgActive
+                    border.color: modelData.focused ? Theme.borderSelected : Theme.border
                     border.width: modelData.focused ? 2 : 1
                     RowLayout {
                         anchors.fill: parent
@@ -60,8 +60,8 @@ PanelWindow {
                         Rectangle {
                             width: 36; height: 36
                             radius: 8
-                            color: modelData.focused ? Theme.fg : Theme.bgBar
-                            Text { anchors.centerIn: parent; text: Icons.display; font.family: Theme.fontFamily; font.pixelSize: 16; color: modelData.focused ? Theme.bgBar : Theme.fgMuted }
+                            color: modelData.focused ? Theme.bgSelected : Theme.bgBar
+                            Text { anchors.centerIn: parent; text: Icons.display; font.family: Theme.fontFamily; font.pixelSize: 16; color: modelData.focused ? Theme.fg : Theme.fgMuted }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -112,7 +112,7 @@ PanelWindow {
                             width: 70; height: 28
                             radius: 6
                             color: Theme.bgActive
-                            border.color: Theme.fg
+                            border.color: Theme.borderActive
                             border.width: 1
                             Text { anchors.centerIn: parent; text: "Extend"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                             MouseArea { anchors.fill: parent; onClicked: connectProc("extend", modelData.name) }

@@ -6,10 +6,12 @@ QtObject {
     id: root
     property bool available: true
     property bool powered: false
+    property bool scanning: false
     property int connectedCount: 0
     property string controllerAlias: ""
     property string controllerAddress: ""
     property var devices: []
+    property var nearby: []
     property string lastError: ""
     signal dataUpdated()
 
@@ -18,8 +20,50 @@ QtObject {
     function forget(address) { root.btRemoveProc.command = ["bluetoothctl", "remove", address]; root.btRemoveProc.running = true }
     function trust(address) { root.btTrustProc.command = ["bluetoothctl", "trust", address]; root.btTrustProc.running = true }
     function togglePower() { if (root.powered) root.btPowerOff.running=true; else root.btPowerOn.running=true }
-    function startScan() { root.btScanOnProc.running = true; root.scanTimer.running = true }
-    function stopScan() { root.btScanOffProc.running = true; root.scanTimer.running = false }
+    function pairAndConnect(address) {
+        root.btPairProc.command = ["sh", "-c", "bluetoothctl --agent NoInputNoOutput pair " + address + "; bluetoothctl trust " + address + "; bluetoothctl --agent NoInputNoOutput connect " + address + " 2>/dev/null"]
+        root.btPairProc.running = true
+    }
+
+    function startScan() {
+        root.nearby = []
+        if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true }
+        else beginScan()
+    }
+    function beginScan() {
+        if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true; return }
+        root.scanning = true
+        root.btScanOnProc.running = true
+        root.scanTimer.restart()
+    }
+    function stopScan() {
+        root.btScanOffProc.running = true
+        root.scanTimer.running = false
+        root.scanning = false
+    }
+
+    function handleScanLine(line) {
+        const l = String(line).trim()
+        if (!l) return
+        const known = root.nearby
+        // [NEW] Device AA:BB:CC:DD:EE:FF Name
+        const nw = l.match(/\[NEW\]\s+Device\s+([0-9A-Fa-f:]{17})(?:\s+(.*))?/)
+        if (nw) {
+            const addr = nw[1].toUpperCase()
+            if (known.some(d => d.address === addr)) return
+            root.nearby = known.concat([{ address: addr, alias: (nw[2] || "Unknown device").trim() }])
+            root.dataUpdated()
+            return
+        }
+        // [CHG] Device AA:BB... Name: X — update alias when it arrives later
+        const chg = l.match(/\[CHG\]\s+Device\s+([0-9A-Fa-f:]{17})\s+Name:\s*(.*)/)
+        if (chg) {
+            const addr = chg[1].toUpperCase()
+            let hit = false
+            const copy = known.map(d => { if (d.address === addr && chg[2].trim()) { hit = true; return { address: d.address, alias: chg[2].trim() } } return d })
+            if (hit) { root.nearby = copy; root.dataUpdated() }
+        }
+    }
 
     property Process pollProc: Process {
         running: true
@@ -56,11 +100,19 @@ QtObject {
     property Process btConnProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btRemoveProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btTrustProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process btPairProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btPowerOn: Process { command: ["bluetoothctl", "power", "on"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btPowerOff: Process { command: ["bluetoothctl", "power", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process btScanOnProc: Process { command: ["bluetoothctl", "scan", "on"]; stdout: StdioCollector {} }
+    property Process btScanOnProc: Process {
+        command: ["bluetoothctl", "scan", "on"]
+        stdout: SplitParser { onRead: (line) => root.handleScanLine(line) }
+    }
     property Process btScanOffProc: Process { command: ["bluetoothctl", "scan", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
 
-    property Timer scanTimer: Timer { interval: 10000; running: false; repeat: false; onTriggered: { root.btScanOffProc.running = true; root.pollProc.running = true } }
+    property Timer scanTimer: Timer { interval: 10000; running: false; repeat: false; onTriggered: { root.btScanOffProc.running = true; root.scanning = false } }
+    property Timer deferredScan: Timer { interval: 1500; running: false; repeat: false; onTriggered: root.beginScan() }
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
+
+    // Bluetooth powered off by default at session start
+    Component.onCompleted: Qt.callLater(() => { root.btPowerOff.running = true })
 }

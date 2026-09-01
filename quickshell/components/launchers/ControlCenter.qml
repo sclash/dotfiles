@@ -40,7 +40,7 @@ PanelWindow {
                     Layout.preferredHeight: 40
                     radius: Theme.roundingItem
                     color: Theme.bgActive
-                    border.color: filterField.activeFocus ? Theme.fg : Theme.border
+                    border.color: filterField.activeFocus ? Theme.borderSelected : Theme.border
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
@@ -77,32 +77,35 @@ PanelWindow {
                 model: root.filteredModel
                 currentIndex: 0
                 focus: true
-                highlight: Rectangle { color: Theme.bgActive; radius: Theme.roundingItem; border.color: Theme.fg; border.width: 2 }
-                highlightMoveDuration: Theme.durationFast
-                delegate: Rectangle {
+                delegate: Item {
                     required property var modelData
                     required property int index
-                    width: 294
-                    height: 78
-                    radius: Theme.roundingItem
-                    color: GridView.isCurrentItem ? Theme.bgActive : (ma.containsMouse ? Theme.bgHover : "transparent")
-                    border.color: GridView.isCurrentItem ? Theme.fg : Theme.border
-                    border.width: GridView.isCurrentItem ? 2 : 1
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: Theme.padM
-                        spacing: Theme.gapM
-                        Rectangle {
-                            width: 44; height: 44
-                            radius: 10
-                            color: Theme.bgBar
-                            Text { anchors.centerIn: parent; text: modelData.icon; font.family: Theme.fontFamily; font.pixelSize: 22; color: GridView.isCurrentItem ? Theme.fg : Theme.fg }
-                        }
-                        ColumnLayout {
-                            spacing: 2
-                            Layout.fillWidth: true
-                            Text { text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Theme.fontWeightMedium; color: Theme.fg }
-                            Text { text: modelData.key; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                    width: gridView.cellWidth
+                    height: gridView.cellHeight
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 294
+                        height: 78
+                        radius: Theme.roundingItem
+                        color: GridView.isCurrentItem ? Theme.bgSelected : (ma.containsMouse ? Theme.bgHover : "transparent")
+                        border.color: GridView.isCurrentItem ? Theme.borderSelected : Theme.border
+                        border.width: GridView.isCurrentItem ? 2 : 1
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.padM
+                            spacing: Theme.gapM
+                            Rectangle {
+                                width: 44; height: 44
+                                radius: 10
+                                color: Theme.bgBar
+                                Text { anchors.centerIn: parent; text: modelData.icon; font.family: Theme.fontFamily; font.pixelSize: 22; color: Theme.fg }
+                            }
+                            ColumnLayout {
+                                spacing: 2
+                                Layout.fillWidth: true
+                                Text { text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Theme.fontWeightMedium; color: Theme.fg }
+                                Text { text: modelData.key; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                            }
                         }
                     }
                     MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { gridView.currentIndex=index; root.dispatch() } }

@@ -43,7 +43,7 @@ Center-screen confirmation grid for power/plane actions. Minimal chrome, large h
 
 ## 5. Styling
 
-* Grid cards: `radius: Theme.roundingItem`, `height: 84`, icon `Theme.fontSizeLauncher*1.6` centered above label, `Theme.fg`. Hover `Theme.bgHover`; focused `Theme.bgActive` + `border.color: Theme.accent`; critical focused `border.color: Theme.critical`.
+* Grid cards: `radius: Theme.roundingItem`, `height: 84`, icon `Theme.fontSizeLauncher*1.6` centered above label, `Theme.fg`. Hover `Theme.bgHover`; focused `Theme.bgSelected` + `border.color: Theme.borderSelected`; critical focused `border.color: Theme.critical`.
 * Plane Mode ON: card at `Theme.accent` tint to indicate active.
 
 ## 6. Dry-Run / Safety

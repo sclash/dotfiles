@@ -16,8 +16,8 @@ RowLayout {
             anchors.centerIn: parent
             text: PerfService.expanded ? Icons.collapse : Icons.expand
             font.family: Theme.fontFamily
-            font.pixelSize: 14
-            color: PerfService.expanded ? Theme.accent : Theme.fgMuted
+            font.pixelSize: Theme.barIconSize
+            color: PerfService.expanded ? Theme.fg : Theme.fgMuted
         }
         MouseArea {
             id: handleMA
@@ -34,7 +34,7 @@ RowLayout {
 
         RowLayout {
             spacing: 4
-            Text { text: Icons.disk; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fgMuted }
+            Text { text: Icons.disk; font.family: Theme.fontFamily; font.pixelSize: Theme.barIconSize; color: Theme.fgMuted }
             Text {
                 text: PerfService.diskUsedGb + "G " + PerfService.diskPercent + "%"
                 font.family: Theme.fontFamily
@@ -48,7 +48,7 @@ RowLayout {
         }
         RowLayout {
             spacing: 4
-            Text { text: Icons.cpu; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fgMuted }
+            Text { text: Icons.cpu; font.family: Theme.fontFamily; font.pixelSize: Theme.barIconSize; color: Theme.fgMuted }
             Text {
                 text: PerfService.cpuUsage + "%"
                 font.family: Theme.fontFamily
@@ -70,7 +70,7 @@ RowLayout {
         }
         RowLayout {
             spacing: 4
-            Text { text: Icons.memory; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fgMuted }
+            Text { text: Icons.memory; font.family: Theme.fontFamily; font.pixelSize: Theme.barIconSize; color: Theme.fgMuted }
             Text {
                 text: PerfService.memUsedGiB + "G " + PerfService.memPercent + "%"
                 font.family: Theme.fontFamily
@@ -84,7 +84,7 @@ RowLayout {
         }
         RowLayout {
             spacing: 4
-            Text { text: Icons.temp; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.accent }
+            Text { text: Icons.temp; font.family: Theme.fontFamily; font.pixelSize: Theme.barIconSize; color: Theme.fgMuted }
             Text {
                 text: PerfService.tempC >=0 ? PerfService.tempC + "°" : "--°"
                 font.family: Theme.fontFamily
@@ -93,7 +93,7 @@ RowLayout {
                     if (PerfService.tempC <0) return Theme.fgDim
                     if (PerfService.tempC >= 80) return Theme.critical
                     if (PerfService.tempC >= 60) return Theme.warning
-                    return Theme.accent
+                    return Theme.fg
                 }
             }
         }

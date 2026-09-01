@@ -50,7 +50,7 @@ RowLayout {
         Text {
             id: bell
             anchors.centerIn: parent
-            text: Icons.notification
+            text: NotifService.dnd ? Icons.notificationDnd : Icons.notification
             font.family: Theme.fontFamily
             font.pixelSize: 16
             color: {

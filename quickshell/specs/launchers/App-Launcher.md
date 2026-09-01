@@ -28,7 +28,7 @@ Center-screen fuzzy app launcher. Parity with current `SUPER+R → walker/elepha
 ### 3.2 Results
 
 * **List:** `ListView` with delegate rows: `icon` (from `DesktopEntry.icon` or backend-provided) + `name` (bold) + `exec`/`comment` (`Theme.fgMuted`, `fontSizeSmall`).
-* **Ordering:** backend order. Highlight the `currentIndex` row at `Theme.bgActive`.
+* **Ordering:** backend order. Highlight the `currentIndex` row at `Theme.bgSelected`.
 * **Empty state:** if query empty → show recent/frequent apps (backend's history) or a hint `"Type to search"` at `Theme.fgMuted`. If no results → `"No results for \"{query}\""`.
 * **Icons:** `Image { source: Quickshell.iconPath(entry.icon, "application-x-executable") }` or `DesktopEntry.icon`. Size `20px`.
 
@@ -57,8 +57,8 @@ Center-screen fuzzy app launcher. Parity with current `SUPER+R → walker/elepha
 
 ## 6. Styling
 
-* Input field: `radius: Theme.roundingItem`, `color: Theme.bgActive`, `border.color: Theme.accent` when focused.
-* Result rows: `radius: Theme.roundingItem`, hover `Theme.bgHover`, selected `Theme.bgActive` + `border.color: Theme.accent`.
+* Input field: `radius: Theme.roundingItem`, `color: Theme.bgActive`, `border.color: Theme.borderSelected` when focused.
+* Result rows: `radius: Theme.roundingItem`, hover `Theme.bgHover`, selected `Theme.bgSelected` + `border.color: Theme.borderSelected`.
 * Input + list share the card padding (`Theme.padM`).
 
 ## 7. Acceptance

@@ -20,7 +20,7 @@ QtObject {
     property int _prevTotal: 0
 
     property Process pollProc: Process {
-        command: ["sh", "-c", "cat /proc/stat | head -n 1; echo '---'; cat /proc/meminfo | head -n 5; echo '---'; cat /proc/loadavg; echo '---'; df -BG / | tail -n 1; echo '---'; cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/thermal/thermal_zone1/temp 2>/dev/null || echo -1"]
+        command: ["sh", "-c", "cat /proc/stat | head -n 1; echo '---'; cat /proc/meminfo | head -n 5; echo '---'; cat /proc/loadavg; echo '---'; df -BG / | tail -n 1; echo '---'; bestv=0; found=0; for z in /sys/class/thermal/thermal_zone*; do t=$(cat \"$z/type\" 2>/dev/null); v=$(cat \"$z/temp\" 2>/dev/null); case \"$v\" in \"\"|*[!0-9]*) continue;; esac; if [ \"$t\" = x86_pkg_temp ]; then echo \"$v\"; exit 0; fi; if [ \"$v\" -gt \"$bestv\" ]; then bestv=\"$v\"; found=1; fi; done; if [ \"$found\" = 1 ]; then echo \"$bestv\"; else echo -1; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text

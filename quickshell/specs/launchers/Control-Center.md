@@ -38,7 +38,7 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 
 ## 5. Styling
 
-* Selected row: `Theme.bgActive` + `border.color: Theme.accent` focus ring.
+* Selected row: `Theme.bgSelected` + `border.color: Theme.borderSelected` focus ring.
 * Key hints right-aligned in `Theme.fgMuted`, `font.pixelSize: Theme.fontSizeSmall`.
 * Icons at `Theme.fontSizeLauncher:13` in `Theme.fg`.
 

@@ -2,13 +2,14 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    // Omarchy matte-black inspired — dark, warm accent, low chrome
+    // Omarchy matte-black inspired — dark, monochrome white/grey, low chrome
     // Derived from themes/matte-black/colors.toml + shell/commons
     property color bgBar:           "#121212"      // background
     property color bgBarAlt:        "#1e1e1e"      // lighter_background
-    property color bgLauncher:      "#1a1a1a"      // slightly lighter than bar for contrast
+    property color bgLauncher:      "#121212"      // same as bgBar
     property color bgHover:         "#2a2a2a"      // selection
     property color bgActive:        "#333333"      // muted
+    property color bgSelected:      "#2e2e2e"      // selected rows — dark, subtle
     property color bgCritical:      "#631e1e"      // muted red wash
 
     property color fg:              "#bebebe"      // foreground
@@ -16,13 +17,14 @@ QtObject {
     property color fgDim:           "#555555"      // dark_foreground
     property color fgBright:        "#eaeaea"
 
-    property color accent:          "#e68e0d"      // accent (orange)
-    property color accentAlt:       "#f59e0b"      // bright_blue
-    property color success:         "#FFC107"      // green
-    property color warning:         "#c63d3d"      // orange
-    property color critical:        "#D35F5F"      // red
+    property color accent:          "#eaeaea"      // white — active/focus states
+    property color accentAlt:       "#8a8a8d"      // grey — secondary active
+    property color success:         "#eaeaea"      // white — on/connected
+    property color warning:         "#c63d3d"      // red — warning states
+    property color critical:        "#D35F5F"      // red — critical states
     property color border:          "#2a2a2a"
     property color borderActive:    "#3a3a3a"
+    property color borderSelected:  "#4a4a4a"      // selected outline — muted grey
     property color shadow:          "#0a0a0a"
     property color overlay:         "#00000099"    // dim overlay
 
@@ -46,6 +48,9 @@ QtObject {
     property int barHeight: 32
     property int barIconSlot: 32
     property int barIconSize: 18
+    property int wsAppIcon: 32       // per-workspace tray icon slot (AppTray parity)
+    property int wsAppIconGlyph: 20  // icon glyph inside the slot
+    property int wsAppIconMax: 3     // max inline icons per workspace (overflow → +n)
 
     // Typography — Omarchy Style.font, JetBrainsMono
     property string fontFamily: "JetBrainsMono Nerd Font"

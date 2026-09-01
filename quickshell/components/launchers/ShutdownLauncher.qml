@@ -52,8 +52,8 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===0 ? Theme.bgActive : (sleepMA.containsMouse ? Theme.bgHover : "transparent")
-                    border.color: root.currentIndex===0 ? Theme.accent : "transparent"
+                    color: root.currentIndex===0 ? Theme.bgSelected : (sleepMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===0 ? Theme.borderSelected : "transparent"
                     border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.sleep; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -66,7 +66,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===1 ? Theme.bgActive : (rebootMA.containsMouse ? Theme.bgHover : "transparent")
+                    color: root.currentIndex===1 ? Theme.bgSelected : (rebootMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===1 ? Theme.warning : "transparent"
                     border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
@@ -80,7 +80,7 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===2 ? Theme.bgActive : (shutdownMA.containsMouse ? Theme.bgHover : "transparent")
+                    color: root.currentIndex===2 ? Theme.bgSelected : (shutdownMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===2 ? Theme.critical : "transparent"
                     border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
@@ -94,13 +94,12 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: planeActive ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.14) : (root.currentIndex===3 ? Theme.bgActive : (planeMA.containsMouse ? Theme.bgHover : "transparent"))
-                    border.color: planeActive ? Theme.accent : (root.currentIndex===3 ? Theme.accent : "transparent")
+                    color: planeActive ? Theme.bgSelected : (root.currentIndex===3 ? Theme.bgSelected : (planeMA.containsMouse ? Theme.bgHover : "transparent"))
+                    border.color: planeActive ? Theme.borderSelected : (root.currentIndex===3 ? Theme.borderSelected : "transparent")
                     border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: planeActive ? Icons.planeOn : Icons.planeOff; font.family: Theme.fontFamily; font.pixelSize: 26; color: planeActive ? Theme.accent : Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: planeActive ? "Plane ON" : "Plane"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
-                        Text { text: planeActive ? "tap to disable" : "airplane"; font.family: Theme.fontFamily; font.pixelSize: 9; color: planeActive ? Theme.accent : Theme.fgMuted; Layout.alignment: Qt.AlignHCenter }
                     }
                     MouseArea { id: planeMA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.currentIndex=3; togglePlane() } }
                 }
@@ -108,15 +107,28 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 110
                     radius: Theme.roundingItem
-                    color: root.currentIndex===4 ? Theme.bgActive : (logoutMA.containsMouse ? Theme.bgHover : "transparent")
-                    border.color: root.currentIndex===4 ? Theme.warning : "transparent"
+                    color: root.currentIndex===4 ? Theme.bgSelected : (lockMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===4 ? Theme.borderSelected : "transparent"
+                    border.width: 2
+                    ColumnLayout { anchors.centerIn: parent; spacing: 8
+                        Text { text: Icons.lock; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
+                        Text { text: "Lock"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
+                    }
+                    MouseArea { id: lockMA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.currentIndex=4; activate(4) } }
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 110
+                    radius: Theme.roundingItem
+                    color: root.currentIndex===5 ? Theme.bgSelected : (logoutMA.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: root.currentIndex===5 ? Theme.warning : "transparent"
                     border.width: 2
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.logout; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Logout"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
-                        Text { visible: root.confirmIndex===4; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
+                        Text { visible: root.confirmIndex===5; text: "↩ again"; font.family: Theme.fontFamily; font.pixelSize: 9; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                     }
-                    MouseArea { id: logoutMA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.currentIndex=4; activate(4) } }
+                    MouseArea { id: logoutMA; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.currentIndex=5; activate(5) } }
                 }
             }
 
@@ -125,8 +137,8 @@ PanelWindow {
             Keys.onPressed: (e)=>{
                 let idx=root.currentIndex
                 if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { idx=Math.max(0,idx-1); e.accepted=true }
-                else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { idx=Math.min(4,idx+1); e.accepted=true }
-                else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { idx=Math.min(4,idx+1); e.accepted=true }
+                else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { idx=Math.min(5,idx+1); e.accepted=true }
+                else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { idx=Math.min(5,idx+1); e.accepted=true }
                 else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { idx=Math.max(0,idx-1); e.accepted=true }
                 else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { activate(idx); e.accepted=true }
                 else if(e.key===Qt.Key_Escape) { if(root.confirmIndex!==-1){root.confirmIndex=-1; e.accepted=true} else root.close() }
@@ -140,14 +152,15 @@ PanelWindow {
 
     function activate(idx){
         if (idx===3) { togglePlane(); return }
-        const needsConfirm = (idx===1 || idx===2 || idx===4)
+        if (idx===4) { execProc.command=["hyprlock"]; execProc.running=true; root.close(); return }
+        const needsConfirm = (idx===1 || idx===2 || idx===5)
         if (needsConfirm && root.confirmIndex!==idx) { root.confirmIndex=idx; return }
         root.confirmIndex=-1
         let cmd=[]
         if(idx===0) cmd=["systemctl","suspend"]
         else if(idx===1) cmd=["systemctl","reboot"]
         else if(idx===2) cmd=["systemctl","poweroff"]
-        else if(idx===4) cmd=["hyprctl","dispatch","exit"]
+        else if(idx===5) cmd=["hyprctl","dispatch","exit"]
         if(cmd.length>0){
             console.log("[ShutdownLauncher] exec:", JSON.stringify(cmd))
             execProc.command=cmd

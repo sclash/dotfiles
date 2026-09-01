@@ -7,7 +7,7 @@ import "../../theme"
 
 RowLayout {
     id: root
-    spacing: 12
+    spacing: 4
     visible: SystemTray.items.values.length > 0
 
     // Expose the bar window for menu display (set from Bar.qml if available)
@@ -15,60 +15,65 @@ RowLayout {
 
     Repeater {
         model: SystemTray.items
-        delegate: Item {
+        delegate: Rectangle {
+            id: slot
             required property var modelData
             required property int index
-            // Spec: icon-size 12, spacing 12 — Waybar parity
-            width: 12; height: 12
+            width: 32; height: 32
+            radius: Theme.roundingItem
+            color: slotMA.containsMouse ? Theme.bgHover : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
             visible: index < 6 || SystemTray.items.values.length <= 6
 
             Image {
                 id: trayIcon
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 20; height: 20
                 // systemTrayItem.icon is already a source string in 0.3.0 —
                 // do not pass it through Quickshell.iconPath (that is for themed
                 // icon *names*, and would garble already-resolved sources)
-                source: modelData.icon
+                source: slot.modelData.icon
                 smooth: true
                 asynchronous: true
-                sourceSize: Qt.size(12, 12)
+                sourceSize: Qt.size(20, 20)
             }
             Text {
                 anchors.centerIn: parent
                 visible: trayIcon.status === Image.Error
                 text: Icons.warning
                 font.family: Theme.fontFamily
-                font.pixelSize: 10
+                font.pixelSize: 12
                 color: Theme.fgDim
             }
-            ToolTip.visible: hoverMA.containsMouse && !!modelData.tooltipTitle
-            ToolTip.text: (modelData.tooltipTitle || "") + (modelData.tooltipDescription ? "\n" + modelData.tooltipDescription : "")
+
+            // Platform menu (hyprland menubar) for tray items that provide one.
+            // Requires `//@ pragma UseQApplication` in shell.qml.
+            QsMenuAnchor {
+                id: menuAnchor
+                anchor.item: slot
+                menu: slot.modelData.menu
+            }
+
+            ToolTip.visible: slotMA.containsMouse && !!slot.modelData.tooltipTitle
+            ToolTip.text: (slot.modelData.tooltipTitle || "") + (slot.modelData.tooltipDescription ? "\n" + slot.modelData.tooltipDescription : "")
             ToolTip.delay: 500
             MouseArea {
-                id: hoverMA
+                id: slotMA
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.RightButton) {
-                        if (modelData.hasMenu) {
-                            let win = root.barWindow
-                            if (!win) win = root.QsWindow.window
-                            if (win) modelData.display(win, mouse.x, mouse.y)
-                            else modelData.secondaryActivate()
-                        } else modelData.secondaryActivate()
+                        if (slot.modelData.hasMenu) menuAnchor.open()
+                        else slot.modelData.secondaryActivate()
                     } else if (mouse.button === Qt.MiddleButton) {
-                        modelData.secondaryActivate()
-                    } else modelData.activate()
+                        slot.modelData.secondaryActivate()
+                    } else slot.modelData.activate()
                 }
                 onPressAndHold: {
-                    if (modelData.hasMenu) {
-                        let win = root.barWindow
-                        if (!win) win = root.QsWindow.window
-                        if (win) modelData.display(win, 0, 0)
-                        else modelData.secondaryActivate()
-                    } else modelData.secondaryActivate()
+                    if (slot.modelData.hasMenu) menuAnchor.open()
+                    else slot.modelData.secondaryActivate()
                 }
             }
         }

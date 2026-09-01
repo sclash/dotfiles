@@ -57,8 +57,8 @@ PanelWindow {
                         Rectangle {
                             width: 40; height: 40
                             radius: 8
-                            color: AudioService.muted ? Theme.bgCritical : Theme.fg
-                            Text { anchors.centerIn: parent; text: AudioService.muted ? Icons.audioMuted : Icons.audioVolume; font.family: Theme.fontFamily; font.pixelSize: 18; color: Theme.bgBar }
+                            color: AudioService.muted ? Theme.bgCritical : Theme.bgSelected
+                            Text { anchors.centerIn: parent; text: AudioService.muted ? Icons.audioMuted : Icons.audioVolume; font.family: Theme.fontFamily; font.pixelSize: 18; color: Theme.fg }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -74,15 +74,44 @@ PanelWindow {
                             }
                             Text { text: AudioService.hasSink ? AudioService.volume + "%" + (AudioService.muted ? " · muted" : "") : ""; color: Theme.fgMuted; font.family: Theme.fontFamily; font.pixelSize: 11 }
                         }
-                        Switch { checked: !AudioService.muted; onClicked: AudioService.toggleMute() }
+                        Switch {
+                            id: muteSwitch
+                            checked: !AudioService.muted
+                            onClicked: AudioService.toggleMute()
+                            Layout.alignment: Qt.AlignVCenter
+                            indicator: Rectangle {
+                                implicitWidth: 38; implicitHeight: 20
+                                radius: 10
+                                color: muteSwitch.checked ? Theme.bgSelected : Theme.bgBar
+                                border.color: muteSwitch.checked ? Theme.borderSelected : Theme.border
+                                border.width: 1
+                                Rectangle {
+                                    width: 14; height: 14; radius: 7
+                                    x: muteSwitch.checked ? parent.width - width - 3 : 3
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: muteSwitch.checked ? Theme.fg : Theme.fgMuted
+                                    Behavior on x { NumberAnimation { duration: Theme.durationFast } }
+                                }
+                            }
+                        }
                     }
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Theme.gapM
-                        Text { text: "−"; font.pixelSize: 14; color: Theme.fgMuted; MouseArea { anchors.fill: parent; onClicked: AudioService.adjustVolume(-0.05) } }
+                        Rectangle {
+                            id: volMinus
+                            width: 28; height: 28
+                            radius: Theme.roundingItem
+                            color: volMinusMouse.containsMouse ? Theme.bgHover : Theme.bgActive
+                            border.color: Theme.border
+                            border.width: 1
+                            Text { anchors.centerIn: parent; text: "−"; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fg }
+                            MouseArea { id: volMinusMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: AudioService.adjustVolume(-0.05) }
+                        }
                         Slider {
                             id: volSlider
                             Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
                             from: 0; to: 1
                             value: (AudioService.sink && AudioService.sink.audio) ? AudioService.sink.audio.volume : 0
                             onMoved: AudioService.setVolume(value)
@@ -95,7 +124,16 @@ PanelWindow {
                             background: Rectangle { implicitHeight: 6; radius: 3; color: Theme.border; Rectangle { width: volSlider.visualPosition*parent.width; height: parent.height; radius: 3; color: Theme.accent } }
                             handle: Rectangle { x: volSlider.leftPadding + volSlider.visualPosition*(volSlider.availableWidth - width); y: volSlider.topPadding + volSlider.availableHeight/2 - height/2; width: 16; height: 16; radius: 8; color: Theme.accent; border.color: Theme.accent; border.width: 2 }
                         }
-                        Text { text: "+"; font.pixelSize: 14; color: Theme.fgMuted; MouseArea { anchors.fill: parent; onClicked: AudioService.adjustVolume(0.05) } }
+                        Rectangle {
+                            id: volPlus
+                            width: 28; height: 28
+                            radius: Theme.roundingItem
+                            color: volPlusMouse.containsMouse ? Theme.bgHover : Theme.bgActive
+                            border.color: Theme.border
+                            border.width: 1
+                            Text { anchors.centerIn: parent; text: "+"; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fg }
+                            MouseArea { id: volPlusMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: AudioService.adjustVolume(0.05) }
+                        }
                     }
                 }
             }
@@ -113,8 +151,8 @@ PanelWindow {
                     width: sinksList.width
                     height: 44
                     radius: Theme.roundingItem
-                    color: (AudioService.sink && modelData.id === AudioService.sink.id) ? Theme.bgActive : (ma.containsMouse ? Theme.bgHover : "transparent")
-                    border.color: (AudioService.sink && modelData.id === AudioService.sink.id) ? Theme.fg : "transparent"
+                    color: (AudioService.sink && modelData.id === AudioService.sink.id) ? Theme.bgSelected : (ma.containsMouse ? Theme.bgHover : "transparent")
+                    border.color: (AudioService.sink && modelData.id === AudioService.sink.id) ? Theme.borderSelected : "transparent"
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
@@ -165,7 +203,26 @@ PanelWindow {
                             background: Rectangle { implicitHeight: 6; radius: 3; color: Theme.border; Rectangle { width: micSlider.visualPosition*parent.width; height: parent.height; radius: 3; color: Theme.accent } }
                             handle: Rectangle { x: micSlider.leftPadding + micSlider.visualPosition*(micSlider.availableWidth - width); y: micSlider.topPadding + micSlider.availableHeight/2 - height/2; width: 16; height: 16; radius: 8; color: Theme.accent; border.color: Theme.accent; border.width: 2 }
                         }
-                        Switch { checked: AudioService.source && AudioService.source.audio ? !AudioService.source.audio.muted : false; onClicked: if(AudioService.source && AudioService.source.audio) AudioService.source.audio.muted = !AudioService.source.audio.muted }
+                        Switch {
+                            id: micSwitch
+                            checked: AudioService.source && AudioService.source.audio ? !AudioService.source.audio.muted : false
+                            onClicked: if(AudioService.source && AudioService.source.audio) AudioService.source.audio.muted = !AudioService.source.audio.muted
+                            Layout.alignment: Qt.AlignVCenter
+                            indicator: Rectangle {
+                                implicitWidth: 38; implicitHeight: 20
+                                radius: 10
+                                color: micSwitch.checked ? Theme.bgSelected : Theme.bgBar
+                                border.color: micSwitch.checked ? Theme.borderSelected : Theme.border
+                                border.width: 1
+                                Rectangle {
+                                    width: 14; height: 14; radius: 7
+                                    x: micSwitch.checked ? parent.width - width - 3 : 3
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: micSwitch.checked ? Theme.fg : Theme.fgMuted
+                                    Behavior on x { NumberAnimation { duration: Theme.durationFast } }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -180,12 +237,14 @@ PanelWindow {
                     width: parent.width
                     height: 40
                     radius: Theme.roundingItem
-                    color: (AudioService.source && modelData.id===AudioService.source.id) ? Theme.bgActive : "transparent"
-                    border.color: (AudioService.source && modelData.id===AudioService.source.id) ? Theme.fg : "transparent"
+                    color: (AudioService.source && modelData.id===AudioService.source.id) ? Theme.bgSelected : "transparent"
+                    border.color: (AudioService.source && modelData.id===AudioService.source.id) ? Theme.borderSelected : "transparent"
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
+                        anchors.rightMargin: Theme.padM
+                        spacing: Theme.gapM
                         Text { text: Icons.audio; font.family: Theme.fontFamily; font.pixelSize: 14; color: Theme.fgMuted }
                         Text { text: modelData.description || modelData.name; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; Layout.fillWidth: true; elide: Text.ElideRight }
                         Text { visible: AudioService.source && modelData.id===AudioService.source.id; text: Icons.check; color: Theme.success; font.family: Theme.fontFamily }

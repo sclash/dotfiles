@@ -67,10 +67,10 @@ PanelWindow {
                 Rectangle {
                     width: 110; height: 36
                     radius: Theme.roundingItem
-                    color: BluetoothService.powered ? Theme.fg : Theme.bgHover
-                    border.color: Theme.border
+                    color: BluetoothService.powered ? Theme.bgSelected : Theme.bgHover
+                    border.color: BluetoothService.powered ? Theme.borderSelected : Theme.border
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: BluetoothService.powered ? "Power Off" : "Power On"; font.family: Theme.fontFamily; font.pixelSize: 12; color: BluetoothService.powered ? Theme.bgBar : Theme.fg; font.weight: Theme.fontWeightMedium }
+                    Text { anchors.centerIn: parent; text: BluetoothService.powered ? "Power Off" : "Power On"; font.family: Theme.fontFamily; font.pixelSize: 12; color: BluetoothService.powered ? Theme.fg : Theme.fgMuted; font.weight: Theme.fontWeightMedium }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: BluetoothService.togglePower() }
                 }
             }
@@ -87,8 +87,8 @@ PanelWindow {
                     width: parent.width
                     height: 48
                     radius: Theme.roundingItem
-                    color: Theme.bgActive
-                    border.color: Theme.fg
+                    color: Theme.bgSelected
+                    border.color: Theme.borderSelected
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
@@ -98,8 +98,8 @@ PanelWindow {
                         Rectangle {
                             width: 32; height: 32
                             radius: 8
-                            color: Theme.fg
-                            Text { anchors.centerIn: parent; text: Icons.bluetoothOn; font.family: Theme.fontFamily; font.pixelSize: 16; color: Theme.bgBar }
+                            color: Theme.bgBar
+                            Text { anchors.centerIn: parent; text: Icons.bluetoothOn; font.family: Theme.fontFamily; font.pixelSize: 16; color: Theme.fg }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -136,6 +136,7 @@ PanelWindow {
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
+                        anchors.rightMargin: Theme.padM
                         spacing: Theme.gapM
                         Text { text: "●"; font.pixelSize: 8; color: Theme.success }
                         ColumnLayout {
@@ -147,7 +148,7 @@ PanelWindow {
                             width: 70; height: 28
                             radius: 6
                             color: Theme.bgActive
-                            border.color: Theme.fg
+                            border.color: Theme.borderActive
                             border.width: 1
                             Text { anchors.centerIn: parent; text: "Connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                             MouseArea { anchors.fill: parent; onClicked: BluetoothService.connect(modelData.address) }
@@ -163,13 +164,13 @@ PanelWindow {
                 Layout.fillWidth: true
                 Text { text: "Nearby"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; Layout.fillWidth: true }
                 Rectangle {
-                    width: 80; height: 32
+                    width: 90; height: 32
                     radius: Theme.roundingItem
-                    color: Theme.bgHover
+                    color: BluetoothService.scanning ? Theme.bgActive : Theme.bgHover
                     border.color: Theme.border
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                    MouseArea { anchors.fill: parent; onClicked: BluetoothService.startScan() }
+                    Text { anchors.centerIn: parent; text: BluetoothService.scanning ? "Stop scan" : "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: BluetoothService.scanning ? BluetoothService.stopScan() : BluetoothService.startScan() }
                 }
             }
             ListView {
@@ -187,13 +188,24 @@ PanelWindow {
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
+                        anchors.rightMargin: Theme.padM
                         spacing: Theme.gapM
                         Text { text: modelData.alias || modelData.address; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; Layout.fillWidth: true; elide: Text.ElideRight }
                         Text { text: modelData.address; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgMuted }
+                        Rectangle {
+                            width: 64; height: 26
+                            radius: 6
+                            color: Theme.bgActive
+                            border.color: Theme.borderActive
+                            border.width: 1
+                            Text { anchors.centerIn: parent; text: "Pair"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: BluetoothService.pairAndConnect(modelData.address) }
+                        }
                     }
-                    MouseArea { id: ma2; anchors.fill: parent; hoverEnabled: true; onClicked: BluetoothService.connect(modelData.address) }
+                    MouseArea { id: ma2; anchors.fill: parent; hoverEnabled: true; onClicked: BluetoothService.pairAndConnect(modelData.address) }
                 }
             }
+            Text { visible: filteredScan.length===0; text: BluetoothService.scanning ? "Scanning for nearby devices…" : "Nothing discovered yet — press Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter }
             Text { text: "/ filter · r rescan · Enter connect · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
         }
         Keys.onPressed: (e)=>{
@@ -206,11 +218,16 @@ PanelWindow {
     property var filteredScan: []
     function updateFilter(){
         const q = filterField ? filterField.text.toLowerCase() : ""
-        let src = BluetoothService.devices
-        // Show unpaired/discovered devices in Nearby: those not paired
-        let avail = src.filter(d=> !d.paired)
-        if(!q) filteredScan=avail.slice(0,20)
-        else filteredScan=avail.filter(d=> (d.alias && d.alias.toLowerCase().indexOf(q)!==-1) || d.address.toLowerCase().indexOf(q)!==-1)
+        // Nearby = live scan results + known-but-unpaired devices
+        const seen = {}
+        let avail = []
+        BluetoothService.nearby.concat(BluetoothService.devices.filter(d=> !d.paired && !d.connected)).forEach(d=>{
+            if (!d || seen[d.address]) return
+            seen[d.address] = 1
+            avail.push(d)
+        })
+        if (q) avail = avail.filter(d=> (d.alias && d.alias.toLowerCase().indexOf(q)!==-1) || d.address.toLowerCase().indexOf(q)!==-1)
+        filteredScan = avail.slice(0, 20)
     }
     Connections { target: BluetoothService; function onDataUpdated(){ updateFilter() } }
     Connections { target: BluetoothService; function onDevicesChanged(){ updateFilter() } }

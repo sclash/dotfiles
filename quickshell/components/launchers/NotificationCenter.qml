@@ -66,7 +66,7 @@ PanelWindow {
                     Layout.preferredHeight: 36
                     radius: Theme.roundingItem
                     color: Theme.bgActive
-                    border.color: filterField.activeFocus ? Theme.fg : Theme.border
+                    border.color: filterField.activeFocus ? Theme.borderSelected : Theme.border
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
@@ -95,7 +95,7 @@ PanelWindow {
                 model: filteredHistory
                 currentIndex: 0
                 focus: true
-                highlight: Rectangle { color: Theme.bgActive; radius: Theme.roundingItem; border.color: Theme.fg; border.width: 1 }
+                highlight: Rectangle { color: Theme.bgSelected; radius: Theme.roundingItem; border.color: Theme.borderSelected; border.width: 1 }
                 highlightMoveDuration: Theme.durationFast
                 delegate: Rectangle {
                     required property var modelData
@@ -103,9 +103,9 @@ PanelWindow {
                     width: notifList.width
                     height: bodyCol.implicitHeight + Theme.padM*2
                     radius: Theme.roundingItem
-                    color: ListView.isCurrentItem ? Theme.bgActive : Theme.bgHover
+                    color: ListView.isCurrentItem ? Theme.bgSelected : Theme.bgHover
                     border.width: ListView.isCurrentItem ? 1 : 0
-                    border.color: Theme.fg
+                    border.color: Theme.borderSelected
                     Rectangle { width: 3; height: parent.height; radius: 2; color: modelData.urgency===2 ? Theme.critical : "transparent"; anchors.left: parent.left }
                     ColumnLayout {
                         id: bodyCol

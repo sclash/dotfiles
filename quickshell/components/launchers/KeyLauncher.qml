@@ -43,7 +43,7 @@ PanelWindow {
                     Layout.preferredHeight: 38
                     radius: Theme.roundingItem
                     color: Theme.bgActive
-                    border.color: filterField.activeFocus ? Theme.fg : Theme.border
+                    border.color: filterField.activeFocus ? Theme.borderSelected : Theme.border
                     border.width: 1
                     RowLayout {
                         anchors.fill: parent
@@ -79,14 +79,14 @@ PanelWindow {
                 spacing: 2
                 model: bindings
                 currentIndex: 0
-                highlight: Rectangle { color: Theme.bgActive; radius: Theme.roundingItem; border.color: Theme.fg; border.width: 1 }
+                highlight: Rectangle { color: Theme.bgSelected; radius: Theme.roundingItem; border.color: Theme.borderSelected; border.width: 1 }
                 highlightMoveDuration: Theme.durationFast
                 delegate: Rectangle {
                     required property var modelData
                     width: listView.width
                     height: 36
                     radius: Theme.roundingItem
-                    color: ListView.isCurrentItem ? Theme.bgActive : "transparent"
+                    color: ListView.isCurrentItem ? Theme.bgSelected : "transparent"
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
@@ -101,7 +101,7 @@ PanelWindow {
                             Layout.preferredWidth: 150
                         }
                         Text { text: modelData.action; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; Layout.fillWidth: true }
-                        Text { text: modelData.desc; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                        Text { text: modelData.desc; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; Layout.preferredWidth: 80; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight }
                     }
                 }
                 Keys.onPressed: (e)=>{

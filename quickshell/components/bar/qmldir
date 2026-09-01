@@ -7,3 +7,4 @@ AudioIcon 1.0 AudioIcon.qml
 BluetoothIcon 1.0 BluetoothIcon.qml
 KeyboardIcon 1.0 KeyboardIcon.qml
 PerfDrawer 1.0 PerfDrawer.qml
+BatteryIcon 1.0 BatteryIcon.qml

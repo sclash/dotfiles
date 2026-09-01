@@ -3,27 +3,35 @@ import QtQuick
 
 QtObject {
     // Wifi / Network — waybar/config.jsonc parity
-    property string wifiConnected:    ""
-    property string wifiEthernet:     ""
-    property string wifiDisconnected: ""
+    property string wifiConnected:    "󰤨"
+    property string wifiSignal4:      "󰤨"
+    property string wifiSignal3:      "󰤥"
+    property string wifiSignal2:      "󰤢"
+    property string wifiSignal1:      "󰤟"
+    property string wifiEthernet:     "󰈀"
+    property string wifiDisconnected: "󰤭"
     // Bluetooth — waybar parity
     property string bluetoothOn:      "󰂯"
     property string bluetoothOff:     "󰂲"
-    // Audio — wireplumber
-    property string audioVolume:      ""
-    property string audioMuted:       "🔇"
-    property string audioLow:         ""
-    property string audioHigh:        ""
+    // Audio — intensity tiers
+    property string audioVolume:      "󰕾"
+    property string audioHigh:        "󰕾"
+    property string audioMedium:      "󰕿"
+    property string audioLow:         "󰖀"
+    property string audioMuted:       "󰖁"
     // Keyboard
-    property string keyboard:         "⌨"
+    property string keyboard:         "󰌌"
     // Notification
     property string notification:     ""
+    property string notificationDnd:  "󰂠"
     property string notificationMuted:"󰂛"
     // Battery
     property string batteryCharging:  "󰂄"
+    property string batteryPlugged:   "󰚥"
     property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"
     // Workspaces
     property string workspaceDot:     ""
+    property string window:           "󰘔"
     // Perf
     property string cpu:              "󰻠"
     property string memory:           ""
@@ -46,7 +54,7 @@ QtObject {
     property string planeOn:          "󱤱"
     property string planeOff:         "󰀝"
     property string logout:           "󰍃"
-    property string lock:             ""
+    property string lock:             "󰌾"
     property string settings:         ""
     property string network:          ""
     property string bluetooth:        "󰂯"

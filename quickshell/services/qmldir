@@ -5,3 +5,4 @@ singleton AudioService 1.0 AudioService.qml
 singleton PerfService 1.0 PerfService.qml
 singleton NotifService 1.0 NotifService.qml
 singleton HyprService 1.0 HyprService.qml
+singleton BatteryService 1.0 BatteryService.qml
