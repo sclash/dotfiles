@@ -40,6 +40,8 @@ WlrLayershell {
                 Layout.fillWidth: true
                 spacing: Theme.gapM
                 Rectangle {
+                    id: filterBar
+                    visible: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
                     radius: Theme.roundingItem
@@ -59,7 +61,19 @@ WlrLayershell {
                             color: Theme.fg
                             placeholderTextColor: Theme.fgDim
                             background: null
+                            cursorDelegate: Rectangle {
+                                width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                                height: Math.round(parent.font.pixelSize * 1.5)
+                                color: Theme.fg
+                            }
                             onTextChanged: listView.model = filtered()
+                            Keys.onPressed: (e)=>{
+                                if(e.key===Qt.Key_Escape) {
+                                    if(filterField.text.length>0) listView.forceActiveFocus()
+                                    else { filterBar.visible=false; listView.forceActiveFocus() }
+                                    e.accepted=true
+                                }
+                            }
                         }
                     }
                 }
@@ -106,13 +120,10 @@ WlrLayershell {
                     if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { listView.contentY = Math.min(listView.contentHeight - listView.height, listView.contentY + 38); e.accepted=true }
                     else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { listView.contentY = Math.max(0, listView.contentY - 38); e.accepted=true }
                     else if(e.key===Qt.Key_Escape) root.close()
-                    else if(e.text==="/") { filterField.forceActiveFocus(); e.accepted=true }
+                    else if(e.text==="/") { filterBar.visible=true; filterField.forceActiveFocus(); e.accepted=true }
                 }
             }
             Text { text: "keep in sync with hyprland.lua"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; font.italic: true; Layout.alignment: Qt.AlignHCenter }
-        }
-        Keys.onPressed: (e)=> {
-            if(e.key===Qt.Key_Escape) { if(filterField.text.length>0){filterField.text=""; e.accepted=true} else root.close() }
         }
     }
     property var bindings: [

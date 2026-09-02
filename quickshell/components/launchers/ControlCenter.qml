@@ -63,6 +63,11 @@ WlrLayershell {
                             color: Theme.fg
                             placeholderTextColor: Theme.fgDim
                             background: null
+                            cursorDelegate: Rectangle {
+                                width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                                height: Math.round(parent.font.pixelSize * 1.5)
+                                color: Theme.fg
+                            }
                             onTextChanged: { root.filteredModel = root.filteredEntries(); gridView.currentIndex = 0; gridView.positionViewAtIndex(0, GridView.Contain) }
                             Keys.onEscapePressed: { root.filterActive = false; Qt.callLater(()=> gridView.forceActiveFocus()) }
                             Keys.onReturnPressed: root.dispatch()
