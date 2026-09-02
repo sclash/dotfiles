@@ -13,7 +13,7 @@ WlrLayershell {
     function toggle(){ if(isOpen) close(); else open() }
 
     anchors { top:true; bottom:true; left:true; right:true }
-    onIsOpenChanged: if(isOpen) Qt.callLater(()=> filterField.forceActiveFocus())
+    onIsOpenChanged: if(isOpen) Qt.callLater(()=> listView.forceActiveFocus())
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
@@ -81,11 +81,10 @@ WlrLayershell {
                 model: bindings
                 delegate: Rectangle {
                     required property var modelData
-                    required property int index
                     width: listView.width
                     height: 36
                     radius: Theme.roundingItem
-                    color: index === listView.currentIndex ? Theme.bgSelected : "transparent"
+                    color: "transparent"
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
@@ -104,8 +103,8 @@ WlrLayershell {
                     }
                 }
                 Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
-                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
+                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { listView.contentY = Math.min(listView.contentHeight - listView.height, listView.contentY + 38); e.accepted=true }
+                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { listView.contentY = Math.max(0, listView.contentY - 38); e.accepted=true }
                     else if(e.key===Qt.Key_Escape) root.close()
                     else if(e.text==="/") { filterField.forceActiveFocus(); e.accepted=true }
                 }
