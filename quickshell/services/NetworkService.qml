@@ -16,44 +16,59 @@ QtObject {
     property var scannedNetworks: []
     property var vpnConnections: []
     property string lastError: ""
+    readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running
     signal dataUpdated()
 
+    function reportError(txt) {
+        const t = (txt || "").trim()
+        if (!t) return
+        const line = t.split("\n").filter(l => l.indexOf("Error") !== -1)[0] || t.split("\n")[0]
+        if (line) { root.lastError = line; root.dataUpdated() }
+    }
+    // Splits an nmcli terse line on unescaped ':' ('\:' is an escaped colon inside a value)
+    function splitTerse(line) {
+        const out = []
+        let cur = ""
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === "\\" && line[i + 1] === ":") { cur += ":"; i++ }
+            else if (line[i] === ":") { out.push(cur); cur = "" }
+            else cur += line[i]
+        }
+        out.push(cur)
+        return out
+    }
+
     function disconnect() {
-        if (!connected) return
+        if (!connected || busy) return
         lastError = ""
         root.nmDownProc.command = ["nmcli", "connection", "down", "id", essid]
         root.nmDownProc.running = true
     }
-    function connectKnown(name) {
+    function connectKnown(uuid) {
+        if (busy) return
         lastError = ""
-        root.nmUpProc.command = ["nmcli", "connection", "up", "id", name]
+        root.nmUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]
         root.nmUpProc.running = true
     }
-    function connectScanned(ssid, password, security) {
+    // One-shot connect (spec §3.3): nmcli picks/creates the profile and key-mgmt itself
+    function connectScanned(ssid, password) {
+        if (busy) return
         lastError = ""
-        const sec = security || ""
-        const km = sec.indexOf("WPA3") !== -1 || sec.indexOf("SAE") !== -1 ? "sae" : "wpa-psk"
-        const hasPwd = password && password.length > 0
-        const secArgs = hasPwd ? ' wifi-sec.key-mgmt ' + km + ' wifi-sec.psk "$2"' : ''
-        const modArgs = hasPwd ? ' wifi-sec.psk "$2"' : ''
-        let script = 'err=$(nmcli connection up id "$1" 2>&1); rc=$?; if [ $rc -eq 0 ]; then echo "$err"; exit 0; fi; '
-        script += 'case "$err" in *"unknown connection"*|*"mismatching interface"*|*"No suitable device"*|*"Secrets were required"*) ;; *) echo "$err" >&2; exit $rc;; esac; '
-        script += 'nmcli connection modify id "$1" connection.interface-name ""' + modArgs + ' 2>/dev/null; '
-        script += 'err=$(nmcli connection up id "$1" 2>&1); rc=$?; if [ $rc -eq 0 ]; then echo "$err"; exit 0; fi; '
-        script += 'if nmcli -t -f NAME connection show 2>/dev/null | cut -d: -f1 | grep -qxF "$1"; then un="$1 (user)"; else un="$1"; fi; '
-        script += 'nmcli connection add type wifi con-name "$un" ssid "$1"' + secArgs + ' connection.permissions "user:$(id -un)" && nmcli connection up "$un"'
-        root.nmScanConnectProc.command = ["sh", "-c", script, "sh", ssid, password ? password : ""]
+        const args = ["nmcli", "device", "wifi", "connect", ssid]
+        if (password && password.length > 0) args.push("password", password)
+        root.nmScanConnectProc.command = args
         root.nmScanConnectProc.running = true
     }
-    function forget(name) {
+    function forget(uuid) {
+        if (busy) return
         lastError = ""
-        root.nmForgetProc.command = ["nmcli", "connection", "delete", "id", name]
+        root.nmForgetProc.command = ["nmcli", "connection", "delete", "uuid", uuid]
         root.nmForgetProc.running = true
     }
     function rescanWifi() { root.nmRescanProc.running = true }
-    function vpnConnect(name) { root.nmVpnUpProc.command = ["nmcli", "connection", "up", "id", name]; root.nmVpnUpProc.running = true }
-    function vpnDisconnect(name) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "id", name]; root.nmVpnDownProc.running = true }
-    function vpnDelete(name) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "id", name]; root.nmVpnDelProc.running = true }
+    function vpnConnect(uuid) { root.nmVpnUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]; root.nmVpnUpProc.running = true }
+    function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
+    function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
     function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true }
     function launchEditor() { root.vpnEditorProc.running = true }
     function vpnAdd() { root.vpnAddProc.running = true }
@@ -85,7 +100,7 @@ QtObject {
                     }
                 }
                 if (!foundWifi && !foundEth) { root.connected = false; root.type = "none"; activeSsid = ""; root.essid = "" }
-                else { root.essid = activeSsid; root.lastError = "" }
+                else { root.essid = activeSsid }
                 if (wifiPart) {
                     const wlines = wifiPart.trim().split("\n")
                     for (const wl of wlines) if (wl.startsWith("*")) { const segs = wl.split(":"); if (segs.length >= 3) root.signalStrength = parseInt(segs[1]) || -1 }
@@ -101,25 +116,34 @@ QtObject {
     }
 
     property Process knownProc: Process {
-        command: ["sh", "-c", "nmcli -t -f NAME,TYPE connection show 2>/dev/null | grep 802-11-wireless | cut -d: -f1"]
+        command: ["sh", "-c", "nmcli -t -f NAME,UUID,TYPE connection show 2>/dev/null | grep 802-11-wireless"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const names = this.text.trim().split("\n").filter(Boolean)
-                root.knownNetworks = names.map(n => ({ name: n, type: "wifi" }))
+                const lines = this.text.trim().split("\n").filter(Boolean)
+                root.knownNetworks = lines.map(l => {
+                    const p = root.splitTerse(l)
+                    return ({ name: p[0] || "", uuid: p[1] || "", type: "wifi" })
+                }).filter(n => n.name && n.uuid)
             }
         }
     }
     property Process vpnProc: Process {
-        command: ["sh", "-c", "nmcli -t -f NAME,TYPE connection show 2>/dev/null | grep vpn"]
+        command: ["sh", "-c", "nmcli -t -f NAME,UUID,TYPE connection show 2>/dev/null | grep -E 'vpn|wireguard'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = this.text.trim().split("\n").filter(Boolean)
-                root.vpnConnections = lines.map(l => { const p = l.split(":"); return ({ name: p[0], active: false }) })
+                root.vpnConnections = lines.map(l => {
+                    const p = root.splitTerse(l)
+                    return ({ name: p[0] || "", uuid: p[1] || "", active: false })
+                }).filter(v => v.name && v.uuid)
             }
         }
     }
 
-    property Process nmDownProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process nmDownProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.pollProc.running = true }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
     property Process nmUpProc: Process {
         stdout: StdioCollector {
             onStreamFinished: {
@@ -128,32 +152,34 @@ QtObject {
                 root.pollProc.running = true
             }
         }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const txt = this.text.trim()
-                if (txt && txt.indexOf("Error") !== -1) { root.lastError = txt.split("\n").filter(l => l.indexOf("Error") !== -1)[0] || txt.split("\n")[0]; root.dataUpdated() }
-            }
-        }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
     }
     property Process nmScanConnectProc: Process {
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
-                if (txt.indexOf("successfully activated") !== -1 || txt.indexOf("successfully added") !== -1) root.lastError = ""
+                if (txt.indexOf("successfully activated") !== -1) root.lastError = ""
                 root.pollProc.running = true
             }
         }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const txt = this.text.trim()
-                if (txt && txt.indexOf("Error") !== -1) { root.lastError = txt.split("\n").filter(l => l.indexOf("Error") !== -1)[0] || txt.split("\n")[0]; root.dataUpdated() }
-            }
-        }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
     }
-    property Process nmForgetProc: Process { stdout: StdioCollector { onStreamFinished: { root.pollProc.running = true; root.knownProc.running = true } } }
-    property Process nmVpnUpProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process nmVpnDownProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process nmVpnDelProc: Process { stdout: StdioCollector { onStreamFinished: root.vpnProc.running = true } }
+    property Process nmForgetProc: Process {
+        stdout: StdioCollector { onStreamFinished: { root.pollProc.running = true; root.knownProc.running = true } }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
+    property Process nmVpnUpProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.pollProc.running = true }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
+    property Process nmVpnDownProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.pollProc.running = true }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
+    property Process nmVpnDelProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.vpnProc.running = true }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
     property Process nmRescanProc: Process {
         command: ["sh", "-c", "nmcli device wifi rescan 2>/dev/null; nmcli -t -f SSID,SIGNAL,SECURITY device wifi list --rescan no 2>/dev/null | head -n 30"]
         stdout: StdioCollector {

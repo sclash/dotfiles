@@ -205,7 +205,7 @@ WlrLayershell {
                         hoverEnabled: true
                         onClicked: {
                             if (modelData.security !== "--") root.openPwd(modelData.ssid, modelData.security)
-                            else NetworkService.connectScanned(modelData.ssid, "", modelData.security)
+                            else NetworkService.connectScanned(modelData.ssid, "")
                         }
                     }
                 }
@@ -224,7 +224,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: ListView.view.width
+                    width: parent.width
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "known" && it.idx === index }
@@ -246,9 +246,9 @@ WlrLayershell {
                             border.color: Theme.borderActive
                             border.width: 1
                             Text { anchors.centerIn: parent; text: "Connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                            MouseArea { anchors.fill: parent; onClicked: NetworkService.connectKnown(modelData.name) }
+                            MouseArea { anchors.fill: parent; onClicked: NetworkService.connectKnown(modelData.uuid) }
                         }
-                        Text { text: "Forget"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.critical; MouseArea { anchors.fill: parent; onClicked: { root.pendingAction = {type:"forget", name:modelData.name}; root.confirmText = "Forget \"" + modelData.name + "\"?  y / n" } } }
+                        Text { text: "Forget"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.critical; MouseArea { anchors.fill: parent; onClicked: { root.pendingAction = {type:"forget", name:modelData.name, uuid:modelData.uuid}; root.confirmText = "Forget \"" + modelData.name + "\"?  y / n" } } }
                     }
                 }
             }
@@ -266,7 +266,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: ListView.view.width
+                    width: parent.width
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "vpn" && it.idx === index }
@@ -278,7 +278,7 @@ WlrLayershell {
                         id: vpnMA
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: isActive ? NetworkService.vpnDisconnect(modelData.name) : NetworkService.vpnConnect(modelData.name)
+                        onClicked: isActive ? NetworkService.vpnDisconnect(modelData.uuid) : NetworkService.vpnConnect(modelData.uuid)
                     }
                     RowLayout {
                         anchors.fill: parent
@@ -294,7 +294,7 @@ WlrLayershell {
                             font.family: Theme.fontFamily
                             font.pixelSize: 11
                             color: Theme.critical
-                            MouseArea { anchors.fill: parent; onClicked: requestVpnDelete(modelData.name) }
+                            MouseArea { anchors.fill: parent; onClicked: requestVpnDelete(modelData.name, modelData.uuid) }
                         }
                     }
                 }
@@ -458,7 +458,17 @@ WlrLayershell {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
             }
-            Text { text: confirmText || "j/k · Enter act · /nearby /known /vpn · x delete · d disc · r rescan · Esc back · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: confirmText ? Theme.critical : Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text {
+                text: {
+                    if (confirmText) return confirmText
+                    if (NetworkService.busy) return "Working…"
+                    return "j/k · Enter act · /nearby /known /vpn · x delete · d disc · r rescan · Esc back · Esc close"
+                }
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                color: confirmText ? Theme.critical : (NetworkService.busy ? Theme.fgMuted : Theme.fgDim)
+                Layout.alignment: Qt.AlignHCenter
+            }
         }
         }
         Keys.onPressed: (e)=>{
@@ -499,17 +509,17 @@ WlrLayershell {
         if(!it) return
         if(it.kind==="known") {
             const n = filteredKnown[it.idx]
-            if(n) { pendingAction = {type:"forget", name:n.name}; confirmText = "Forget \"" + n.name + "\"?  y / n" }
+            if(n) { pendingAction = {type:"forget", name:n.name, uuid:n.uuid}; confirmText = "Forget \"" + n.name + "\"?  y / n" }
         } else if(it.kind==="vpn") {
             const v = filteredVpn[it.idx]
-            if(v) { pendingAction = {type:"vpnDelete", name:v.name}; confirmText = "Delete VPN \"" + v.name + "\"?  y / n" }
+            if(v) { pendingAction = {type:"vpnDelete", name:v.name, uuid:v.uuid}; confirmText = "Delete VPN \"" + v.name + "\"?  y / n" }
         }
     }
-    function requestVpnDelete(name){ confirmText = "Delete VPN \"" + name + "\"?  y / n"; pendingAction = {type:"vpnDelete", name:name} }
+    function requestVpnDelete(name, uuid){ confirmText = "Delete VPN \"" + name + "\"?  y / n"; pendingAction = {type:"vpnDelete", name:name, uuid:uuid} }
     function confirmYes(){
         if(!pendingAction){ confirmText=""; return }
-        if(pendingAction.type==="forget") NetworkService.forget(pendingAction.name)
-        else if(pendingAction.type==="vpnDelete") NetworkService.vpnDelete(pendingAction.name)
+        if(pendingAction.type==="forget") NetworkService.forget(pendingAction.uuid)
+        else if(pendingAction.type==="vpnDelete") NetworkService.vpnDelete(pendingAction.uuid)
         confirmText=""
         pendingAction=null
     }
@@ -522,7 +532,7 @@ WlrLayershell {
         pwdField.forceActiveFocus()
     }
     function connectPwd(){
-        NetworkService.connectScanned(pwdDialog.ssid, pwdField.text, pwdDialog.security)
+        NetworkService.connectScanned(pwdDialog.ssid, pwdField.text)
         cancelPwd()
     }
     function cancelPwd(){
@@ -564,9 +574,9 @@ WlrLayershell {
         if(!it) return
         if(it.kind==="current"){ if(NetworkService.connected) NetworkService.disconnect(); else NetworkService.rescanWifi() }
         else if(it.kind==="scan"){ NetworkService.rescanWifi() }
-        else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.name) }
-        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n){ if(n.security!=="--"){ openPwd(n.ssid, n.security) } else NetworkService.connectScanned(n.ssid,"",n.security) } }
-        else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.name); else NetworkService.vpnConnect(v.name) } }
+        else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.uuid) }
+        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n){ if(n.security!=="--"){ openPwd(n.ssid, n.security) } else NetworkService.connectScanned(n.ssid,"") } }
+        else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.uuid); else NetworkService.vpnConnect(v.uuid) } }
         else if(it.kind==="vpnAdd"){ NetworkService.vpnAdd() }
         else if(it.kind==="editor"){ NetworkService.launchEditor() }
     }
