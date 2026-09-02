@@ -187,7 +187,7 @@
     enable = true;
     powerOnBoot = true;
   };
-  services.blueman.enable = true;
+  services.blueman.enable = false;
   services.upower.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
