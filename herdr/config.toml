@@ -44,3 +44,4 @@ previous_agent = "alt+shift+tab"
 
 sidebar_collapsed_mode = "hidden"
 mouse_capture = false
+toast.delivery = "system"
