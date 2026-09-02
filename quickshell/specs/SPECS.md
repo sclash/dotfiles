@@ -64,6 +64,8 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `elephant` (or `walker`) | App index for App-Launcher | **yes** | already in autostart (`hyprland.lua:38`) — ensure packaged |
 | `upower` | Battery (if kept) | optional | `pkgs.upower` |
 | `lm_sensors` / `sysstat` | Temperature / CPU | **yes** for perf widgets | `pkgs.lm_sensors` |
+| `udisks2` | USB storage mount/unmount via `udisksctl` | **yes** for USB-Manager | `pkgs.udisks2` + `services.udisks2.enable` |
+| `usbutils` | USB device listing (`lsusb`) | **yes** for USB-Manager | `pkgs.usbutils` |
 | `noto-fonts` + `nerd-fonts.jetbrains-mono` | Icons / typography | **yes** | ensure in `fonts.packages` |
 | `quickshell` needs `qt6.qtdeclarative` | Already in `home.packages` | **yes** | present |
 | `herdr` | Agentic orchestration | **yes** for build phase | `pkgs-unstable.herdr` — already enabled |
@@ -107,7 +109,8 @@ quickshell/
 │   ├── AudioService.qml      # Thin wrapper over Quickshell.Services.Pipewire
 │   ├── PerfService.qml       # CPU/RAM/Disk/Temp polling (pause when hidden)
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
-│   └── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
+│   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
+│   └── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
 ├── components/
 │   ├── bar/
 │   │   ├── Workspaces.qml
@@ -128,7 +131,8 @@ quickshell/
 │       ├── NotificationCenter.qml
 │       ├── ShutdownLauncher.qml
 │       ├── KeyLauncher.qml
-│       └── DisplayManager.qml
+│       ├── DisplayManager.qml
+│       └── UsbManager.qml
 ├── theme/
 │   ├── Theme.qml             # Singleton — colours, radii, spacing, fonts
 │   └── Icons.qml             # Singleton — nerd-font glyph map
@@ -209,6 +213,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Bluetooth-Center | `SUPER+b` | `Bluetooth-Center.md` |
 | Audio-Center | `SUPER+a` | `Audio-Center.md` |
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
+| USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
 | Shutdown-Launcher | `SUPER+q` | `Shutdown-Launcher.md` |
 | Key-Launcher | `SUPER+k` | `Key-Launcher.md` |
@@ -236,7 +241,7 @@ Summary:
 1. `theme/Theme.qml` + `Icons.qml` + `services/*` skeletons (shared foundation).
 2. `Bar.qml` shell + `LauncherBase.qml` (so builders have the canvas).
 3. Bar workstreams: `Date` → `Workspaces/AppTray` → `Keyboard` → `Wifi`/`Bluetooth`/`Audio` → `PerfDrawer`.
-4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `Notification-Center` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
+4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Notification-Center` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
 5. Wire `hyprland.lua` keybindings + `quickshell ipc` handlers end-to-end.
 6. Final pass: perf/idle measurement, memory audit, Herdr demo.
 

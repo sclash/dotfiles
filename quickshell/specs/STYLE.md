@@ -167,6 +167,11 @@ property string disk:             "󰋊"
 property string temp:             "󰔏"
 property string expand:           ""
 property string collapse:         ""
+// USB (codepoints verified against installed JetBrainsMono Nerd Font)
+property string usb:              "\uf0553"    // nf-md-usb
+property string usbDrive:         "\uf129e"    // nf-md-usb-flash-drive
+property string usbPort:          "\uf11f0"    // nf-md-usb-port
+property string eject:            "\uf01ea"    // nf-md-eject
 // VPN / Common
 property string vpn:              "󰖂"
 property string search:           ""

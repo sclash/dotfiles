@@ -28,7 +28,7 @@ Read top-to-bottom; do not skip `STYLE.md` — every component must use its toke
 | 7 | `bar/Bar-performance.md` | Collapsible perf drawer (`bar/Bar-performance.md:12`, polling paused when hidden). |
 | 8 | `launchers/LauncherBase` (implicit via `SPECS.md:96` + each launcher §2) + `launchers/App-Launcher.md` | Shared launcher chrome + first launcher (backend `elephant`/`walker`/`DesktopEntries`). |
 | 9 | `launchers/Network-Center.md`, `Bluetooth-Center.md` | Bar↔launcher state sync is critical here — read together. |
-| 10 | `launchers/Audio-Center.md`, `Display-manager.md` | Audio graph + `hyprctl monitors -j`. |
+| 10 | `launchers/Audio-Center.md`, `Display-manager.md`, `Usb-Manager.md` | Audio graph + `hyprctl monitors -j` + udisks2 USB mount/storage listing. |
 | 11 | `launchers/Notification-Center.md`, `Shutdown-Launcher.md`, `Key-Launcher.md` | System + meta. |
 | 12 | `launchers/Control-Center.md` | Last — dispatches to all others (`Control-Center.md:12`). |
 
