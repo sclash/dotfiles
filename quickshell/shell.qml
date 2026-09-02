@@ -17,7 +17,7 @@ Scope {
         onLauncherToggleRequested: (name) => ipcHandler.toggle(name)
     }
 
-    // Launchers — each is a PanelWindow singleton overlay
+    // Launchers — each is a WlrLayershell singleton overlay
     AppLauncher { id: appLauncher }
     NetworkCenter { id: networkCenter }
     BluetoothCenter { id: bluetoothCenter }

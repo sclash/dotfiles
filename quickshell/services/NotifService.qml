@@ -72,7 +72,8 @@ QtObject {
                 const tracked = notifServer.trackedNotifications.values
                 if (tracked && tracked.length > 0) {
                     const copy = []
-                    for (let i = 0; i < Math.min(tracked.length, 50); i++) {
+                    const start = Math.max(0, tracked.length - 50)
+                    for (let i = tracked.length - 1; i >= start; i--) {
                         const n = tracked[i]
                         copy.push({
                             id: n.id || Date.now()+i,
