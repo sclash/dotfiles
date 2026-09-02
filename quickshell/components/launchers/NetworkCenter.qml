@@ -120,6 +120,7 @@ WlrLayershell {
                 height: curCol.implicitHeight + Theme.padM*2
                 radius: Theme.roundingItem
                 readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "current"
+                readonly property bool isConnecting: NetworkService.connecting
                 color: NetworkService.connected ? Theme.bgActive : (isSel ? Theme.bgSelected : Theme.bgHover)
                 border.color: isSel ? Theme.borderSelected : (NetworkService.connected ? Theme.borderSelected : Theme.border)
                 border.width: 1
@@ -140,14 +141,15 @@ WlrLayershell {
                         ColumnLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: NetworkService.connected ? NetworkService.essid + " · " + NetworkService.signalStrength + "%" : "Not connected"
+                                text: currentCard.isConnecting ? "Connecting to " + (NetworkService.connectingSsid || "network") + "…" : (NetworkService.connected ? NetworkService.essid + " · " + NetworkService.signalStrength + "%" : "Not connected")
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 14
                                 font.weight: Theme.fontWeightMedium
-                                color: NetworkService.connected ? Theme.fg : Theme.fgDim
+                                color: currentCard.isConnecting ? Theme.fgMuted : (NetworkService.connected ? Theme.fg : Theme.fgDim)
+                                elide: Text.ElideRight
                             }
                             Text {
-                                visible: NetworkService.connected
+                                visible: NetworkService.connected && !currentCard.isConnecting
                                 text: (NetworkService.ipaddr || "") + (NetworkService.vpnActive ? " · via " + NetworkService.vpnName : "")
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
@@ -155,7 +157,7 @@ WlrLayershell {
                             }
                         }
                         Rectangle {
-                            visible: NetworkService.connected
+                            visible: NetworkService.connected && !currentCard.isConnecting
                             width: 90; height: 32
                             radius: Theme.roundingItem
                             color: Theme.bgBar
@@ -165,7 +167,7 @@ WlrLayershell {
                             MouseArea { anchors.fill: parent; onClicked: NetworkService.disconnect() }
                         }
                     }
-                    Text { visible: !NetworkService.connected; text: "Pick a known network or scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
+                    Text { visible: !NetworkService.connected && !currentCard.isConnecting; text: "Pick a known network or scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
                 }
             }
 
@@ -203,10 +205,7 @@ WlrLayershell {
                         id: ma2
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: {
-                            if (modelData.security !== "--") root.openPwd(modelData.ssid, modelData.security)
-                            else NetworkService.connectScanned(modelData.ssid, "")
-                        }
+                        onClicked: root.connectNearby(modelData)
                     }
                 }
             }
@@ -524,6 +523,8 @@ WlrLayershell {
         pendingAction=null
     }
     function openPwd(ssid, security){
+        // Guard: an in-flight connect must never re-open the dialog
+        if (NetworkService.connecting || NetworkService.busy) return
         pwdDialog.ssid = ssid
         pwdDialog.security = security
         pwdField.text = ""
@@ -531,9 +532,24 @@ WlrLayershell {
         pwdDialog.visible = true
         pwdField.forceActiveFocus()
     }
+    // Spec §3.3: an SSID with an existing profile connects via its saved credentials —
+    // never prompt for a password, even when selected from the nearby view.
+    // connectScanned routes known ssids to `connection up` internally (NetworkService §5).
+    function knownUuidFor(ssid){
+        const k = NetworkService.knownNetworks
+        for (let i = 0; i < k.length; i++) if (k[i].name === ssid) return k[i].uuid
+        return ""
+    }
+    function connectNearby(net){
+        if (!net) return
+        if (net.security !== "--" && knownUuidFor(net.ssid) === "") openPwd(net.ssid, net.security)
+        else NetworkService.connectScanned(net.ssid, "")
+    }
     function connectPwd(){
-        NetworkService.connectScanned(pwdDialog.ssid, pwdField.text)
+        const ssid = pwdDialog.ssid
+        const pwd = pwdField.text
         cancelPwd()
+        NetworkService.connectScanned(ssid, pwd)
     }
     function cancelPwd(){
         pwdDialog.visible=false
@@ -575,7 +591,7 @@ WlrLayershell {
         if(it.kind==="current"){ if(NetworkService.connected) NetworkService.disconnect(); else NetworkService.rescanWifi() }
         else if(it.kind==="scan"){ NetworkService.rescanWifi() }
         else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.uuid) }
-        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n){ if(n.security!=="--"){ openPwd(n.ssid, n.security) } else NetworkService.connectScanned(n.ssid,"") } }
+        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n) connectNearby(n) }
         else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.uuid); else NetworkService.vpnConnect(v.uuid) } }
         else if(it.kind==="vpnAdd"){ NetworkService.vpnAdd() }
         else if(it.kind==="editor"){ NetworkService.launchEditor() }

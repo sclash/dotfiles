@@ -12,6 +12,8 @@ QtObject {
     property int signalStrength: -1
     property bool vpnActive: false
     property string vpnName: ""
+    property bool connecting: false
+    property string connectingSsid: ""
     property var knownNetworks: []
     property var scannedNetworks: []
     property var vpnConnections: []
@@ -47,13 +49,27 @@ QtObject {
     function connectKnown(uuid) {
         if (busy) return
         lastError = ""
+        root.connecting = true
+        const k = root.knownNetworks
+        for (let i = 0; i < k.length; i++) if (k[i].uuid === uuid) { root.connectingSsid = k[i].name; break }
         root.nmUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]
         root.nmUpProc.running = true
     }
-    // One-shot connect (spec §3.3): nmcli picks/creates the profile and key-mgmt itself
+    // One-shot connect (spec §3.3/§5): resolves the ssid against known profiles internally —
+    // known → nmcli connection up (password ignored); unknown → device wifi connect.
     function connectScanned(ssid, password) {
         if (busy) return
         lastError = ""
+        root.connecting = true
+        root.connectingSsid = ssid
+        const k = root.knownNetworks
+        for (let i = 0; i < k.length; i++) {
+            if (k[i].name === ssid) {
+                root.nmUpProc.command = ["nmcli", "connection", "up", "uuid", k[i].uuid]
+                root.nmUpProc.running = true
+                return
+            }
+        }
         const args = ["nmcli", "device", "wifi", "connect", ssid]
         if (password && password.length > 0) args.push("password", password)
         root.nmScanConnectProc.command = args
@@ -149,20 +165,24 @@ QtObject {
             onStreamFinished: {
                 const txt = this.text
                 if (txt.indexOf("successfully activated") !== -1) root.lastError = ""
+                root.connecting = false
+                root.connectingSsid = ""
                 root.pollProc.running = true
             }
         }
-        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+        stderr: StdioCollector { onStreamFinished: { root.connecting = false; root.connectingSsid = ""; root.reportError(this.text) } }
     }
     property Process nmScanConnectProc: Process {
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
                 if (txt.indexOf("successfully activated") !== -1) root.lastError = ""
+                root.connecting = false
+                root.connectingSsid = ""
                 root.pollProc.running = true
             }
         }
-        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+        stderr: StdioCollector { onStreamFinished: { root.connecting = false; root.connectingSsid = ""; root.reportError(this.text) } }
     }
     property Process nmForgetProc: Process {
         stdout: StdioCollector { onStreamFinished: { root.pollProc.running = true; root.knownProc.running = true } }

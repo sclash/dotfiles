@@ -30,6 +30,7 @@ The **Current Connection** status card (§3.1) and the scan/filter row are alway
 * **Fields:** `ESSID` (bold), signal `({signal}%)`, `IPv4` (`ipaddr`), `VPN` line if `vpnActive` ("via {vpnName}").
 * **Actions:** `Disconnect` button (visible only when `connected`). Calls `NetworkService.disconnect()` → `nmcli connection down id "{essid}"`.
 * **Empty state:** if `!connected` → `"Not connected — scan or pick a known network"` at `Theme.fgMuted`.
+* **Connecting state:** while a connection attempt is in progress (`connecting` flag on `NetworkService`) → `"Connecting to {ssid}…"` at `Theme.fgMuted`, replacing the fields/empty state. Shown immediately when a connect is initiated (including right after the password dialog is submitted) and cleared on success (fields render again) or failure (inline error per §4).
 
 ### 3.2 Known Networks (`/known`)
 
@@ -44,7 +45,10 @@ The **Current Connection** status card (§3.1) and the scan/filter row are alway
 * Trigger scan: `nmcli device wifi rescan` then `nmcli -t -f SSID,SIGNAL,SECURITY device wifi list --rescan no`.
 * Display: list sorted by signal desc. Each row: `SSID` + `signal%` bar (text or thin `Rectangle` width = `signal%`) + `SECURITY` lock icon if not `--`.
 * **Empty state:** if no networks in scan results → `"No networks found — press r to rescan"` at `Theme.fgDim`.
-* **Connect flow:** select row → if open network: `nmcli device wifi connect "{ssid}"`. If secured: prompt for password via an inline dialog (`placeholder: "Password for {ssid}"`, `echoMode: Password`), then `nmcli device wifi connect "{ssid}" password "{pwd}"`. The password field has a show/hide toggle: the eye button or `Ctrl+s` flips `echoMode` between `Password` and `Normal`. On failure, show inline error (`Theme.critical`) + allow retry. On success, the new connection auto-appears in Known.
+* **Connect flow:** select row →
+  * **Already known:** if the SSID has an existing profile (present in the known networks list, §3.2), connect directly via `nmcli connection up id "{ssid}"` — **never prompt for a password**, even when selected from the nearby view. NM supplies the saved credentials.
+  * **Open network (not known):** `nmcli device wifi connect "{ssid}"`.
+  * **Secured (not known):** prompt for password via an inline dialog (`placeholder: "Password for {ssid}"`, `echoMode: Password`), then `nmcli device wifi connect "{ssid}" password "{pwd}"`. The password field has a show/hide toggle: the eye button or `Ctrl+s` flips `echoMode` between `Password` and `Normal`. On **submit (`Enter`)** the dialog closes immediately and the Current Connection card switches to the connecting state (§3.1); the connect command then runs. On failure, clear the connecting state and show inline error (`Theme.critical`) + allow retry. On success, the new connection auto-appears in Known.
 
 ### 3.4 VPN (`/vpn`)
 
@@ -75,6 +79,8 @@ All `nmcli` invocations go through `NetworkService.qml` — no ad-hoc `Process` 
 function disconnect(): void
 function connectKnown(name: string): void
 function connectScanned(ssid: string, password?: string): void
+// connectScanned resolves the ssid against known profiles internally:
+// known → nmcli connection up (password ignored); unknown → device wifi connect.
 function forget(name: string): void
 function rescanWifi(): void
 function vpnConnect(name: string): void
@@ -92,6 +98,8 @@ DBus `PropertiesChanged` or next poll propagates changes back to the `Wifi` icon
 * [ ] Current connection shows ESSID, signal, IPv4, VPN if any; Disconnect works.
 * [ ] Known list shows all wifi profiles with available/forget/connect.
 * [ ] Scan lists by signal desc; secured connect prompts for password; open connect succeeds.
+* [ ] Connecting to an already-known SSID from the nearby view never prompts for a password.
+* [ ] Submitting the password closes the dialog immediately; Current Connection shows `"Connecting to {ssid}…"` until the attempt resolves.
 * [ ] Every new wifi connection appears in Known (NM default).
 * [ ] VPN list/connect/delete/add works; `nm-connection-editor` fallback documented if native form deferred.
 * [ ] Vim nav + `/` filter + view commands + `r` rescan + `Esc` close all work.
