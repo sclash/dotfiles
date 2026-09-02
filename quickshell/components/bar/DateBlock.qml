@@ -44,6 +44,7 @@ RowLayout {
     Rectangle {
         width: 32; height: 32
         radius: 8
+        visible: NotifService.dnd || NotifService.history.length > 0
         color: bellMA.containsMouse ? Theme.bgHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 

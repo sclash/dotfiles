@@ -29,10 +29,20 @@ QtObject {
         root.nmUpProc.command = ["nmcli", "connection", "up", "id", name]
         root.nmUpProc.running = true
     }
-    function connectScanned(ssid, password) {
+    function connectScanned(ssid, password, security) {
         lastError = ""
-        if (password && password.length > 0) root.nmScanConnectProc.command = ["nmcli", "device", "wifi", "connect", ssid, "password", password]
-        else root.nmScanConnectProc.command = ["nmcli", "device", "wifi", "connect", ssid]
+        const sec = security || ""
+        const km = sec.indexOf("WPA3") !== -1 || sec.indexOf("SAE") !== -1 ? "sae" : "wpa-psk"
+        const hasPwd = password && password.length > 0
+        const secArgs = hasPwd ? ' wifi-sec.key-mgmt ' + km + ' wifi-sec.psk "$2"' : ''
+        const modArgs = hasPwd ? ' wifi-sec.psk "$2"' : ''
+        let script = 'err=$(nmcli connection up id "$1" 2>&1); rc=$?; if [ $rc -eq 0 ]; then echo "$err"; exit 0; fi; '
+        script += 'case "$err" in *"unknown connection"*|*"mismatching interface"*|*"No suitable device"*|*"Secrets were required"*) ;; *) echo "$err" >&2; exit $rc;; esac; '
+        script += 'nmcli connection modify id "$1" connection.interface-name ""' + modArgs + ' 2>/dev/null; '
+        script += 'err=$(nmcli connection up id "$1" 2>&1); rc=$?; if [ $rc -eq 0 ]; then echo "$err"; exit 0; fi; '
+        script += 'if nmcli -t -f NAME connection show 2>/dev/null | cut -d: -f1 | grep -qxF "$1"; then un="$1 (user)"; else un="$1"; fi; '
+        script += 'nmcli connection add type wifi con-name "$un" ssid "$1"' + secArgs + ' connection.permissions "user:$(id -un)" && nmcli connection up "$un"'
+        root.nmScanConnectProc.command = ["sh", "-c", script, "sh", ssid, password ? password : ""]
         root.nmScanConnectProc.running = true
     }
     function forget(name) {
@@ -75,7 +85,7 @@ QtObject {
                     }
                 }
                 if (!foundWifi && !foundEth) { root.connected = false; root.type = "none"; activeSsid = ""; root.essid = "" }
-                else root.essid = activeSsid
+                else { root.essid = activeSsid; root.lastError = "" }
                 if (wifiPart) {
                     const wlines = wifiPart.trim().split("\n")
                     for (const wl of wlines) if (wl.startsWith("*")) { const segs = wl.split(":"); if (segs.length >= 3) root.signalStrength = parseInt(segs[1]) || -1 }
@@ -110,8 +120,36 @@ QtObject {
     }
 
     property Process nmDownProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process nmUpProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process nmScanConnectProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process nmUpProc: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const txt = this.text
+                if (txt.indexOf("successfully activated") !== -1) root.lastError = ""
+                root.pollProc.running = true
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const txt = this.text.trim()
+                if (txt && txt.indexOf("Error") !== -1) { root.lastError = txt.split("\n").filter(l => l.indexOf("Error") !== -1)[0] || txt.split("\n")[0]; root.dataUpdated() }
+            }
+        }
+    }
+    property Process nmScanConnectProc: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const txt = this.text
+                if (txt.indexOf("successfully activated") !== -1 || txt.indexOf("successfully added") !== -1) root.lastError = ""
+                root.pollProc.running = true
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const txt = this.text.trim()
+                if (txt && txt.indexOf("Error") !== -1) { root.lastError = txt.split("\n").filter(l => l.indexOf("Error") !== -1)[0] || txt.split("\n")[0]; root.dataUpdated() }
+            }
+        }
+    }
     property Process nmForgetProc: Process { stdout: StdioCollector { onStreamFinished: { root.pollProc.running = true; root.knownProc.running = true } } }
     property Process nmVpnUpProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process nmVpnDownProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }

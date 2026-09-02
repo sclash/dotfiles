@@ -16,8 +16,8 @@ QtObject {
     // Audio — intensity tiers
     property string audioVolume:      "󰕾"
     property string audioHigh:        "󰕾"
-    property string audioMedium:      "󰕿"
-    property string audioLow:         "󰖀"
+    property string audioMedium:      "󰖀"
+    property string audioLow:         "󰕿"
     property string audioMuted:       "󰖁"
     // Keyboard
     property string keyboard:         "󰌌"
@@ -55,6 +55,8 @@ QtObject {
     property string planeOff:         "󰀝"
     property string logout:           "󰍃"
     property string lock:             "󰌾"
+    property string eye:              "\uf06e"
+    property string eyeOff:           "\uf070"
     property string settings:         ""
     property string network:          ""
     property string bluetooth:        "󰂯"

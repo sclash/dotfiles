@@ -10,7 +10,7 @@ PanelWindow {
     id: root
     property bool isOpen: false
     property bool filterActive: false
-    property bool showKnown: false
+    property string view: "nearby"
     // Known section visible only after the `/known` command
     property var navItems: []
     property int selIndex: 0
@@ -87,7 +87,7 @@ PanelWindow {
                 }
                 Text {
                     visible: !filterActive
-                    text: "Press / for commands (/known · /nearby) · j/k to move · Enter to act"
+                    text: "Press / for commands (/nearby · /known · /vpn) · j/k to move · Enter to act"
                     font.family: Theme.fontFamily
                     font.pixelSize: 11
                     color: Theme.fgDim
@@ -162,9 +162,11 @@ PanelWindow {
                 }
             }
 
-            Text { text: "Nearby"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "nearby"; text: "Nearby"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "nearby" && filteredScan.length === 0; text: "No networks found — press r to rescan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
             ListView {
                 id: nearbyList
+                visible: root.view === "nearby"
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(160, contentHeight)
                 clip: true
@@ -195,17 +197,18 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            if (modelData.security !== "--") { pwdDialog.ssid=modelData.ssid; pwdDialog.visible=true; pwdField.forceActiveFocus() }
-                            else NetworkService.connectScanned(modelData.ssid, "")
+                            if (modelData.security !== "--") root.openPwd(modelData.ssid, modelData.security)
+                            else NetworkService.connectScanned(modelData.ssid, "", modelData.security)
                         }
                     }
                 }
             }
 
-            Text { visible: root.showKnown; text: "Known"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "known"; text: "Known"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "known" && filteredKnown.length === 0; text: "No known networks — connect from /nearby first"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
             ListView {
                 id: knownList
-                visible: root.showKnown
+                visible: root.view === "known"
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(140, contentHeight)
                 clip: true
@@ -243,14 +246,16 @@ PanelWindow {
                 }
             }
 
-            Text { text: "VPN"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "vpn"; text: "VPN"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+            Text { visible: root.view === "vpn" && filteredVpn.length === 0; text: "No VPN connections"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
             ListView {
                 id: vpnList
+                visible: root.view === "vpn"
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(80, contentHeight)
                 clip: true
                 spacing: 4
-                model: NetworkService.vpnConnections
+                model: filteredVpn
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
@@ -289,6 +294,7 @@ PanelWindow {
             }
             Rectangle {
                 id: vpnAddRow
+                visible: root.view === "vpn"
                 Layout.fillWidth: true
                 height: 32
                 radius: Theme.roundingItem
@@ -300,57 +306,147 @@ PanelWindow {
                 MouseArea { anchors.fill: parent; onClicked: NetworkService.vpnAdd() }
             }
             Rectangle {
+                id: editorRow
+                visible: root.view === "vpn"
+                Layout.fillWidth: true
+                height: 32
+                radius: Theme.roundingItem
+                readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "editor"
+                color: isSel ? Theme.bgSelected : Theme.bgHover
+                border.color: isSel ? Theme.borderSelected : Theme.border
+                border.width: 1
+                Text { anchors.centerIn: parent; text: "Open connection editor…"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                MouseArea { anchors.fill: parent; onClicked: NetworkService.launchEditor() }
+            }
+            Rectangle {
                 id: pwdDialog
                 property string ssid: ""
+                property string security: ""
                 visible: false
                 Layout.fillWidth: true
-                height: pwdCol.implicitHeight + Theme.padM*2
+                height: pwdCol.implicitHeight + Theme.padL*2
                 radius: Theme.roundingItem
                 color: Theme.bgActive
                 border.color: Theme.borderSelected
-                border.width: 2
+                border.width: 1
                 ColumnLayout {
                     id: pwdCol
                     anchors.fill: parent
-                    anchors.margins: Theme.padM
-                    spacing: Theme.gapS
-                    Text { text: "Password for " + pwdDialog.ssid; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; font.weight: Theme.fontWeightMedium }
-                    TextField {
-                        id: pwdField
-                        Layout.fillWidth: true
-                        placeholderText: "Password…"
-                        echoMode: TextInput.Password
-                        font.family: Theme.fontFamily
-                        background: Rectangle { radius: Theme.roundingItem; color: Theme.bgBar; border.color: Theme.border }
-                        color: Theme.fg
-                        onAccepted: { NetworkService.connectScanned(pwdDialog.ssid, text); pwdDialog.visible=false; text="" }
-                    }
+                    anchors.margins: Theme.padL
+                    spacing: Theme.gapM
                     RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.gapM
+                        Rectangle {
+                            width: 36; height: 36
+                            radius: Theme.roundingItem
+                            color: Theme.bgBar
+                            border.color: Theme.border
+                            border.width: 1
+                            Text { anchors.centerIn: parent; text: Icons.lock; font.family: Theme.fontFamily; font.pixelSize: 16; color: Theme.fg }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text {
+                                text: "Password for " + pwdDialog.ssid
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 13
+                                font.weight: Theme.fontWeightMedium
+                                color: Theme.fg
+                                elide: Text.ElideRight
+                            }
+                            Text { text: "Enter the password to connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                        }
+                        Rectangle {
+                            width: 64; height: 24
+                            radius: Theme.roundingItem
+                            color: Theme.bgCritical
+                            Text { anchors.centerIn: parent; text: pwdDialog.security; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.critical; font.weight: Theme.fontWeightMedium }
+                        }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 40
+                        radius: Theme.roundingItem
+                        color: Theme.bgBar
+                        border.color: pwdField.activeFocus ? Theme.borderSelected : Theme.border
+                        border.width: 1
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.padM
+                            anchors.rightMargin: Theme.padS
+                            spacing: Theme.gapS
+                            TextField {
+                                id: pwdField
+                                Layout.fillWidth: true
+                                placeholderText: "Password…"
+                                echoMode: pwdShow.checked ? TextInput.Normal : TextInput.Password
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 13
+                                color: Theme.fg
+                                placeholderTextColor: Theme.fgDim
+                                background: null
+                                onAccepted: connectPwd()
+                            }
+                            Rectangle {
+                                id: pwdShow
+                                property bool checked: false
+                                width: 30; height: 30
+                                radius: Theme.roundingItem
+                                color: pwdShow.checked ? Theme.bgSelected : "transparent"
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: pwdShow.checked ? Icons.eyeOff : Icons.eye
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 14
+                                    color: pwdShow.checked ? Theme.fg : Theme.fgMuted
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: pwdShow.checked = !pwdShow.checked
+                                }
+                            }
+                        }
+                    }
+                    Text { text: "Ctrl+s show/hide password · Enter connect · Esc cancel"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+                    RowLayout {
+                        Layout.fillWidth: true
                         spacing: Theme.gapM
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 32
+                            height: 36
                             radius: Theme.roundingItem
                             color: Theme.bgSelected
                             border.color: Theme.borderSelected
                             border.width: 1
                             Text { anchors.centerIn: parent; text: "Connect"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg; font.weight: Theme.fontWeightMedium }
-                            MouseArea { anchors.fill: parent; onClicked: { NetworkService.connectScanned(pwdDialog.ssid, pwdField.text); pwdDialog.visible=false; pwdField.text="" } }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: connectPwd() }
                         }
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 32
+                            height: 36
                             radius: Theme.roundingItem
                             color: Theme.bgHover
                             border.color: Theme.border
                             border.width: 1
                             Text { anchors.centerIn: parent; text: "Cancel"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg }
-                            MouseArea { anchors.fill: parent; onClicked: { pwdDialog.visible=false; pwdField.text="" } }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: cancelPwd() }
                         }
                     }
                 }
             }
-            Text { text: confirmText || "j/k move · Enter act · / known · x forget/delete · d disconnect · r rescan · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: confirmText ? Theme.critical : Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text {
+                visible: NetworkService.lastError !== ""
+                text: Icons.warning + " " + NetworkService.lastError
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                color: Theme.critical
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+            }
+            Text { text: confirmText || "j/k move · Enter act · /nearby /known /vpn · x forget/delete · d disconnect · r rescan · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: confirmText ? Theme.critical : Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
         }
         }
         Keys.onPressed: (e)=>{
@@ -359,10 +455,11 @@ PanelWindow {
                 else if(e.key===Qt.Key_N || e.key===Qt.Key_Escape) { confirmText=""; e.accepted=true; return }
             }
             if(e.key===Qt.Key_Escape) {
-                if(pwdDialog.visible){ pwdDialog.visible=false; pwdField.text=""; mainCol.forceActiveFocus(); e.accepted=true }
+                if(pwdDialog.visible){ cancelPwd(); e.accepted=true }
                 else if(filterActive){ filterActive=false; mainCol.forceActiveFocus(); e.accepted=true }
                 else root.close()
             }
+            else if((e.key===Qt.Key_S) && (e.modifiers & Qt.ControlModifier)) { if(pwdDialog.visible){ pwdShow.checked = !pwdShow.checked; e.accepted=true } }
             else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { root.moveSel(1); e.accepted=true }
             else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { root.moveSel(-1); e.accepted=true }
             else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.activate(); e.accepted=true }
@@ -372,9 +469,10 @@ PanelWindow {
             else if(e.key===Qt.Key_R) { NetworkService.rescanWifi(); e.accepted=true }
         }
     }
-    onIsOpenChanged: if(isOpen) { NetworkService.refresh(); filterField.text=""; root.showKnown=false; selIndex=0; confirmText=""; updateModels(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
+    onIsOpenChanged: if(isOpen) { NetworkService.lastError = ""; NetworkService.refresh(); NetworkService.rescanWifi(); filterField.text=""; root.view="nearby"; selIndex=0; confirmText=""; updateModels(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
     property var filteredKnown: []
     property var filteredScan: []
+    property var filteredVpn: []
     property string confirmText: ""
     property var pendingAction: null
     function requestDelete(){
@@ -384,7 +482,7 @@ PanelWindow {
             const n = filteredKnown[it.idx]
             if(n) { pendingAction = {type:"forget", name:n.name}; confirmText = "Forget \"" + n.name + "\"?  y / n" }
         } else if(it.kind==="vpn") {
-            const v = NetworkService.vpnConnections[it.idx]
+            const v = filteredVpn[it.idx]
             if(v) { pendingAction = {type:"vpnDelete", name:v.name}; confirmText = "Delete VPN \"" + v.name + "\"?  y / n" }
         }
     }
@@ -395,6 +493,24 @@ PanelWindow {
         else if(pendingAction.type==="vpnDelete") NetworkService.vpnDelete(pendingAction.name)
         confirmText=""
         pendingAction=null
+    }
+    function openPwd(ssid, security){
+        pwdDialog.ssid = ssid
+        pwdDialog.security = security
+        pwdField.text = ""
+        pwdShow.checked = false
+        pwdDialog.visible = true
+        pwdField.forceActiveFocus()
+    }
+    function connectPwd(){
+        NetworkService.connectScanned(pwdDialog.ssid, pwdField.text, pwdDialog.security)
+        cancelPwd()
+    }
+    function cancelPwd(){
+        pwdDialog.visible=false
+        pwdField.text=""
+        pwdShow.checked=false
+        mainCol.forceActiveFocus()
     }
     function moveSel(delta){
         const n = navItems.length
@@ -430,36 +546,39 @@ PanelWindow {
         if(it.kind==="current"){ if(NetworkService.connected) NetworkService.disconnect(); else NetworkService.rescanWifi() }
         else if(it.kind==="scan"){ NetworkService.rescanWifi() }
         else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.name) }
-        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n){ if(n.security!=="--"){ pwdDialog.ssid=n.ssid; pwdDialog.visible=true; pwdField.forceActiveFocus() } else NetworkService.connectScanned(n.ssid,"") } }
-        else if(it.kind==="vpn"){ const v=NetworkService.vpnConnections[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.name); else NetworkService.vpnConnect(v.name) } }
+        else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n){ if(n.security!=="--"){ openPwd(n.ssid, n.security) } else NetworkService.connectScanned(n.ssid,"",n.security) } }
+        else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.name); else NetworkService.vpnConnect(v.name) } }
         else if(it.kind==="vpnAdd"){ NetworkService.vpnAdd() }
         else if(it.kind==="editor"){ NetworkService.launchEditor() }
     }
     function updateModels(){
         const raw = filterField.text.trim().toLowerCase()
-        // Slash commands:
-        //   /known   → show the Known section
-        //   /nearby  → hide the Known section
-        //   <text>   → filter currently visible lists
+        // Slash commands switch the visible view (default: nearby):
+        //   /nearby → nearby networks only
+        //   /known  → known networks only
+        //   /vpn    → VPN networks + configuration options
+        //   <text>  → filter the currently visible list
         const isKnownCmd = raw === "/known" || raw === "known"
         const isNearbyCmd = raw === "/nearby" || raw === "nearby"
-        if (isKnownCmd) { root.showKnown = true }
-        else if (isNearbyCmd) { root.showKnown = false }
-        const q = (isKnownCmd || isNearbyCmd) ? "" : raw.replace(/^\//, "")
+        const isVpnCmd = raw === "/vpn" || raw === "vpn"
+        const isCmd = isKnownCmd || isNearbyCmd || isVpnCmd
+        if (isKnownCmd) { root.view = "known"; Qt.callLater(()=> filterField.text = "") }
+        else if (isNearbyCmd) { root.view = "nearby"; Qt.callLater(()=> filterField.text = "") }
+        else if (isVpnCmd) { root.view = "vpn"; Qt.callLater(()=> filterField.text = "") }
+        const q = isCmd ? "" : raw.replace(/^\//, "")
         let k = NetworkService.knownNetworks
         let s = NetworkService.scannedNetworks
-        if(q){ k=k.filter(x=> x.name.toLowerCase().indexOf(q)!==-1); s=s.filter(x=> x.ssid.toLowerCase().indexOf(q)!==-1) }
+        let v = NetworkService.vpnConnections
+        if(q){ k=k.filter(x=> x.name.toLowerCase().indexOf(q)!==-1); s=s.filter(x=> x.ssid.toLowerCase().indexOf(q)!==-1); v=v.filter(x=> x.name.toLowerCase().indexOf(q)!==-1) }
         filteredKnown=k
         filteredScan=s
+        filteredVpn=v
         const items=[]
         items.push({kind:"current"})
         items.push({kind:"scan"})
-        for(let i=0;i<s.length;i++) items.push({kind:"nearby", idx:i})
-        if(root.showKnown) for(let i=0;i<k.length;i++) items.push({kind:"known", idx:i})
-        const v=NetworkService.vpnConnections
-        for(let i=0;i<v.length;i++) items.push({kind:"vpn", idx:i})
-        items.push({kind:"vpnAdd"})
-        items.push({kind:"editor"})
+        if(root.view==="nearby"){ for(let i=0;i<s.length;i++) items.push({kind:"nearby", idx:i}) }
+        else if(root.view==="known"){ for(let i=0;i<k.length;i++) items.push({kind:"known", idx:i}) }
+        else if(root.view==="vpn"){ for(let i=0;i<v.length;i++) items.push({kind:"vpn", idx:i}); items.push({kind:"vpnAdd"}); items.push({kind:"editor"}) }
         navItems=items
         selIndex=Math.max(0, Math.min(selIndex, items.length-1))
         Qt.callLater(()=> ensureVisible(selIndex))
