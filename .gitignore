@@ -1,3 +1,4 @@
 .gitignore
 .opencode/
 .claude/
+*prompt.md
