@@ -11,5 +11,9 @@
       owner = "asergi";
       mode = "0600";
     };
+    secrets.opencode = {
+      owner = "asergi";
+      mode = "0600";
+    };
   };
 }
