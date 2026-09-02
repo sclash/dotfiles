@@ -27,17 +27,20 @@ QtObject {
 
     function startScan() {
         root.nearby = []
-        if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true }
+        if (!root.powered) { root.btPowerOn.running = true; root.scanning = true; root.deferredScan.running = true }
         else beginScan()
     }
     function beginScan() {
         if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true; return }
         root.scanning = true
+        root.btDiscoverableOn.running = true
         root.btScanOnProc.running = true
         root.scanTimer.restart()
     }
     function stopScan() {
+        root.btScanOnProc.running = false
         root.btScanOffProc.running = true
+        root.btDiscoverableOff.running = true
         root.scanTimer.running = false
         root.scanning = false
     }
@@ -51,16 +54,34 @@ QtObject {
         if (nw) {
             const addr = nw[1].toUpperCase()
             if (known.some(d => d.address === addr)) return
-            root.nearby = known.concat([{ address: addr, alias: (nw[2] || "Unknown device").trim() }])
+            root.nearby = known.concat([{ address: addr, alias: (nw[2] || "Unknown device").trim(), rssi: 0 }])
             root.dataUpdated()
             return
         }
-        // [CHG] Device AA:BB... Name: X — update alias when it arrives later
-        const chg = l.match(/\[CHG\]\s+Device\s+([0-9A-Fa-f:]{17})\s+Name:\s*(.*)/)
-        if (chg) {
+        const addrRe = /\[CHG\]\s+Device\s+([0-9A-Fa-f:]{17})\s+(.*)/
+        // [CHG] Device AA:BB... RSSI: -42 — signal for spec sorting
+        const rssi = l.match(addrRe)
+        if (rssi && rssi[2].startsWith("RSSI:")) {
+            const addr = rssi[1].toUpperCase()
+            const val = parseInt(rssi[2].slice(5).trim(), 10)
+            if (isNaN(val)) return
+            root.nearby = known.map(d => d.address === addr ? { address: d.address, alias: d.alias, rssi: val } : d)
+            root.dataUpdated()
+            return
+        }
+        // [CHG] Device AA:BB... Name:/Alias: X — update alias when it arrives later
+        const chg = l.match(addrRe)
+        if (chg && (chg[2].startsWith("Name:") || chg[2].startsWith("Alias:"))) {
             const addr = chg[1].toUpperCase()
+            const name = chg[2].slice(chg[2].indexOf(":") + 1).trim()
+            if (!name) return
             let hit = false
-            const copy = known.map(d => { if (d.address === addr && chg[2].trim()) { hit = true; return { address: d.address, alias: chg[2].trim() } } return d })
+            const copy = known.map(d => {
+                if (d.address !== addr) return d
+                hit = true
+                const isPlaceholder = !d.alias || d.alias === "Unknown device" || d.alias === d.address
+                return isPlaceholder ? { address: d.address, alias: name, rssi: d.rssi } : d
+            })
             if (hit) { root.nearby = copy; root.dataUpdated() }
         }
     }
@@ -108,8 +129,10 @@ QtObject {
         stdout: SplitParser { onRead: (line) => root.handleScanLine(line) }
     }
     property Process btScanOffProc: Process { command: ["bluetoothctl", "scan", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process btDiscoverableOn: Process { command: ["sh", "-c", "bluetoothctl discoverable on; bluetoothctl pairable on"] }
+    property Process btDiscoverableOff: Process { command: ["bluetoothctl", "discoverable", "off"] }
 
-    property Timer scanTimer: Timer { interval: 10000; running: false; repeat: false; onTriggered: { root.btScanOffProc.running = true; root.scanning = false } }
+    property Timer scanTimer: Timer { interval: 10000; running: false; repeat: false; onTriggered: root.stopScan() }
     property Timer deferredScan: Timer { interval: 1500; running: false; repeat: false; onTriggered: root.beginScan() }
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
 
