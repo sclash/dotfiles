@@ -12,6 +12,7 @@ QtObject {
     property string controllerAddress: ""
     property var devices: []
     property var nearby: []
+    property var seenAddrs: ({})
     property string lastError: ""
     signal dataUpdated()
 
@@ -27,11 +28,13 @@ QtObject {
 
     function startScan() {
         root.nearby = []
+        root.seenAddrs = {}
         if (!root.powered) { root.btPowerOn.running = true; root.scanning = true; root.deferredScan.running = true }
         else beginScan()
     }
     function beginScan() {
         if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true; return }
+        root.seenAddrs = {}
         root.scanning = true
         root.btDiscoverableOn.running = true
         root.btScanOnProc.running = true
@@ -43,18 +46,32 @@ QtObject {
         root.btDiscoverableOff.running = true
         root.scanTimer.running = false
         root.scanning = false
+        // Names resolve into BlueZ's cache during discovery but [CHG] Name
+        // events are unreliable — read the cache once the scan ends (same as
+        // running `bluetoothctl devices` after `scan on` in a terminal).
+        root.btScanListProc.running = true
     }
 
+    // bluetoothctl hardcodes ANSI colour codes on [NEW]/[CHG] event lines even
+    // when stdout is piped, so raw lines look like "\x1b[0;92mNEW\x1b[0m Device …"
+    // and never match a literal "[NEW]" — strip the escapes before parsing.
+    function sanitizeLine(line) { return String(line).replace(/\x1b\[[0-9;]*m/g, "").trim() }
+    function isPlaceholderAlias(alias, addr) {
+        if (!alias || alias === "Unknown device") return true
+        return alias.replace(/-/g, ":").toUpperCase() === addr
+    }
     function handleScanLine(line) {
-        const l = String(line).trim()
+        const l = root.sanitizeLine(line)
         if (!l) return
         const known = root.nearby
         // [NEW] Device AA:BB:CC:DD:EE:FF Name
         const nw = l.match(/\[NEW\]\s+Device\s+([0-9A-Fa-f:]{17})(?:\s+(.*))?/)
         if (nw) {
             const addr = nw[1].toUpperCase()
+            root.seenAddrs[addr] = true
             if (known.some(d => d.address === addr)) return
-            root.nearby = known.concat([{ address: addr, alias: (nw[2] || "Unknown device").trim(), rssi: 0 }])
+            const rawAlias = (nw[2] || "").trim()
+            root.nearby = known.concat([{ address: addr, alias: root.isPlaceholderAlias(rawAlias, addr) ? "Unknown device" : rawAlias, rssi: 0 }])
             root.dataUpdated()
             return
         }
@@ -63,6 +80,7 @@ QtObject {
         const rssi = l.match(addrRe)
         if (rssi && rssi[2].startsWith("RSSI:")) {
             const addr = rssi[1].toUpperCase()
+            root.seenAddrs[addr] = true
             const val = parseInt(rssi[2].slice(5).trim(), 10)
             if (isNaN(val)) return
             root.nearby = known.map(d => d.address === addr ? { address: d.address, alias: d.alias, rssi: val } : d)
@@ -73,14 +91,14 @@ QtObject {
         const chg = l.match(addrRe)
         if (chg && (chg[2].startsWith("Name:") || chg[2].startsWith("Alias:"))) {
             const addr = chg[1].toUpperCase()
+            root.seenAddrs[addr] = true
             const name = chg[2].slice(chg[2].indexOf(":") + 1).trim()
             if (!name) return
             let hit = false
             const copy = known.map(d => {
                 if (d.address !== addr) return d
                 hit = true
-                const isPlaceholder = !d.alias || d.alias === "Unknown device" || d.alias === d.address
-                return isPlaceholder ? { address: d.address, alias: name, rssi: d.rssi } : d
+                return root.isPlaceholderAlias(d.alias, addr) ? { address: d.address, alias: name, rssi: d.rssi } : d
             })
             if (hit) { root.nearby = copy; root.dataUpdated() }
         }
@@ -88,10 +106,11 @@ QtObject {
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "bluetoothctl show 2>/dev/null; echo '---DEVICES---'; bluetoothctl devices Connected 2>/dev/null; echo '---PAIRED---'; bluetoothctl paired-devices 2>/dev/null; echo '---ALL---'; bluetoothctl devices 2>/dev/null | head -n 30"]
+        command: ["sh", "-c", "bluetoothctl show 2>/dev/null; echo '---DEVICES---'; bluetoothctl devices Connected 2>/dev/null; echo '---PAIRED---'; bluetoothctl devices Paired 2>/dev/null; echo '---ALL---'; bluetoothctl devices 2>/dev/null | head -n 30"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const txt = this.text
+                // bluetoothctl emits ANSI escapes on error/status lines even piped
+                const txt = String(this.text).replace(/\x1b\[[0-9;]*m/g, "")
                 if (!txt || txt.indexOf("No default controller") !== -1) { root.available = false; root.powered = false; return }
                 root.available = true
                 const sections = txt.split("---DEVICES---")
@@ -125,10 +144,47 @@ QtObject {
     property Process btPowerOn: Process { command: ["bluetoothctl", "power", "on"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btPowerOff: Process { command: ["bluetoothctl", "power", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btScanOnProc: Process {
-        command: ["bluetoothctl", "scan", "on"]
+        // One-shot (--timeout) mode: plain `bluetoothctl scan on` piped to a
+        // non-tty never prints "Discovery started" nor [NEW] events, while
+        // --timeout streams them and exits on its own (scanTimer acts as backup).
+        command: ["bluetoothctl", "--timeout", "10", "scan", "on"]
         stdout: SplitParser { onRead: (line) => root.handleScanLine(line) }
     }
     property Process btScanOffProc: Process { command: ["bluetoothctl", "scan", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process btScanListProc: Process {
+        // `paired-devices` is not a valid command on this bluetoothctl version —
+        // the menu-style filter `devices Paired` is the supported equivalent.
+        command: ["sh", "-c", "echo '---PAIRED---'; bluetoothctl devices Paired 2>/dev/null; echo '---CONNECTED---'; bluetoothctl devices Connected 2>/dev/null; echo '---CACHE---'; bluetoothctl devices 2>/dev/null"]
+        stdout: StdioCollector { onStreamFinished: root.populateNearbyFromCache(String(this.text).replace(/\x1b\[[0-9;]*m/g, ""))
+        }
+    }
+
+    // Post-scan nearby refresh: cache devices seen by discovery, minus paired,
+    // connected and still-nameless entries.
+    function populateNearbyFromCache(txt) {
+        if (root.scanning) return
+        if (!txt) return
+        const pairedSec = (txt.split("---PAIRED---")[1] || "").split("---CONNECTED---")[0] || ""
+        const connectedSec = (txt.split("---CONNECTED---")[1] || "").split("---CACHE---")[0] || ""
+        const cacheSec = (txt.split("---CACHE---")[1] || "")
+        const inPaired = a => pairedSec.indexOf(a) !== -1
+        const inConnected = a => connectedSec.indexOf(a) !== -1
+        const list = []
+        cacheSec.trim().split("\n").forEach(l => {
+            const m = l.match(/Device\s+([0-9A-F:]{17})\s+(.*)/)
+            if (!m) return
+            const addr = m[1].toUpperCase()
+            const alias = m[2].trim()
+            // Only devices actually seen during the current scan session — the
+            // cache keeps stale entries for devices that are off/out of range.
+            if (!root.seenAddrs[addr]) return
+            if (inPaired(addr) || inConnected(addr)) return
+            if (root.isPlaceholderAlias(alias, addr)) return
+            list.push({ address: addr, alias: alias, rssi: 0 })
+        })
+        root.nearby = list
+        root.dataUpdated()
+    }
     property Process btDiscoverableOn: Process { command: ["sh", "-c", "bluetoothctl discoverable on; bluetoothctl pairable on"] }
     property Process btDiscoverableOff: Process { command: ["bluetoothctl", "discoverable", "off"] }
 
