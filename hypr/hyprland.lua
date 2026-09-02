@@ -291,6 +291,8 @@ hl.config({
 			force_default_wallpaper = 0,
 			-- # If true disables the random hyprland logo / anime girl background. :(
 			disable_hyprland_logo = true,
+			-- # If true disables the "Hyprland" splash text at the bottom of the screen
+			disable_splash_rendering = true,
 			background_color = 0x000000,
 			-- # background_color = 0xffffff # White
 		}
