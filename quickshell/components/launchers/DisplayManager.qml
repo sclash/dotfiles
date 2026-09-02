@@ -8,12 +8,14 @@ import "../../theme"
 PanelWindow {
     id: root
     property bool isOpen: false
+    property var navItems: []
+    property int selIndex: 0
     function open(){ isOpen=true }
     function close(){ isOpen=false }
     function toggle(){ if(isOpen) close(); else open() }
 
     anchors { top:true; bottom:true; left:true; right:true }
-    onIsOpenChanged: if(isOpen) { refresh(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
+    onIsOpenChanged: if(isOpen) { selIndex=0; updateNav(); refresh(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
     color: "transparent"
     visible: isOpen
     focusable: true
@@ -39,6 +41,7 @@ PanelWindow {
 
             Text { text: "Current"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
             ListView {
+                id: currentList
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(160, contentHeight)
                 clip: true
@@ -46,12 +49,14 @@ PanelWindow {
                 model: monitors
                 delegate: Rectangle {
                     required property var modelData
+                    required property int index
                     width: parent.width
                     height: 56
                     radius: Theme.roundingItem
+                    readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "monitor" && it.idx === index }
                     color: modelData.focused ? Theme.bgSelected : Theme.bgActive
-                    border.color: modelData.focused ? Theme.borderSelected : Theme.border
-                    border.width: modelData.focused ? 2 : 1
+                    border.color: isSel ? Theme.accent : (modelData.focused ? Theme.borderSelected : Theme.border)
+                    border.width: isSel ? 2 : (modelData.focused ? 2 : 1)
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
@@ -88,6 +93,7 @@ PanelWindow {
 
             Text { text: "Available"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
             ListView {
+                id: availableList
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(140, contentHeight)
                 clip: true
@@ -95,12 +101,14 @@ PanelWindow {
                 model: availableMonitors
                 delegate: Rectangle {
                     required property var modelData
+                    required property int index
                     width: parent.width
                     height: 52
                     radius: Theme.roundingItem
-                    color: Theme.bgHover
-                    border.color: Theme.border
-                    border.width: 1
+                    readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "available" && it.idx === index }
+                    color: isSel ? Theme.bgActive : Theme.bgHover
+                    border.color: isSel ? Theme.accent : Theme.border
+                    border.width: isSel ? 2 : 1
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
@@ -141,12 +149,14 @@ PanelWindow {
                         model: ["Left","Right","Top","Bottom"]
                         delegate: Rectangle {
                             required property string modelData
+                            required property int index
                             Layout.fillWidth: true
                             height: 32
                             radius: Theme.roundingItem
-                            color: ma.containsMouse ? Theme.bgHover : Theme.bgActive
-                            border.color: Theme.border
-                            border.width: 1
+                            readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "orient" && it.dir === modelData.toLowerCase() }
+                            color: isSel ? Theme.bgActive : (ma.containsMouse ? Theme.bgHover : Theme.bgActive)
+                            border.color: isSel ? Theme.accent : Theme.border
+                            border.width: isSel ? 2 : 1
                             Text { anchors.centerIn: parent; text: modelData; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                             MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; onClicked: orient(modelData.toLowerCase()) }
                         }
@@ -158,26 +168,76 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 Rectangle {
+                    id: refreshBtn
                     width: 100; height: 32
                     radius: Theme.roundingItem
-                    color: Theme.bgHover
-                    border.color: Theme.border
-                    border.width: 1
+                    readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "refresh"
+                    color: isSel ? Theme.bgActive : Theme.bgHover
+                    border.color: isSel ? Theme.accent : Theme.border
+                    border.width: isSel ? 2 : 1
                     Text { anchors.centerIn: parent; text: "Refresh"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                     MouseArea { anchors.fill: parent; onClicked: refresh() }
                 }
                 Item { Layout.fillWidth: true }
-                Text { text: "r refresh · / filter · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim }
+                Text { text: "j/k move · Enter act · d disconnect · r refresh · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim }
             }
         }
         Keys.onPressed: (e)=>{
             if(e.key===Qt.Key_Escape) root.close()
-            else if(e.text==="/") { e.accepted=true }
             else if(e.key===Qt.Key_R) { refresh(); e.accepted=true }
+            else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { root.moveSel(1); e.accepted=true }
+            else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { root.moveSel(-1); e.accepted=true }
+            else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.activate(); e.accepted=true }
+            else if(e.key===Qt.Key_D) { root.disconnectFocused(); e.accepted=true }
+            else if(e.key===Qt.Key_U) { root.duplicateFocused(); e.accepted=true }
         }
+    }
+    function updateNav(){
+        const items=[]
+        for(let i=0;i<monitors.length;i++) items.push({kind:"monitor", idx:i})
+        for(let i=0;i<availableMonitors.length;i++) items.push({kind:"available", idx:i})
+        if(monitors.length>=2) for(const dir of ["Left","Right","Top","Bottom"]) items.push({kind:"orient", dir:dir.toLowerCase()})
+        items.push({kind:"refresh"})
+        navItems=items
+        selIndex=Math.max(0, Math.min(selIndex, items.length-1))
+    }
+    function moveSel(delta){
+        const n = navItems.length
+        if(n===0) return
+        selIndex = Math.max(0, Math.min(n-1, selIndex+delta))
+        const it = navItems[selIndex]
+        if(!it) return
+        if(it.kind==="monitor" && currentList) currentList.positionViewAtIndex(it.idx, ListView.Contain)
+        else if(it.kind==="available" && availableList) availableList.positionViewAtIndex(it.idx, ListView.Contain)
+        Qt.callLater(()=> mainCol.forceActiveFocus())
+    }
+    function disconnectFocused(){
+        const it = navItems[selIndex]
+        if(!it || it.kind!=="monitor") return
+        const m = monitors[it.idx]
+        if(!m) return
+        if(monitors.length<2){ errorText.text="Cannot disable the only monitor"; return }
+        disconnectProc.command = ["hyprctl","keyword","monitor", m.name+",disable"]
+        disconnectProc.running=true
+    }
+    function duplicateFocused(){
+        const it = navItems[selIndex]
+        if(!it || it.kind!=="available") return
+        const m = availableMonitors[it.idx]
+        if(m) connectProc("duplicate", m.name)
+    }
+    function activate(){
+        const it = navItems[selIndex]
+        if(!it) return
+        if(it.kind==="monitor") disconnectFocused()
+        else if(it.kind==="available") { const m = availableMonitors[it.idx]; if(m) connectProc("extend", m.name) }
+        else if(it.kind==="orient") orient(it.dir)
+        else if(it.kind==="refresh") refresh()
     }
     property var monitors: []
     property var availableMonitors: []
+    onMonitorsChanged: updateNav()
+    onAvailableMonitorsChanged: updateNav()
     function refresh(){
         monitorsProc.running=true
         allMonitorsProc.running=true

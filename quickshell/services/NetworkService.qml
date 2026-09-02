@@ -46,6 +46,7 @@ QtObject {
     function vpnDelete(name) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "id", name]; root.nmVpnDelProc.running = true }
     function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true }
     function launchEditor() { root.vpnEditorProc.running = true }
+    function vpnAdd() { root.vpnAddProc.running = true }
 
     property Process pollProc: Process {
         running: true
@@ -90,7 +91,7 @@ QtObject {
     }
 
     property Process knownProc: Process {
-        command: ["sh", "-c", "nmcli -t -f NAME,TYPE connection show 2>/dev/null | grep wifi | cut -d: -f1"]
+        command: ["sh", "-c", "nmcli -t -f NAME,TYPE connection show 2>/dev/null | grep 802-11-wireless | cut -d: -f1"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const names = this.text.trim().split("\n").filter(Boolean)
@@ -125,7 +126,8 @@ QtObject {
             }
         }
     }
-    property Process vpnEditorProc: Process { command: ["nm-connection-editor"] }
+    property Process vpnEditorProc: Process { command: ["nm-connection-editor"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
+    property Process vpnAddProc: Process { command: ["nm-connection-editor", "-c", "-t", "vpn"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
 
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
     Component.onCompleted: { root.knownProc.running = true; root.vpnProc.running = true }

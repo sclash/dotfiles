@@ -147,7 +147,6 @@ Scope {
                             anchors.centerIn: parent
                             text: {
                                 if (!NetworkService.available) return Icons.wifiDisconnected
-                                if (NetworkService.vpnActive) return Icons.vpn
                                 if (!NetworkService.connected) return Icons.wifiDisconnected
                                 if (NetworkService.type === "ethernet") return Icons.wifiEthernet
                                 const s = NetworkService.signalStrength
@@ -160,13 +159,36 @@ Scope {
                             font.pixelSize: Theme.barIconSize
                             color: {
                                 if (!NetworkService.available || !NetworkService.connected) return Theme.fgDim
-                                if (NetworkService.vpnActive) return Theme.accent
                                 if (NetworkService.signalStrength >=0 && NetworkService.signalStrength < 30) return Theme.warning
                                 return Theme.fg
                             }
                         }
                         MouseArea {
                             id: wifiMA
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.launcherToggleRequested("network")
+                        }
+                    }
+
+                    Rectangle {
+                        visible: NetworkService.vpnActive
+                        height: Theme.barIconSlot
+                        Layout.preferredWidth: vpnText.implicitWidth + 14
+                        radius: Theme.roundingItem
+                        color: vpnMA.containsMouse ? Theme.bgHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                        Text {
+                            id: vpnText
+                            anchors.centerIn: parent
+                            text: Icons.vpn + " " + NetworkService.vpnName
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.barIconSize
+                            color: Theme.accent
+                        }
+                        MouseArea {
+                            id: vpnMA
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor

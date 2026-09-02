@@ -149,8 +149,8 @@ PanelWindow {
                     }
                 }
                 Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); e.accepted=true }
-                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); e.accepted=true }
+                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_D || e.key===Qt.Key_Delete) { NotifService.dismiss(currentIndex); e.accepted=true }
                     else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) {
                         const m=filteredHistory[currentIndex]
@@ -187,8 +187,8 @@ PanelWindow {
             else if(e.key===Qt.Key_J || e.key===Qt.Key_K || e.key===Qt.Key_Up || e.key===Qt.Key_Down) {
                 notifList.forceActiveFocus()
                 // forward to list
-                if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { notifList.currentIndex=Math.min(notifList.count-1, notifList.currentIndex+1); e.accepted=true }
-                else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { notifList.currentIndex=Math.max(0, notifList.currentIndex-1); e.accepted=true }
+                if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { notifList.currentIndex=Math.min(notifList.count-1, notifList.currentIndex+1); notifList.positionViewAtIndex(notifList.currentIndex, ListView.Contain); e.accepted=true }
+                else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { notifList.currentIndex=Math.max(0, notifList.currentIndex-1); notifList.positionViewAtIndex(notifList.currentIndex, ListView.Contain); e.accepted=true }
             }
         }
     }

@@ -1,6 +1,7 @@
 module BarComponents
 Workspaces 1.0 Workspaces.qml
 AppTray 1.0 AppTray.qml
+BarToolTip 1.0 BarToolTip.qml
 DateBlock 1.0 DateBlock.qml
 WifiIcon 1.0 WifiIcon.qml
 AudioIcon 1.0 AudioIcon.qml

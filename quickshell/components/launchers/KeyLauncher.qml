@@ -105,8 +105,8 @@ PanelWindow {
                     }
                 }
                 Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); e.accepted=true }
-                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); e.accepted=true }
+                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_Escape) root.close()
                     else if(e.text==="/") { filterField.forceActiveFocus(); e.accepted=true }
                 }

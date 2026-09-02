@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Hyprland
 import "../../theme"
@@ -112,9 +111,12 @@ RowLayout {
                         }
                     }
 
-                    ToolTip.visible: slotMA.containsMouse && !!iconSlot.toplevel
-                    ToolTip.text: iconSlot.toplevel && iconSlot.toplevel.title ? iconSlot.toplevel.title : ""
-                    ToolTip.delay: 500
+                    BarToolTip {
+                        id: slotTip
+                        visible: slotMA.containsMouse && !!iconSlot.toplevel
+                        text: iconSlot.toplevel && iconSlot.toplevel.title ? iconSlot.toplevel.title : ""
+                        anchorItem: iconSlot
+                    }
 
                     MouseArea {
                         id: slotMA

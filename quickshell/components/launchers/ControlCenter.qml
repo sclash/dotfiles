@@ -59,8 +59,8 @@ PanelWindow {
                             onTextChanged: { root.filteredModel = root.filteredEntries(); gridView.currentIndex = 0 }
                             Keys.onEscapePressed: root.close()
                             Keys.onPressed: (e)=>{
-                                if(e.key===Qt.Key_Down || e.key===Qt.Key_J) { gridView.forceActiveFocus(); gridView.currentIndex = Math.min(gridView.count-1, gridView.currentIndex+2); e.accepted=true }
-                                else if(e.key===Qt.Key_Up || e.key===Qt.Key_K) { gridView.forceActiveFocus(); gridView.currentIndex = Math.max(0, gridView.currentIndex-2); e.accepted=true }
+                                if(e.key===Qt.Key_Down || e.key===Qt.Key_J) { gridView.forceActiveFocus(); gridView.currentIndex = Math.min(gridView.count-1, gridView.currentIndex+2); gridView.positionViewAtIndex(gridView.currentIndex, GridView.Contain); e.accepted=true }
+                                else if(e.key===Qt.Key_Up || e.key===Qt.Key_K) { gridView.forceActiveFocus(); gridView.currentIndex = Math.max(0, gridView.currentIndex-2); gridView.positionViewAtIndex(gridView.currentIndex, GridView.Contain); e.accepted=true }
                                 else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.dispatch(); e.accepted=true }
                             }
                         }
@@ -111,10 +111,10 @@ PanelWindow {
                     MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { gridView.currentIndex=index; root.dispatch() } }
                 }
                 Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+2); e.accepted=true }
-                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-2); e.accepted=true }
-                    else if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { currentIndex=Math.max(0, currentIndex-1); e.accepted=true }
-                    else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { currentIndex=Math.min(count-1, currentIndex+1); e.accepted=true }
+                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+2); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-2); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.dispatch(); e.accepted=true }
                     else if(e.key===Qt.Key_Escape) root.close()
                     else if(e.text==="/") { filterField.forceActiveFocus(); e.accepted=true }

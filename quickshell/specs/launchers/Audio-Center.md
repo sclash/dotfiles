@@ -16,15 +16,15 @@ Center-screen window to inspect and mutate audio: default sink/source, available
 
 ### 3.1 Output — Current Sink
 
-* **Row:** `device.description` (bold) + `volume%` + `muted` badge if muted.
-* **Slider:** `Slider { from: 0; to: 1.0; value: sink.audio.volume; onMoved: sink.audio.volume = value }` at `Theme.accent`. Step buttons `−` / `+` at 5%.
+* **Row:** `device.description` (bold) + `volume%` + `muted` badge if muted. Flat row — no card/box.
+* **Slider:** slim 4px track, `Theme.border` background, filled `Theme.fgMuted`, 12px thumb `Theme.fg`. Quiet `−`/`+` step buttons at 5%.
 * **Mute toggle:** checkbox / `Switch` or button — `sink.audio.muted = !sink.audio.muted`.
 * If `Pipewire.defaultAudioSink == null` → `"No output device"` at `Theme.fgMuted`.
 
 ### 3.2 Output — All Sinks
 
 * List of `Pipewire.nodes.values.filter(n => n.isSink && !n.isStream)`.
-* Each row: `description` + `volume%` + active check `Icons.check` if `n === defaultAudioSink`.
+* Each row: `description` + `volume%` + active check `Icons.check` if `n === defaultAudioSink`. Rows are flat (no boxes); active device shown via `Theme.fgBright` text + check.
 * **Change device:** `Enter` or click row → `Pipewire.defaultAudioSink = n` (preferred) or `wpctl set-default {n.id}` via `AudioService.setDefaultSink(id)`.
 * Rows update when devices are plugged/unplugged via `Pipewire.nodesChanged`.
 
@@ -46,8 +46,8 @@ Center-screen window to inspect and mutate audio: default sink/source, available
 ## 5. Styling
 
 * Active device row: `Icons.check` at `Theme.success`.
-* Muted: row tint `Theme.fgDim`, badge at `Theme.warning`.
-* Slider filled track: `Theme.accent`; thumb: `Theme.fg`.
+* Muted: row text `Theme.fgDim`, badge at `Theme.warning`.
+* Slider filled track: `Theme.fgMuted`; thumb: `Theme.fg`. Output and Input sections are visually identical (flat icon + name + switch + slim slider).
 
 ## 6. Service Contract
 

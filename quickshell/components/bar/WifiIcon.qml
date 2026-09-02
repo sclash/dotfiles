@@ -9,14 +9,12 @@ Text {
     font.pixelSize: Theme.fontSizeBar
     text: {
         if (!NetworkService.available) return Icons.wifiDisconnected
-        if (NetworkService.vpnActive) return Icons.vpn
         if (!NetworkService.connected) return Icons.wifiDisconnected
         if (NetworkService.type === "ethernet") return Icons.wifiEthernet
         return Icons.wifiConnected
     }
     color: {
         if (!NetworkService.available || !NetworkService.connected) return Theme.fgDim
-        if (NetworkService.vpnActive) return Theme.accent
         if (NetworkService.signalStrength >=0 && NetworkService.signalStrength < 30) return Theme.warning
         return Theme.fg
     }

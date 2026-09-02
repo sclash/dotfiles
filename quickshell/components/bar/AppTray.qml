@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Services.SystemTray
 import "../../theme"
@@ -54,9 +53,12 @@ RowLayout {
                 menu: slot.modelData.menu
             }
 
-            ToolTip.visible: slotMA.containsMouse && !!slot.modelData.tooltipTitle
-            ToolTip.text: (slot.modelData.tooltipTitle || "") + (slot.modelData.tooltipDescription ? "\n" + slot.modelData.tooltipDescription : "")
-            ToolTip.delay: 500
+            BarToolTip {
+                id: slotTip
+                visible: slotMA.containsMouse && !!slot.modelData.tooltipTitle
+                text: (slot.modelData.tooltipTitle || "") + (slot.modelData.tooltipDescription ? "\n" + slot.modelData.tooltipDescription : "")
+                anchorItem: slot
+            }
             MouseArea {
                 id: slotMA
                 anchors.fill: parent
