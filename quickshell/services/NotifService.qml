@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Quickshell.Io
 import Quickshell.Services.Notifications
 
 QtObject {
@@ -9,6 +10,8 @@ QtObject {
     property bool hasUnread: unreadCount > 0
     property var history: []
     property bool available: true
+    property bool soundEnabled: true
+    property string fallbackSound: Qt.resolvedUrl("../assets/notify.ogg").toString().replace("file://", "")
 
     // Host the notification server to acquire org.freedesktop.Notifications
     property NotificationServer server: NotificationServer {
@@ -41,6 +44,28 @@ QtObject {
         }
         root.history = copy
         if (!root.dnd) root.unreadCount++
+        root.playSound(n)
+    }
+
+    property Process soundProc: Process {
+        id: soundProcess
+        command: ["pw-play", root.fallbackSound]
+    }
+
+    function playSound(n) {
+        if (!root.soundEnabled || root.dnd) return
+        try {
+            const hints = n.hints
+            if (hints && hints["suppress-sound"] === true) return
+            let file = hints && hints["sound-file"]
+            if (!file || file.length === 0) file = root.fallbackSound
+            if (!file || file.length === 0) return
+            if (file.indexOf("file://") === 0) file = file.substring(7)
+            soundProcess.command = ["pw-play", file]
+            soundProcess.running = true
+        } catch(e) {
+            console.log("NotifService: failed to play notification sound: " + e)
+        }
     }
 
     function clearHistory() {
