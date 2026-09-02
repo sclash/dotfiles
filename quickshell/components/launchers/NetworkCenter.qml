@@ -11,6 +11,7 @@ WlrLayershell {
     id: root
     property bool isOpen: false
     property bool filterActive: false
+    property bool suppressUpdate: false
     property string view: "nearby"
     // Known section visible only after the `/known` command
     property var navItems: []
@@ -86,7 +87,7 @@ WlrLayershell {
                                 height: Math.round(parent.font.pixelSize * 1.5)
                                 color: Theme.fg
                             }
-                            onTextChanged: updateModels()
+                            onTextChanged: if(!suppressUpdate) updateModels()
                             onAccepted: { filterActive=false; updateModels(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
                         }
                     }
@@ -223,7 +224,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view.width
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "known" && it.idx === index }
@@ -265,7 +266,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view.width
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "vpn" && it.idx === index }
@@ -457,7 +458,7 @@ WlrLayershell {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
             }
-            Text { text: confirmText || "j/k move · Enter act · /nearby /known /vpn · x forget/delete · d disconnect · r rescan · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: confirmText ? Theme.critical : Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text { text: confirmText || "j/k · Enter act · /nearby /known /vpn · x delete · d disc · r rescan · Esc back · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: confirmText ? Theme.critical : Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
         }
         }
         Keys.onPressed: (e)=>{
@@ -467,7 +468,8 @@ WlrLayershell {
             }
             if(e.key===Qt.Key_Escape) {
                 if(pwdDialog.visible){ cancelPwd(); e.accepted=true }
-                else if(filterActive){ filterActive=false; mainCol.forceActiveFocus(); e.accepted=true }
+                else if(filterActive){ filterActive=false; clearFilter(); mainCol.forceActiveFocus(); e.accepted=true }
+                else if(root.view !== "nearby"){ root.view="nearby"; updateModels(); e.accepted=true }
                 else root.close()
             }
             else if((e.key===Qt.Key_S) && (e.modifiers & Qt.ControlModifier)) { if(pwdDialog.visible){ pwdShow.checked = !pwdShow.checked; e.accepted=true } }
@@ -486,6 +488,12 @@ WlrLayershell {
     property var filteredVpn: []
     property string confirmText: ""
     property var pendingAction: null
+    function clearFilter(){
+        suppressUpdate = true
+        filterField.text = ""
+        suppressUpdate = false
+        updateModels()
+    }
     function requestDelete(){
         const it = navItems[selIndex]
         if(!it) return
@@ -573,9 +581,9 @@ WlrLayershell {
         const isNearbyCmd = raw === "/nearby" || raw === "nearby"
         const isVpnCmd = raw === "/vpn" || raw === "vpn"
         const isCmd = isKnownCmd || isNearbyCmd || isVpnCmd
-        if (isKnownCmd) { root.view = "known"; Qt.callLater(()=> filterField.text = "") }
-        else if (isNearbyCmd) { root.view = "nearby"; Qt.callLater(()=> filterField.text = "") }
-        else if (isVpnCmd) { root.view = "vpn"; Qt.callLater(()=> filterField.text = "") }
+        if (isKnownCmd) { root.view = "known"; clearFilter() }
+        else if (isNearbyCmd) { root.view = "nearby"; clearFilter() }
+        else if (isVpnCmd) { root.view = "vpn"; clearFilter() }
         if (isCmd) {
             filterActive = false
             Qt.callLater(()=> mainCol.forceActiveFocus())
