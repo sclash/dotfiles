@@ -230,5 +230,5 @@ delegate: Rectangle {
         if(!q) return NotifService.history.slice(0,50)
         return NotifService.history.filter(n=> (n.appName && n.appName.toLowerCase().indexOf(q)!==-1) || (n.summary && n.summary.toLowerCase().indexOf(q)!==-1) || (n.body && n.body.toLowerCase().indexOf(q)!==-1))
     }
-    Connections { target: NotifService; function onHistoryChanged(){ filteredHistory = filterHistory() } }
+    Connections { target: NotifService; function onHistoryChanged(){ filteredHistory = filterHistory(); if(NotifService.history.length===0) root.close() } }
 }
