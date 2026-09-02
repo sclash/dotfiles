@@ -189,6 +189,7 @@
   };
   services.blueman.enable = false;
   services.upower.enable = true;
+  services.udisks2.enable = true;   # udisksctl backend for UsbService (quickshell USB-Manager)
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
