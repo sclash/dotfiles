@@ -66,7 +66,7 @@ WlrLayershell {
                                 height: Math.round(parent.font.pixelSize * 1.5)
                                 color: Theme.fg
                             }
-                            onTextChanged: listView.model = filtered()
+                            onTextChanged: { listView.model = filtered(); listView.contentY = 0 }
                             Keys.onPressed: (e)=>{
                                 if(e.key===Qt.Key_Escape) {
                                     if(filterField.text.length>0) listView.forceActiveFocus()
@@ -116,9 +116,9 @@ WlrLayershell {
                         Text { text: modelData.desc; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; Layout.preferredWidth: 80; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight }
                     }
                 }
-                Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { listView.contentY = Math.min(listView.contentHeight - listView.height, listView.contentY + 38); e.accepted=true }
-                    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { listView.contentY = Math.max(0, listView.contentY - 38); e.accepted=true }
+Keys.onPressed: (e)=>{
+    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { if(listView.contentHeight > listView.height) listView.contentY = Math.min(listView.contentHeight - listView.height, listView.contentY + 38); e.accepted=true }
+    else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { listView.contentY = Math.max(0, listView.contentY - 38); e.accepted=true }
                     else if(e.key===Qt.Key_Escape) root.close()
                     else if(e.text==="/") { filterBar.visible=true; filterField.forceActiveFocus(); e.accepted=true }
                 }
