@@ -3,10 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Wayland
 import "../../theme"
 import "../../services"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
     property var navItems: []
@@ -18,7 +19,7 @@ PanelWindow {
     anchors { top:true; bottom:true; left:true; right:true }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 

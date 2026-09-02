@@ -2,40 +2,47 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import "../../theme"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
+    property bool filterActive: false
     signal requestToggle(string name)
     function open(){ isOpen=true }
-    function close(){ isOpen=false }
+    function close(){ isOpen=false; filterActive=false }
     function toggle(){ if(isOpen) close(); else open() }
 
     anchors { top:true; bottom:true; left:true; right:true }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
-    onIsOpenChanged: if(isOpen) { filterField.text=""; root.filteredModel = entries; gridView.currentIndex=0; Qt.callLater(()=> filterField.forceActiveFocus()) }
 
     Rectangle {
         width: 600
+        height: Math.min(560, mainCol.implicitHeight + Theme.padL * 2)
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
         border.width: 1
         border.color: Theme.borderActive
+        clip: true
         ColumnLayout {
+            id: mainCol
             anchors.fill: parent
             anchors.margins: Theme.padL
             spacing: Theme.gapM
             Text { text: "Control Center"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2 }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.gapM
                 Rectangle {
+                    visible: root.filterActive
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     radius: Theme.roundingItem
@@ -56,23 +63,29 @@ PanelWindow {
                             color: Theme.fg
                             placeholderTextColor: Theme.fgDim
                             background: null
-                            onTextChanged: { root.filteredModel = root.filteredEntries(); gridView.currentIndex = 0 }
-                            Keys.onEscapePressed: root.close()
-                            Keys.onPressed: (e)=>{
-                                if(e.key===Qt.Key_Down || e.key===Qt.Key_J) { gridView.forceActiveFocus(); gridView.currentIndex = Math.min(gridView.count-1, gridView.currentIndex+2); gridView.positionViewAtIndex(gridView.currentIndex, GridView.Contain); e.accepted=true }
-                                else if(e.key===Qt.Key_Up || e.key===Qt.Key_K) { gridView.forceActiveFocus(); gridView.currentIndex = Math.max(0, gridView.currentIndex-2); gridView.positionViewAtIndex(gridView.currentIndex, GridView.Contain); e.accepted=true }
-                                else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.dispatch(); e.accepted=true }
-                            }
+                            onTextChanged: { root.filteredModel = root.filteredEntries(); gridView.currentIndex = 0; gridView.positionViewAtIndex(0, GridView.Contain) }
+                            Keys.onEscapePressed: { root.filterActive = false; Qt.callLater(()=> gridView.forceActiveFocus()) }
+                            Keys.onReturnPressed: root.dispatch()
+                            Keys.onEnterPressed: root.dispatch()
                         }
                     }
                 }
+                Text {
+                    visible: !root.filterActive
+                    text: "j/k h/l move · Enter open · / filter · Esc close"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                    color: Theme.fgDim
+                    Layout.fillWidth: true
+                }
             }
+
             GridView {
                 id: gridView
                 Layout.fillWidth: true
-                Layout.preferredHeight: 340
-                cellWidth: 304
-                cellHeight: 86
+                Layout.preferredHeight: Math.min(4, Math.max(1, Math.ceil(root.filteredModel.length / 2))) * 84
+                cellWidth: Math.floor(gridView.width / 2)
+                cellHeight: 84
                 clip: true
                 model: root.filteredModel
                 currentIndex: 0
@@ -84,45 +97,65 @@ PanelWindow {
                     height: gridView.cellHeight
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 294
-                        height: 78
+                        width: gridView.cellWidth - Theme.gapM
+                        height: gridView.cellHeight - 10
                         radius: Theme.roundingItem
-                        color: GridView.isCurrentItem ? Theme.bgSelected : (ma.containsMouse ? Theme.bgHover : "transparent")
-                        border.color: GridView.isCurrentItem ? Theme.borderSelected : Theme.border
-                        border.width: GridView.isCurrentItem ? 2 : 1
+                        color: index === gridView.currentIndex ? Theme.bgSelected : (ma.containsMouse ? Theme.bgHover : "transparent")
+                        border.color: index === gridView.currentIndex ? Theme.borderSelected : Theme.border
+                        border.width: index === gridView.currentIndex ? 2 : 1
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: Theme.padM
+                            anchors.leftMargin: Theme.padM
+                            anchors.rightMargin: Theme.padM
                             spacing: Theme.gapM
                             Rectangle {
-                                width: 44; height: 44
-                                radius: 10
+                                width: 40; height: 40
+                                radius: 8
                                 color: Theme.bgBar
-                                Text { anchors.centerIn: parent; text: modelData.icon; font.family: Theme.fontFamily; font.pixelSize: 22; color: Theme.fg }
+                                Text { anchors.centerIn: parent; text: modelData.icon; font.family: Theme.fontFamily; font.pixelSize: 18; color: Theme.fg }
                             }
-                            ColumnLayout {
-                                spacing: 2
+                            Text {
+                                text: modelData.label
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeLauncher
+                                font.weight: Theme.fontWeightMedium
+                                color: Theme.fg
                                 Layout.fillWidth: true
-                                Text { text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Theme.fontWeightMedium; color: Theme.fg }
-                                Text { text: modelData.key; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                text: modelData.key
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgMuted
+                                horizontalAlignment: Text.AlignRight
                             }
                         }
                     }
-                    MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { gridView.currentIndex=index; root.dispatch() } }
+                    MouseArea {
+                        id: ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { gridView.currentIndex=index; root.dispatch() }
+                    }
                 }
                 Keys.onPressed: (e)=>{
-                    if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+2); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
+                    if(e.key===Qt.Key_Escape) { root.close(); e.accepted=true }
+                    else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+2); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-2); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, GridView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_Home) { currentIndex=0; positionViewAtIndex(0, GridView.Contain); e.accepted=true }
+                    else if(e.key===Qt.Key_End) { currentIndex=count-1; positionViewAtIndex(count-1, GridView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.dispatch(); e.accepted=true }
-                    else if(e.key===Qt.Key_Escape) root.close()
-                    else if(e.text==="/") { filterField.forceActiveFocus(); e.accepted=true }
+                    else if(e.text==="/") { root.filterActive=true; Qt.callLater(()=> filterField.forceActiveFocus()); e.accepted=true }
                 }
             }
-            Text { text: "j/k/h/l to move · Enter to open · / to filter · Esc to close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
         }
-        Keys.onEscapePressed: root.close()
+    }
+    onIsOpenChanged: {
+        if(isOpen) { root.filterActive=false; filterField.text=""; root.filteredModel = entries; gridView.currentIndex=0; Qt.callLater(()=> gridView.forceActiveFocus()) }
     }
 
     property var entries: [
@@ -136,14 +169,36 @@ PanelWindow {
         { label: "Key Hints", key: "SUPER+k", icon: Icons.key, target: "keys" }
     ]
     property var filteredModel: entries
+    function fuzzyMatch(text, q){
+        let i = 0
+        for (const ch of q) {
+            i = text.indexOf(ch, i)
+            if (i === -1) return false
+            i++
+        }
+        return true
+    }
+    function score(e, q){
+        const label = e.label.toLowerCase()
+        const key = e.key.toLowerCase()
+        if (label.indexOf(q) === 0) return 3
+        if (label.indexOf(q) !== -1 || key.indexOf(q) !== -1) return 2
+        if (fuzzyMatch(label, q)) return 1
+        return -1
+    }
     function filteredEntries(){
-        const q = filterField ? filterField.text.toLowerCase() : ""
+        const q = filterField ? filterField.text.trim().toLowerCase() : ""
         if(!q) return entries
-        return entries.filter(e=> e.label.toLowerCase().indexOf(q)!==-1 || e.key.toLowerCase().indexOf(q)!==-1)
+        const scored = []
+        for (const e of entries) {
+            const s = score(e, q)
+            if (s > 0) scored.push({ label: e.label, key: e.key, icon: e.icon, target: e.target, score: s })
+        }
+        scored.sort((a, b) => b.score - a.score)
+        return scored
     }
     function dispatch(){
-        const list = root.filteredModel
-        const m = list[gridView.currentIndex]
+        const m = root.filteredModel[gridView.currentIndex]
         if(!m) return
         root.close()
         root.requestToggle(m.target)

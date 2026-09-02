@@ -3,9 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../../theme"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
     property var navItems: []
@@ -18,7 +19,7 @@ PanelWindow {
     onIsOpenChanged: if(isOpen) { selIndex=0; updateNav(); refresh(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 

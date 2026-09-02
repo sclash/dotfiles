@@ -4,13 +4,19 @@ import QtQuick
 QtObject {
     // Omarchy matte-black inspired — dark, monochrome white/grey, low chrome
     // Derived from themes/matte-black/colors.toml + shell/commons
-    property color bgBar:           "#121212"      // background
+    // property color bgBar:           "#121212"      // background
+    property color bgBar:           "#000000"      // background
     property color bgBarAlt:        "#1e1e1e"      // lighter_background
-    property color bgLauncher:      "#121212"      // same as bgBar
-    property color bgHover:         "#2a2a2a"      // selection
-    property color bgActive:        "#333333"      // muted
-    property color bgSelected:      "#2e2e2e"      // selected rows — dark, subtle
+    // property color bgLauncher:      "#121212"      // same as bgBar
+    property color bgLauncher:      "#000000"      // same as bgBar
+    // property color bgHover:         "#2a2a2a"      // selection
+    // property color bgActive:        "#333333"      // muted
+    // property color bgSelected:      "#2e2e2e"      // selected rows — dark, subtle
     property color bgCritical:      "#631e1e"      // muted red wash
+    
+    property color bgHover:         "#000000"      // selection
+    property color bgActive:        "#000000"      // muted
+    property color bgSelected:      "#000000"      // selected rows — dark, subtle
 
     property color fg:              "#bebebe"      // foreground
     property color fgMuted:         "#8a8a8d"      // light_foreground

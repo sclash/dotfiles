@@ -2,9 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import "../../theme"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
     function open(){ isOpen=true }
@@ -15,7 +16,7 @@ PanelWindow {
     onIsOpenChanged: if(isOpen) Qt.callLater(()=> filterField.forceActiveFocus())
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 
@@ -78,15 +79,13 @@ PanelWindow {
                 clip: true
                 spacing: 2
                 model: bindings
-                currentIndex: 0
-                highlight: Rectangle { color: Theme.bgSelected; radius: Theme.roundingItem; border.color: Theme.borderSelected; border.width: 1 }
-                highlightMoveDuration: Theme.durationFast
                 delegate: Rectangle {
                     required property var modelData
+                    required property int index
                     width: listView.width
                     height: 36
                     radius: Theme.roundingItem
-                    color: ListView.isCurrentItem ? Theme.bgSelected : "transparent"
+                    color: index === listView.currentIndex ? Theme.bgSelected : "transparent"
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM

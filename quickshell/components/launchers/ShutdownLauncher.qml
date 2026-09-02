@@ -3,10 +3,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../../theme"
 import "../../services"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
     property int confirmIndex: -1
@@ -18,7 +19,7 @@ PanelWindow {
     anchors { top:true; bottom:true; left:true; right:true }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 
@@ -183,7 +184,7 @@ PanelWindow {
     property Process execProc: Process {}
     property Process planeProc: Process {}
     property Process planeCheck: Process {
-        command: ["sh","-c","rfkill list 2>/dev/null | grep -q \"Soft blocked: yes\" && echo on || echo off"]
+        command: ["sh","-c","if rfkill list 2>/dev/null | grep -q 'Soft blocked: no'; then echo off; elif rfkill list 2>/dev/null | grep -q 'Soft blocked: yes'; then echo on; else echo off; fi"]
         stdout: StdioCollector { onStreamFinished: root.planeActive = this.text.trim()==="on" }
     }
     onIsOpenChanged: {

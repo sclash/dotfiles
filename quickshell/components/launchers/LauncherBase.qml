@@ -2,8 +2,9 @@ import QtQuick
 import "../../theme"
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 
-PanelWindow {
+WlrLayershell {
     id: root
     property int cardWidth: 600
     property string launcherName: ""
@@ -22,9 +23,9 @@ PanelWindow {
     }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
-    // WlrLayershell is auto Overlay for PanelWindow covering full screen? layer handled via exclusive? Keep Ignore.
+    // WlrLayershell full-screen overlay: keyboardFocus Exclusive grabs keys when mapped; Ignore avoids reserving space.
 
     // Dim overlay
     Rectangle {
