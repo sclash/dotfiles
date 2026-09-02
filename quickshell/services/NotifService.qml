@@ -13,6 +13,13 @@ QtObject {
     property bool soundEnabled: true
     property string fallbackSound: Qt.resolvedUrl("../assets/notify.ogg").toString().replace("file://", "")
 
+    // Transient toast surface — on by default. Suppressed automatically
+    // while dnd is true (re-enabled when dnd is lifted).
+    property bool toastEnabled: true
+    property int toastTimeoutMs: 3000
+    property int toastMaxVisible: 3
+    property var toasts: []
+
     // Host the notification server to acquire org.freedesktop.Notifications
     property NotificationServer server: NotificationServer {
         id: notifServer
@@ -25,8 +32,7 @@ QtObject {
 
     function handleNotification(n) {
         try { n.tracked = true } catch(e) {}
-        const copy = root.history.slice()
-        copy.unshift({
+        const entry = {
             id: n.id || Date.now(),
             appName: n.appName || "Unknown",
             appIcon: n.appIcon || "",
@@ -37,7 +43,9 @@ QtObject {
             image: n.image || "",
             actions: n.actions ? n.actions : [],
             notification: n
-        })
+        }
+        const copy = root.history.slice()
+        copy.unshift(entry)
         if (copy.length > 50) {
             const removed = copy.pop()
             if (removed && removed.notification && removed.notification.dismiss) try { removed.notification.dismiss() } catch(e) {}
@@ -45,7 +53,32 @@ QtObject {
         root.history = copy
         if (!root.dnd) root.unreadCount++
         root.playSound(n)
+        root.spawnToast(entry)
     }
+
+    function spawnToast(entry) {
+        if (!entry) return
+        if (!root.toastEnabled) return
+        // DND suppresses toast entirely, regardless of urgency.
+        if (root.dnd) return
+        const timeout = Math.max(1000, Math.min(10000, root.toastTimeoutMs || 3000))
+        const stamped = Object.assign({}, entry, { _toastId: Date.now() + "_" + Math.random().toString(36).slice(2,8), _expiresAt: Date.now() + timeout })
+        const next = root.toasts.slice()
+        next.push(stamped)
+        while (next.length > root.toastMaxVisible) next.shift()
+        root.toasts = next
+    }
+
+    function dismissToast(toastId) {
+        const next = root.toasts.filter(t => t._toastId !== toastId)
+        if (next.length !== root.toasts.length) root.toasts = next
+    }
+
+    function clearToasts() { root.toasts = [] }
+
+    function toggleToast() { root.toastEnabled = !root.toastEnabled; if (!root.toastEnabled) root.clearToasts() }
+
+    function toggleSound() { root.soundEnabled = !root.soundEnabled }
 
     property Process soundProc: Process {
         id: soundProcess

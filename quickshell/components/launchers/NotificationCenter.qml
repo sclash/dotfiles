@@ -41,6 +41,24 @@ WlrLayershell {
                 Rectangle {
                     width: 90; height: 32
                     radius: Theme.roundingItem
+                    color: (NotifService.soundEnabled && !NotifService.dnd) ? Theme.bgActive : Theme.bgHover
+                    border.color: (NotifService.soundEnabled && !NotifService.dnd) ? Theme.borderSelected : Theme.border
+                    border.width: 1
+                    Text { anchors.centerIn: parent; text: (NotifService.soundEnabled && !NotifService.dnd) ? "Sound: on" : "Sound: off"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifService.toggleSound() }
+                }
+                Rectangle {
+                    width: 90; height: 32
+                    radius: Theme.roundingItem
+                    color: (NotifService.toastEnabled && !NotifService.dnd) ? Theme.bgActive : Theme.bgHover
+                    border.color: (NotifService.toastEnabled && !NotifService.dnd) ? Theme.borderSelected : Theme.border
+                    border.width: 1
+                    Text { anchors.centerIn: parent; text: (NotifService.toastEnabled && !NotifService.dnd) ? "Toasts: on" : "Toasts: off"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifService.toggleToast() }
+                }
+                Rectangle {
+                    width: 90; height: 32
+                    radius: Theme.roundingItem
                     color: NotifService.dnd ? Theme.warning : Theme.bgHover
                     border.color: Theme.border
                     border.width: 1
@@ -184,7 +202,7 @@ delegate: Rectangle {
                 Layout.alignment: Qt.AlignHCenter
             }
             Text { visible: NotifService.dnd; text: "Silenced — new notifications are dimmed"; color: Theme.fgDim; font.family: Theme.fontFamily; font.pixelSize: 11; wrapMode: Text.Wrap; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter }
-            Text { text: "/ filter · j/k move · d dismiss · Enter open · c clear · Ctrl+s silence · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text { text: "/ filter · j/k move · d dismiss · Enter open · c clear · Ctrl+s silence · Ctrl+t toasts · Ctrl+m sound · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.fillWidth: true; wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter }
         }
         Keys.onPressed: (e)=>{
             if(e.key===Qt.Key_Escape) {
@@ -195,6 +213,8 @@ delegate: Rectangle {
             else if(e.key===Qt.Key_C) { NotifService.clearHistory(); e.accepted=true }
             else if((e.key===Qt.Key_K && e.modifiers & Qt.ControlModifier) || e.key===Qt.Key_C) { NotifService.clearHistory(); e.accepted=true }
             else if(e.key===Qt.Key_S && e.modifiers & Qt.ControlModifier) { NotifService.toggleDnd(); e.accepted=true }
+            else if(e.key===Qt.Key_T && e.modifiers & Qt.ControlModifier) { NotifService.toggleToast(); e.accepted=true }
+            else if(e.key===Qt.Key_M && e.modifiers & Qt.ControlModifier) { NotifService.toggleSound(); e.accepted=true }
             else if(e.key===Qt.Key_J || e.key===Qt.Key_K || e.key===Qt.Key_Up || e.key===Qt.Key_Down) {
                 notifList.forceActiveFocus()
                 // forward to list

@@ -31,6 +31,10 @@ Scope {
         onRequestToggle: (name) => ipcHandler.toggle(name)
     }
 
+    // Passive top-right toast overlay — always mounted, hidden when no toasts
+    // or when toastEnabled is false. Never opened via IPC.
+    NotificationToast { id: notificationToast }
+
     // IPC
     IpcHandler {
         id: ipcHandler
