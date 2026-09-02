@@ -34,8 +34,9 @@ Exclusive notification surface: replaces `swaync`/`mako` popups. Shows recent no
 * A small top-right toast is shown for every new notification by default, gated by `NotifService.toastEnabled` (default `true`). It auto-dismisses after `NotifService.toastTimeoutMs` (default `3000` ms, clamped1–10 s).
 * **Suppressed while `NotifService.dnd === true`** — DND overrides the toast entirely; `urgency` does not bypass.
 * When DND is lifted, `toastEnabled` remains `true` (DND only suppresses *now*, it does not auto-disable the toggle).
-* Placement: top-right corner of the primary monitor, anchored `Screen.desktopAvailableWidth - width - Theme.spacingM`. Stack downward; max 3 visible; oldest evicted on overflow (FIFO).
-* Geometry: `width: 360`, `rounding: Theme.roundingLauncher`, padding `Theme.spacingM`, `Theme.bgElevated` background, `Theme.fg` text, `Theme.fgMuted` timestamp.
+* Placement: top-right corner of the primary monitor, anchored `Screen.desktopAvailableWidth - width - Theme.spacingM`. Stack downward; **max 5 visible**.
+* **Overflow:** when 5 toasts are already up, new ones enter a FIFO `toastQueue` (max 20). As soon as a visible toast expires (or is clicked/dismissed), the oldest queued toast is promoted — the "latest" toast is displayed only after a slot frees up. A promoted toast gets a **full fresh lifetime** (`toastTimeoutMs`) from the moment it is shown.
+* Geometry: `width: 360`, `rounding: Theme.roundingItem`, black (`Theme.bgBar`) background, no border, `Theme.fg` text, `Theme.fgMuted` timestamp.
 * Content: `appIcon` (24px) + `appName` (small, muted) on row 1; `summary` (bold) + `body` (1 line, elide) on row 2; right-aligned `Theme.fontSizeSmall` age (`now − received`). No actions, no dismiss button — auto-dismiss only.
 * Lifecycle: timer per toast; cancelled on user click (single click = invoke primary action if present, else just close).
 * **No daemon-level popup layer** — toasts are drawn by Quickshell in `components/launchers/NotificationToast.qml`; `swaync`/`mako` autostart stays disabled.
@@ -86,11 +87,17 @@ QtObject {
   property bool toastEnabled: true   // transient top-right toast (on by default; suppressed while dnd)
   property int toastTimeoutMs: 3000  // auto-dismiss after this; clamped [1000, 10000]
   property bool soundEnabled: true   // play alert sound (on by default; suppressed while dnd)
-  property list<Notification> toasts  // active transient toasts (max 3, FIFO)
+  property int toastMaxVisible: 5    // max simultaneously visible toasts
+  property int toastQueueMax: 20     // cap on queued (not yet visible) toasts
+  property list<Notification> toasts  // currently visible toasts
+  property list<Notification> toastQueue // waiting to be shown (FIFO)
   function clearHistory(): void
   function dismiss(id: int): void
   function invokeAction(id: int, actionId: string): void
-  function spawnToast(n: Notification): void  // no-op when dnd || !toastEnabled
+  function spawnToast(n: Notification): void  // no-op when dnd || !toastEnabled; queues if full
+  function promoteFromQueue(): void // backfill visible stack from toastQueue
+  function reapExpiredToasts(): void // drop expired visible toasts, then promote
+  function dismissToast(id: string): void
   function toggleToast(): void
   function toggleSound(): void
 }
@@ -109,6 +116,6 @@ QtObject {
 * [ ] With `dnd: true` no toast appears regardless of `toastEnabled` (DND is unconditional, including `urgency === critical`).
 * [ ] With `dnd: true` no sound plays regardless of `soundEnabled`.
 * [ ] `soundEnabled` defaults to `true`; `Sound: on/off` toggle and `Ctrl+m` work.
-* [ ] Toasts stack top-right, max 3 visible, FIFO eviction.
+* [ ] Toasts stack top-right, max 5 visible; overflow toasts are queued and promoted as slots free up (full fresh lifetime on promotion).
 * [ ] Vim nav + `/` filter + `Esc` close work.
 * [ ] Uses `LauncherBase` + `Theme.*` tokens.

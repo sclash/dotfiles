@@ -17,8 +17,10 @@ QtObject {
     // while dnd is true (re-enabled when dnd is lifted).
     property bool toastEnabled: true
     property int toastTimeoutMs: 3000
-    property int toastMaxVisible: 3
+    property int toastMaxVisible: 5
+    property int toastQueueMax: 20
     property var toasts: []
+    property var toastQueue: []
 
     // Host the notification server to acquire org.freedesktop.Notifications
     property NotificationServer server: NotificationServer {
@@ -62,19 +64,56 @@ QtObject {
         // DND suppresses toast entirely, regardless of urgency.
         if (root.dnd) return
         const timeout = Math.max(1000, Math.min(10000, root.toastTimeoutMs || 3000))
-        const stamped = Object.assign({}, entry, { _toastId: Date.now() + "_" + Math.random().toString(36).slice(2,8), _expiresAt: Date.now() + timeout })
-        const next = root.toasts.slice()
-        next.push(stamped)
-        while (next.length > root.toastMaxVisible) next.shift()
-        root.toasts = next
+        const stamped = Object.assign({}, entry, { _toastId: Date.now() + "_" + Math.random().toString(36).slice(2,8), _expiresAt: Date.now() + timeout, _timeout: timeout })
+        // Max 5 visible; extras go to a FIFO queue and are shown as slots free up.
+        if (root.toasts.length >= root.toastMaxVisible) {
+            const q = root.toastQueue.slice()
+            q.push(stamped)
+            while (q.length > root.toastQueueMax) q.shift()
+            root.toastQueue = q
+        } else {
+            const next = root.toasts.slice()
+            next.push(stamped)
+            root.toasts = next
+        }
+    }
+
+    // Promote queued toasts into the visible list until the stack is full.
+    function promoteFromQueue() {
+        if (!root.toastEnabled || root.dnd) return
+        const t = root.toasts.slice()
+        const q = root.toastQueue.slice()
+        const now = Date.now()
+        let changed = false
+        while (t.length < root.toastMaxVisible && q.length > 0) {
+            const queued = q.shift()
+            // Give the promoted toast a full lifetime from the moment it is shown.
+            t.push(Object.assign({}, queued, { _expiresAt: now + (queued._timeout || root.toastTimeoutMs || 3000) }))
+            changed = true
+        }
+        if (changed) root.toasts = t
+        if (q.length !== root.toastQueue.length) root.toastQueue = q
     }
 
     function dismissToast(toastId) {
         const next = root.toasts.filter(t => t._toastId !== toastId)
-        if (next.length !== root.toasts.length) root.toasts = next
+        if (next.length !== root.toasts.length) {
+            root.toasts = next
+            root.promoteFromQueue()
+        }
     }
 
-    function clearToasts() { root.toasts = [] }
+    // Called by the reaper timer; drop expired visible toasts, then backfill from queue.
+    function reapExpiredToasts() {
+        const now = Date.now()
+        const live = root.toasts.filter(t => !t._expiresAt || t._expiresAt > now)
+        if (live.length !== root.toasts.length) {
+            root.toasts = live
+            root.promoteFromQueue()
+        }
+    }
+
+    function clearToasts() { root.toasts = []; root.toastQueue = [] }
 
     function toggleToast() { root.toastEnabled = !root.toastEnabled; if (!root.toastEnabled) root.clearToasts() }
 

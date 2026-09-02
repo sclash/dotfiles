@@ -31,6 +31,9 @@ PanelWindow {
     color: "transparent"
 
     implicitWidth: 360
+    // Height must track the stacked cards — the window only clips its own
+    // bounds, so without this the second toast is cut off.
+    implicitHeight: stack.implicitHeight
 
     ColumnLayout {
         id: stack
@@ -54,15 +57,11 @@ PanelWindow {
         }
     }
 
-    // Reaper — drop expired toasts that the per-card Timer missed.
+    // Reaper — drop expired toasts, then backfill from the queue.
     Timer {
         interval: 250
         running: toastRoot.anyVisible
         repeat: true
-        onTriggered: {
-            const now = Date.now()
-            const live = NotifService.toasts.filter(t => !t._expiresAt || t._expiresAt > now)
-            if (live.length !== NotifService.toasts.length) NotifService.toasts = live
-        }
+        onTriggered: NotifService.reapExpiredToasts()
     }
 }
