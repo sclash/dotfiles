@@ -99,9 +99,9 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "power"
                     color: isSel ? Theme.bgSelected : Theme.bgHover
-                    border.color: isSel ? Theme.borderSelected : (BluetoothService.powered ? Theme.borderSelected : Theme.border)
+                    border.color: isSel ? Theme.accent : (BluetoothService.powered ? Theme.borderSelected : Theme.border)
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: BluetoothService.powered ? "Power Off" : "Power On"; font.family: Theme.fontFamily; font.pixelSize: 11; color: BluetoothService.powered ? Theme.fg : Theme.fgMuted }
+                    Text { anchors.centerIn: parent; text: BluetoothService.powered ? "Power Off" : "Power On"; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: powerBtn.isSel ? Theme.fontWeightMedium : Theme.fontWeightNormal; color: powerBtn.isSel ? Theme.fgBright : (BluetoothService.powered ? Theme.fg : Theme.fgMuted) }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: BluetoothService.togglePower() }
                 }
                 Rectangle {
@@ -110,9 +110,9 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "scan"
                     color: isSel ? Theme.bgSelected : Theme.bgHover
-                    border.color: isSel ? Theme.borderSelected : Theme.border
+                    border.color: isSel ? Theme.accent : Theme.border
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: BluetoothService.scanning ? "Stop scan" : "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                    Text { anchors.centerIn: parent; text: BluetoothService.scanning ? "Stop scan" : "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: scanBtn.isSel ? Theme.fgBright : Theme.fg }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.toggleScan() }
                 }
             }

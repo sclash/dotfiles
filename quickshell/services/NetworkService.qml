@@ -18,6 +18,7 @@ QtObject {
     property var scannedNetworks: []
     property var vpnConnections: []
     property string lastError: ""
+    property bool wifiEnabled: true
     readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running
     signal dataUpdated()
 
@@ -82,6 +83,11 @@ QtObject {
         root.nmForgetProc.running = true
     }
     function rescanWifi() { root.nmRescanProc.running = true }
+    function toggleWifi() {
+        if (root.nmRadioProc.running) return
+        root.nmRadioProc.command = ["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]
+        root.nmRadioProc.running = true
+    }
     function vpnConnect(uuid) { root.nmVpnUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]; root.nmVpnUpProc.running = true }
     function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
     function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
@@ -91,7 +97,7 @@ QtObject {
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "nmcli -t -f TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep vpn || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20"]
+        command: ["sh", "-c", "nmcli -t -f TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep vpn || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
@@ -101,7 +107,10 @@ QtObject {
                 const devSection = parts[0] || ""
                 const ipPart = (parts[1] || "").split("---VPN---")[0] || ""
                 const vpnPart = (parts[1] || "").split("---VPN---")[1] || ""
-                const wifiPart = (parts[1] || "").split("---WIFI---")[1] || ""
+                const wifiRaw = (parts[1] || "").split("---WIFI---")[1] || ""
+                const wifiPart = wifiRaw.split("---RADIO---")[0] || ""
+                const radioPart = wifiRaw.split("---RADIO---")[1] || ""
+                if (radioPart.trim() !== "") root.wifiEnabled = radioPart.trim() === "enabled"
                 const lines = devSection.trim().split("\n").filter(Boolean)
                 let foundWifi = false
                 let foundEth = false
@@ -198,6 +207,10 @@ QtObject {
     }
     property Process nmVpnDelProc: Process {
         stdout: StdioCollector { onStreamFinished: root.vpnProc.running = true }
+        stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
+    }
+    property Process nmRadioProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.pollProc.running = true }
         stderr: StdioCollector { onStreamFinished: root.reportError(this.text) }
     }
     property Process nmRescanProc: Process {

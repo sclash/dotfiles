@@ -92,13 +92,16 @@ WlrLayershell {
                         }
                     }
                 }
-                Text {
-                    visible: !filterActive
-                    text: "Press / for commands (/nearby · /known · /vpn) · j/k to move · Enter to act"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 11
-                    color: Theme.fgDim
-                    Layout.fillWidth: true
+                Rectangle {
+                    id: powerBtn
+                    width: 96; height: 32
+                    radius: Theme.roundingItem
+                    readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "power"
+                    color: isSel ? Theme.bgSelected : Theme.bgHover
+                    border.color: isSel ? Theme.accent : (NetworkService.wifiEnabled ? Theme.borderSelected : Theme.border)
+                    border.width: 1
+                    Text { anchors.centerIn: parent; text: NetworkService.wifiEnabled ? "Power Off" : "Power On"; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: powerBtn.isSel ? Theme.fontWeightMedium : Theme.fontWeightNormal; color: powerBtn.isSel ? Theme.fgBright : (NetworkService.wifiEnabled ? Theme.fg : Theme.fgMuted) }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkService.toggleWifi() }
                 }
                 Rectangle {
                     id: scanBtn
@@ -106,9 +109,9 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "scan"
                     color: isSel ? Theme.bgSelected : Theme.bgHover
-                    border.color: isSel ? Theme.borderSelected : Theme.border
+                    border.color: isSel ? Theme.accent : Theme.border
                     border.width: 1
-                    Text { anchors.centerIn: parent; text: "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                    Text { anchors.centerIn: parent; text: "Scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: scanBtn.isSel ? Theme.fgBright : Theme.fg }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NetworkService.rescanWifi() }
                 }
             }
@@ -167,12 +170,12 @@ WlrLayershell {
                             MouseArea { anchors.fill: parent; onClicked: NetworkService.disconnect() }
                         }
                     }
-                    Text { visible: !NetworkService.connected && !currentCard.isConnecting; text: "Pick a known network or scan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
+                    Text { visible: !NetworkService.connected && !currentCard.isConnecting; text: NetworkService.wifiEnabled ? "Pick a known network or scan" : "Wi-Fi is off — power on to connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
                 }
             }
 
             Text { visible: root.view === "nearby"; text: "Nearby"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
-            Text { visible: root.view === "nearby" && filteredScan.length === 0; text: "No networks found — press r to rescan"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
+            Text { visible: root.view === "nearby" && filteredScan.length === 0; text: NetworkService.wifiEnabled ? "No networks found — press r to rescan" : "Wi-Fi is off — power on to scan" ; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
             ListView {
                 id: nearbyList
                 visible: root.view === "nearby"
@@ -572,6 +575,7 @@ WlrLayershell {
         else if(it.kind==="vpn" && vpnList) vpnList.positionViewAtIndex(it.idx, ListView.Contain)
         let anchor = null
         if(it.kind==="current") anchor = currentCard
+        else if(it.kind==="power") anchor = powerBtn
         else if(it.kind==="scan") anchor = scanBtn
         else if(it.kind==="vpnAdd") anchor = vpnAddRow
         else if(it.kind==="editor") anchor = editorRow
@@ -589,6 +593,7 @@ WlrLayershell {
         const it = navItems[selIndex]
         if(!it) return
         if(it.kind==="current"){ if(NetworkService.connected) NetworkService.disconnect(); else NetworkService.rescanWifi() }
+        else if(it.kind==="power"){ NetworkService.toggleWifi() }
         else if(it.kind==="scan"){ NetworkService.rescanWifi() }
         else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.uuid) }
         else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n) connectNearby(n) }
@@ -624,6 +629,7 @@ WlrLayershell {
         filteredVpn=v
         const items=[]
         items.push({kind:"current"})
+        items.push({kind:"power"})
         items.push({kind:"scan"})
         if(root.view==="nearby"){ for(let i=0;i<s.length;i++) items.push({kind:"nearby", idx:i}) }
         else if(root.view==="known"){ for(let i=0;i<k.length;i++) items.push({kind:"known", idx:i}) }
