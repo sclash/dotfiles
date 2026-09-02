@@ -566,6 +566,10 @@ WlrLayershell {
         if (isKnownCmd) { root.view = "known"; Qt.callLater(()=> filterField.text = "") }
         else if (isNearbyCmd) { root.view = "nearby"; Qt.callLater(()=> filterField.text = "") }
         else if (isVpnCmd) { root.view = "vpn"; Qt.callLater(()=> filterField.text = "") }
+        if (isCmd) {
+            filterActive = false
+            Qt.callLater(()=> mainCol.forceActiveFocus())
+        }
         const q = isCmd ? "" : raw.replace(/^\//, "")
         let k = NetworkService.knownNetworks
         let s = NetworkService.scannedNetworks
