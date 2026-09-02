@@ -314,6 +314,9 @@
       lazygit
       btop
       htop
+      # needed by flameshot + xdg-desktop-portal-hyprland (Screenshot portal)
+      grim
+      slurp
       wget
       # kitty
       xorg.xrandr
