@@ -44,9 +44,9 @@ QtObject {
     property string window:           "󰘔"
     // Perf
     property string cpu:              "󰻠"
-    property string memory:           ""
-    property string disk:             "💿"
-    property string temp:             ""
+    property string memory:           "󰍛"
+    property string disk:             "󰋊"
+    property string temp:             "󰔏"
     property string expand:           ""
     property string collapse:         ""
     // VPN
