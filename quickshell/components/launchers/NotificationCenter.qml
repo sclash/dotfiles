@@ -2,10 +2,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import "../../theme"
 import "../../services"
 
-PanelWindow {
+WlrLayershell {
     id: root
     property bool isOpen: false
     function open(){ isOpen=true }
@@ -15,10 +16,10 @@ PanelWindow {
     anchors { top:true; bottom:true; left:true; right:true }
     color: "transparent"
     visible: isOpen
-    focusable: true
+    keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
-    onIsOpenChanged: if(isOpen) { notifList.forceActiveFocus(); notifList.currentIndex=0 }
+    onIsOpenChanged: if(isOpen) { notifList.currentIndex=0; notifList.positionViewAtIndex(0, ListView.Beginning); notifList.forceActiveFocus() }
 
     Rectangle {
         width: 620
@@ -95,23 +96,28 @@ PanelWindow {
                 model: filteredHistory
                 currentIndex: 0
                 focus: true
-                highlight: Rectangle { color: Theme.bgSelected; radius: Theme.roundingItem; border.color: Theme.borderSelected; border.width: 1 }
-                highlightMoveDuration: Theme.durationFast
-                delegate: Rectangle {
+delegate: Rectangle {
                     required property var modelData
                     required property int index
+                    readonly property bool selected: ListView.isCurrentItem
                     width: notifList.width
                     height: bodyCol.implicitHeight + Theme.padM*2
                     radius: Theme.roundingItem
-                    color: ListView.isCurrentItem ? Theme.bgSelected : Theme.bgHover
-                    border.width: ListView.isCurrentItem ? 1 : 0
-                    border.color: Theme.borderSelected
-                    Rectangle { width: 3; height: parent.height; radius: 2; color: modelData.urgency===2 ? Theme.critical : "transparent"; anchors.left: parent.left }
+                    // color: cardHover.containsMouse ? Theme.bgHover : Theme.bgBarAlt
+                    color:  Theme.bgHover 
+                    // border.width: 1
+		    border.width: selected ? 3 : 1
+                    border.color: selected ? Theme.borderSelected : Theme.border
+                    MouseArea {
+                        id: cardHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                    }
                     ColumnLayout {
                         id: bodyCol
                         anchors.fill: parent
                         anchors.margins: Theme.padM
-                        anchors.leftMargin: Theme.padL
                         spacing: 4
                         RowLayout {
                             Layout.fillWidth: true
