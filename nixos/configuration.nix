@@ -57,13 +57,15 @@
   programs.wshowkeys.enable = true;
 
   networking.hostName = "nixos-os"; # Define your hostname.
-  # Pick only one of the below networking options.
-  networking.wireless.enable = false; # Disables wireless support via wpa_supplicant.
+  # networking.wireless is left unset: with the default wpa_supplicant backend
+  # the NetworkManager module enables wpa_supplicant itself (dbusControlled).
   # networking.wireless.iwd.enable = true; # Enables wireless support via wpa_supplicant.
   networking.networkmanager.enable = true; # Easiest to use and most distros use this by default.
   networking.networkmanager.wifi.powersave = false;
   networking.networkmanager.wifi.scanRandMacAddress = false;
-  networking.networkmanager.wifi.backend = "iwd";
+  # wifi backend defaults to wpa_supplicant: iwd renamed the interface
+  # (wlp1s0 -> wlan0), breaking existing connection profiles, and failed
+  # SAE handshakes against WPA3-transition hotspots.
   networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
   services.strongswan.enable = true;
 
@@ -369,6 +371,7 @@
       hyprpicker
       hyprpaper
       hyprlock
+      hyprpolkitagent
       wlr-randr
       pywal
       # swaynotificationcenter
