@@ -29,6 +29,16 @@ QtObject {
     property string batteryCharging:  "󰂄"
     property string batteryPlugged:   "󰚥"
     property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"
+    // Custom app icons — per-workspace tray overrides (see Workspaces.qml)
+    property url appGhostty: Qt.resolvedUrl("../icons/ghostty-light.svg")
+    property url appChrome: Qt.resolvedUrl("../icons/googlechrome-dark.svg")
+    // Returns override url string for known appIds, else "" (caller falls back to theme lookup)
+    function appIconOverride(appId) {
+        var id = (appId || "").toLowerCase();
+        if (id.indexOf("ghostty") !== -1 || id.indexOf("mitchellh") !== -1) return appGhostty;
+        if (id.indexOf("chrome") !== -1 || id.indexOf("chromium") !== -1) return appChrome;
+        return "";
+    }
     // Workspaces
     property string workspaceDot:     ""
     property string window:           "󰘔"

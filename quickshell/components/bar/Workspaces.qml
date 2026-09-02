@@ -80,7 +80,12 @@ RowLayout {
                     required property int index
                     property var toplevel: wsGroup.apps[index]
                     property string appId: toplevel && toplevel.wayland ? (toplevel.wayland.appId || "") : ""
-                    property string iconSource: appId !== "" ? Quickshell.iconPath(appId) : ""
+                    // Custom SVG override first (Icons.appIconOverride), else freedesktop theme
+                    property string iconSource: {
+                        var o = Icons.appIconOverride(appId);
+                        if (o !== "") return o;
+                        return appId !== "" ? Quickshell.iconPath(appId) : "";
+                    }
                     implicitWidth: Theme.wsAppIcon; implicitHeight: Theme.wsAppIcon
                     Layout.alignment: Qt.AlignVCenter
 
