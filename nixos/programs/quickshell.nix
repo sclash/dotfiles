@@ -29,6 +29,8 @@
     lm_sensors          # temp sensors for PerfService
     sysstat
     upower
+    udisks2             # udisksctl for UsbService (USB-Manager)
+    usbutils            # lsusb for UsbService
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
