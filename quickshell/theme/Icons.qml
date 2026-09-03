@@ -44,6 +44,9 @@ QtObject {
         if (id.indexOf("chrome") !== -1 || id.indexOf("chromium") !== -1) return appChrome;
         return "";
     }
+    // Menus (tray context menu)
+    property string chevronLeft:      "\uf0141"
+    property string chevronRight:     "\uf0142"
     // Workspaces
     property string workspaceDot:     ""
     property string window:           "󰘔"

@@ -45,12 +45,10 @@ RowLayout {
                 color: Theme.fgDim
             }
 
-            // Platform menu (hyprland menubar) for tray items that provide one.
-            // Requires `//@ pragma UseQApplication` in shell.qml.
-            QsMenuAnchor {
-                id: menuAnchor
-                anchor.item: slot
-                menu: slot.modelData.menu
+            // Themed QML menu for tray items that provide one (TrayMenu.qml) —
+            // replaces the native QsMenuAnchor popup, which rendered white.
+            TrayMenu {
+                id: trayMenu
             }
 
             BarToolTip {
@@ -67,14 +65,14 @@ RowLayout {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.RightButton) {
-                        if (slot.modelData.hasMenu) menuAnchor.open()
+                        if (slot.modelData.hasMenu) trayMenu.openFor(slot.modelData, slot)
                         else slot.modelData.secondaryActivate()
                     } else if (mouse.button === Qt.MiddleButton) {
                         slot.modelData.secondaryActivate()
                     } else slot.modelData.activate()
                 }
                 onPressAndHold: {
-                    if (slot.modelData.hasMenu) menuAnchor.open()
+                    if (slot.modelData.hasMenu) trayMenu.openFor(slot.modelData, slot)
                     else slot.modelData.secondaryActivate()
                 }
             }

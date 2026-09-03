@@ -339,6 +339,9 @@
       # wofi
       nautilus
       gnome-themes-extra
+      # required by gsettings gtk-theme "adw-gtk3-dark" (hyprland.conf) —
+      # makes xdg portal file dialogs + GTK3 popups render dark
+      adw-gtk3
       # gnome-control-center
       # nwg-look
       evince
