@@ -135,7 +135,7 @@ Keys.onPressed: (e)=>{
         { key: "SUPER+D", action: "Display", desc: "monitors" },
         { key: "SUPER+SHIFT+A", action: "Notifications", desc: "bell" },
         { key: "SUPER+Q", action: "Shutdown", desc: "power" },
-        { key: "SUPER+K", action: "Key Hints", desc: "this" },
+        { key: "SUPER+/", action: "Key Hints", desc: "this" },
         { key: "SUPER+U", action: "USB Devices", desc: "usb" },
         { key: "SUPER+P", action: "Perf Drawer", desc: "metrics" },
         { key: "SUPER+1..9", action: "Workspace", desc: "switch" },

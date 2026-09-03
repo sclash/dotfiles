@@ -1,6 +1,6 @@
 # Key-Launcher — Refined Spec
 
-> Command: `SUPER+k` · File: `components/launchers/KeyLauncher.qml`
+> Command: `SUPER+/` · File: `components/launchers/KeyLauncher.qml`
 
 ---
 
@@ -28,7 +28,7 @@ Reference popup: a filterable table of all `SUPER+<key>` bindings. Read-only, ke
   | `SUPER+d` | Display-Manager | monitors |
   | `SUPER+SHIFT+a` | Notification-Center | notifications |
   | `SUPER+q` | Shutdown-Launcher | power/plane |
-  | `SUPER+k` | Key-Launcher | this popup |
+  | `SUPER+/` | Key-Launcher | this popup |
   | `SUPER+p` | Toggle Perf Drawer | bar perf |
   | `SUPER+<number>` | Workspace switch | Hyprland dispatch |
   | `Alt+Shift` | Cycle keyboard layout | Hyprland `kb_options` |

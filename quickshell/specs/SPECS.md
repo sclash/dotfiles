@@ -218,7 +218,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
 | Shutdown-Launcher | `SUPER+q` | `Shutdown-Launcher.md` |
-| Key-Launcher | `SUPER+k` | `Key-Launcher.md` |
+| Key-Launcher | `SUPER+/` | `Key-Launcher.md` |
 
 All launchers share `LauncherBase.qml` (centered card, 560–640 px wide, `rounding: 12`, `focusable: true`, Esc/vim nav).
 

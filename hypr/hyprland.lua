@@ -655,7 +655,7 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle 
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell ipc call launcher toggle display"))
 hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle notification"))
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call launcher toggle shutdown"))
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("quickshell ipc call launcher toggle usb"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("quickshell ipc call launcher closeAll"))
 -- NOTE: SUPER+R (app) and SUPER+P (perf) already bound above        
