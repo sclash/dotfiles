@@ -97,6 +97,7 @@
       # tailwindcss-language-server
       # python313Packages.markitdown
       # playwright
+      telegram-desktop
     ])
     ++ (with pkgs-unstable; [
       # markitdown-mcp
