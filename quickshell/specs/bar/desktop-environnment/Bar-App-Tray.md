@@ -26,7 +26,7 @@ apps "common to all desktop environments" — i.e., not tied to a single workspa
 | Action | Effect |
 |---|---|
 | Left click | `item.activate()` — app-defined (often opens the app) |
-| Right click | `item.secondaryActivate()` or `item.display(window, x, y)` — context menu |
+| Right click | themed popup menu (`TrayMenu.qml` + `DBusMenuClient`) — `DBusMenuClient` is a `busctl`-backed DBusMenu client because quickshell 0.3.0 cannot open submenu handles via `QsMenuOpener` |
 | Hover | tooltip |
 
 No keyboard binding; tray is mouse/touch affordance within a keyboard-driven bar. Optional: `SUPER+t` could focus the tray row for keyboard activation — nice-to-have.

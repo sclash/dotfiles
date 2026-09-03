@@ -30,6 +30,7 @@ Reference popup: a filterable table of all `SUPER+<key>` bindings. Read-only, ke
   | `SUPER+q` | Shutdown-Launcher | power/plane |
   | `SUPER+/` | Key-Launcher | this popup |
   | `SUPER+p` | Toggle Perf Drawer | bar perf |
+  | `SUPER+t` | Tray-Manager | tray apps + menus |
   | `SUPER+<number>` | Workspace switch | Hyprland dispatch |
   | `Alt+Shift` | Cycle keyboard layout | Hyprland `kb_options` |
   | `Esc` | Close launcher | global |

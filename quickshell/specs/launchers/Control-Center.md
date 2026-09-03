@@ -27,6 +27,7 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 | 7 | Shutdown | `SUPER+q` | `` | `launcher.toggle("shutdown")` |
 | 8 | Key Hints | `SUPER+/` | `` | `launcher.toggle("keys")` |
 | 9 | USB | `SUPER+u` | `\uf0553` (`Icons.usb`) | `launcher.toggle("usb")` |
+| 10 | Tray | `SUPER+t` | `Icons.app` | `launcher.toggle("tray")` |
 
 > The Control Center **does not duplicate** launcher UIs inside itself — it dispatches to them. Selecting an entry closes Control Center and opens that launcher (replace, don't stack).
 

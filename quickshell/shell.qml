@@ -27,6 +27,7 @@ Scope {
     NotificationCenter { id: notificationCenter }
     ShutdownLauncher { id: shutdownLauncher }
     KeyLauncher { id: keyLauncher }
+    TrayManager { id: trayManager }
     ControlCenter {
         id: controlCenter
         onRequestToggle: (name) => ipcHandler.toggle(name)
@@ -52,6 +53,7 @@ Scope {
             if (except !== "shutdown") shutdownLauncher.close()
             if (except !== "keys" && except !== "key") keyLauncher.close()
             if (except !== "control") controlCenter.close()
+            if (except !== "tray") trayManager.close()
         }
 
         function toggle(name: string): void {
@@ -65,13 +67,14 @@ Scope {
             else if (name === "shutdown") { if (shutdownLauncher.isOpen) shutdownLauncher.close(); else { closeAllExcept("shutdown"); shutdownLauncher.open() } }
             else if (name === "keys" || name === "key") { if (keyLauncher.isOpen) keyLauncher.close(); else { closeAllExcept("keys"); keyLauncher.open() } }
             else if (name === "control") { if (controlCenter.isOpen) controlCenter.close(); else { closeAllExcept("control"); controlCenter.open() } }
+            else if (name === "tray") { if (trayManager.isOpen) trayManager.close(); else { closeAllExcept("tray"); trayManager.open() } }
             else if (name === "perf") { PerfService.toggle() }
             else console.log("unknown launcher: " + name)
         }
 
         function closeAll(): void {
             appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close()
-            displayManager.close(); usbManager.close(); notificationCenter.close(); shutdownLauncher.close(); keyLauncher.close(); controlCenter.close()
+            displayManager.close(); usbManager.close(); notificationCenter.close(); shutdownLauncher.close(); keyLauncher.close(); controlCenter.close(); trayManager.close()
         }
 
         function open(name: string): void { toggle(name) }
@@ -86,6 +89,7 @@ Scope {
             else if (name==="shutdown") shutdownLauncher.close()
             else if (name==="keys") keyLauncher.close()
             else if (name==="control") controlCenter.close()
+            else if (name==="tray") trayManager.close()
         }
     }
 

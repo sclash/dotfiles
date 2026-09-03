@@ -1,12 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import "../launchers"
 import "../../theme"
 
 // Themed replacement for the native QsMenuAnchor popup (Bar-App-Tray.md §3):
 // tray context menus rendered with Theme tokens instead of the Qt platform
-// palette. Submenus swap the opener's handle inside this one window (stack);
-// Esc pops a submenu, outside click / Esc on root dismisses (grabFocus).
+// palette. Backed by DBusMenuClient — quickshell 0.3.0 cannot open submenu
+// handles via QsMenuOpener, so this client speaks DBusMenu over busctl.
+// Submenus push a level inside this one window; the "back" row pops.
 PopupWindow {
     id: root
 
@@ -18,7 +20,7 @@ PopupWindow {
     function openFor(item, anchorItem) {
         root.trayItem = item;
         root.anchorItem = anchorItem;
-        root.menuStack = [];
+        menuClient.openForItem(item);
         visible = true;
     }
 
@@ -42,15 +44,10 @@ PopupWindow {
     anchor.gravity: Edges.Bottom
     anchor.margins.top: Theme.padXS
 
-    // --- menu stack (submenu support) --------------------------------
-    property var menuStack: []
-    readonly property var currentMenu: root.menuStack.length > 0 ? root.menuStack[root.menuStack.length - 1] : (trayItem ? trayItem.menu : null)
+    onVisibleChanged: if (!visible) menuClient.openForItem(null)
 
-    onVisibleChanged: if (!visible) root.menuStack = []
-
-    QsMenuOpener {
-        id: opener
-        menu: root.currentMenu
+    DBusMenuClient {
+        id: menuClient
     }
 
     // --- card ----------------------------------------------------------
@@ -62,23 +59,21 @@ PopupWindow {
         border.color: Theme.borderActive
 
         Keys.onEscapePressed: {
-            if (root.menuStack.length > 0)
-                root.menuStack = root.menuStack.slice(0, -1);
+            if (menuClient.canGoBack)
+                menuClient.back();
             else
                 root.close();
         }
 
         Column {
             id: menuCol
+
             anchors.centerIn: parent
             spacing: 0
 
             Repeater {
-                model: opener.children
+                model: menuClient.entries
 
-                // modelData lives on the Loader (required props inside the
-                // loaded component are NOT initialized by Loader — they must
-                // be referenced through the loader's id instead).
                 delegate: Loader {
                     id: entryLoader
 
@@ -109,11 +104,6 @@ PopupWindow {
                             id: entryRoot
 
                             readonly property var item: entryLoader.modelData
-                            readonly property bool checked: item.checkState === Qt.Checked
-                            readonly property bool partial: item.checkState === Qt.PartiallyChecked
-                            readonly property bool isCheck: item.buttonType === 1
-                            readonly property bool isRadio: item.buttonType === 2
-                            readonly property bool hasSubmenu: item.hasChildren && ("menuHandle" in item)
 
                             width: root.menuWidth
                             height: 30
@@ -123,16 +113,17 @@ PopupWindow {
 
                             MouseArea {
                                 id: entryMA
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (!entryRoot.item.enabled)
                                         return;
-                                    if (entryRoot.hasSubmenu) {
-                                        root.menuStack = root.menuStack.concat([entryRoot.item.menuHandle]);
+                                    if (entryRoot.item.hasChildren) {
+                                        menuClient.drill(index);
                                     } else {
-                                        entryRoot.item.triggered();
+                                        menuClient.trigger(index);
                                         root.close();
                                     }
                                 }
@@ -149,18 +140,18 @@ PopupWindow {
                                     Layout.preferredWidth: 14
                                     Layout.preferredHeight: 14
                                     Layout.alignment: Qt.AlignVCenter
-                                    visible: entryRoot.isCheck || entryRoot.isRadio
+                                    visible: entryRoot.item.toggleType !== ""
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        visible: entryRoot.isCheck
+                                        visible: entryRoot.item.toggleType === "checkbox"
                                         radius: Theme.padXS
-                                        color: entryRoot.checked ? Theme.fg : (entryRoot.partial ? Theme.fgDim : "transparent")
+                                        color: entryRoot.item.toggleState === 1 ? Theme.fg : (entryRoot.item.toggleState === 2 ? Theme.fgDim : "transparent")
                                         border.width: Theme.borderWidth
                                         border.color: Theme.borderActive
 
                                         Text {
-                                            visible: entryRoot.checked
+                                            visible: entryRoot.item.toggleState === 1
                                             anchors.centerIn: parent
                                             text: Icons.check
                                             font.family: Theme.fontFamily
@@ -171,14 +162,14 @@ PopupWindow {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        visible: entryRoot.isRadio
+                                        visible: entryRoot.item.toggleType === "radio"
                                         radius: width / 2
                                         color: "transparent"
                                         border.width: Theme.borderWidth
                                         border.color: Theme.borderActive
 
                                         Rectangle {
-                                            visible: entryRoot.checked
+                                            visible: entryRoot.item.toggleState === 1
                                             anchors.centerIn: parent
                                             width: 6
                                             height: 6
@@ -190,7 +181,7 @@ PopupWindow {
 
                                 Text {
                                     Layout.fillWidth: true
-                                    text: entryRoot.item.text
+                                    text: entryRoot.item.label
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeLauncher
                                     color: entryRoot.item.enabled ? Theme.fg : Theme.fgDim
@@ -198,7 +189,7 @@ PopupWindow {
                                 }
 
                                 Text {
-                                    visible: entryRoot.hasSubmenu
+                                    visible: entryRoot.item.hasChildren
                                     text: Icons.chevronRight
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
@@ -213,8 +204,8 @@ PopupWindow {
             // back row when inside a submenu (mouse way back up the stack)
             Rectangle {
                 width: root.menuWidth
-                height: root.menuStack.length > 0 ? 26 : 0
-                visible: root.menuStack.length > 0
+                height: menuClient.canGoBack ? 26 : 0
+                visible: menuClient.canGoBack
                 radius: Theme.roundingMenu
                 color: backMA.containsMouse ? Theme.bgBarAlt : "transparent"
 
@@ -240,11 +231,21 @@ PopupWindow {
                 }
                 MouseArea {
                     id: backMA
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.menuStack = root.menuStack.slice(0, -1)
+                    onClicked: menuClient.back()
                 }
+            }
+
+            // empty / loading state
+            Text {
+                visible: menuClient.entries.length === 0
+                text: menuClient.busy ? "loading menu…" : "no options available"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.fgMuted
             }
         }
     }

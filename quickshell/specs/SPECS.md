@@ -132,6 +132,7 @@ quickshell/
 │       ├── ShutdownLauncher.qml
 │       ├── KeyLauncher.qml
 │       ├── DisplayManager.qml
+│       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/
 │   ├── Theme.qml             # Singleton — colours, radii, spacing, fonts
