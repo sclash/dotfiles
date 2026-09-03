@@ -71,8 +71,8 @@ hl.on("hyprland.start", function ()
 
 hl.env( "XCURSOR_SIZE","24" )
 hl.env( "HYPRCURSOR_SIZE","24" )
--- # for Qt apps# Theme 
-hl.env( "QT_QPA_PLATFORMTHEME","qt6ct")
+-- # for Qt apps (file dialogs via xdg portal, qt6ct theming)
+hl.env( "QT_QPA_PLATFORMTHEME","xdgdesktopportal:qt6ct")
 -- # env = HYPRCURSOR_THEME,awd-dark
 -- #for libadwaita gtk4 apps you can use this command:
 -- exec = gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"   # for GTK4 apps

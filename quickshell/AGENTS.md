@@ -99,6 +99,8 @@ grep -R "#[0-9a-fA-F]" --include="*.qml" quickshell/ | grep -v "theme/Theme.qml"
 
 ## 7. Useful References
 
+The hyprland config use `hyprland.lua`
+
 * `waybar/{config.jsonc,style.css}` — legacy behaviour/colours (`SPECS.md:256`)
 * `hypr/hyprland.lua:38` — current autostart/binds
 * `nixos/programs/quickshell.nix` / `herdr.nix` — Nix wiring

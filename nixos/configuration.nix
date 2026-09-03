@@ -133,6 +133,16 @@
     # Use xdg-desktop-portal-gtk to handle GSettings for GTK apps like Firefox.
     # It must be in extraPortals for Hyprland to use it for settings.
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    # Explicit portal routing: file dialogs (FileChooser) via gtk portal so all
+    # apps (Chrome, Firefox, Qt apps) get the same dialog; hyprland keeps
+    # ScreenCast/Screenshot.
+    config = {
+      common.default = [ "gtk" ];
+      hyprland = {
+        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
+      };
+    };
   };
   # services.wayland.windowManager.hyprland.systemd.enable = true;
   # wayland.windowManager.hyprland.systemd.enable = true;
