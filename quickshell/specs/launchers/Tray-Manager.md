@@ -15,7 +15,7 @@ leaving the keyboard.
 ## 2. Display
 
 * Single centered card, `LauncherBase`-class chrome: width `560`, `Theme.bgLauncher`,
-  `Theme.borderActive` border, dim overlay behind, `Theme.roundingLauncher` radius.
+  `Theme.borderActive` border, dim overlay behind, `Theme.roundingManager` radius (hyprland rounding).
 * **Two views** in one card, switched in place:
   * **Apps view** (root): header `Tray Manager`; rows = tray apps — icon (`item.icon`,
     20px, same fallback glyph rule as `AppTray.qml`) + label (`tooltipTitle` or `id`).
@@ -24,9 +24,10 @@ leaving the keyboard.
     checkbox/radio indicator, submenu chevron (same row language as `TrayMenu.qml`).
 * Row height 38 (apps) / 30 (options); selected row `Theme.bgSelected`, hover `Theme.bgBarAlt`.
 * Footer hint: `enter open/trigger · l forward · h back · j/k navigate · / filter` at `Theme.fgDim`.
-* **Selection visibility:** the `bgSelected` token is `#000000` on this theme, so
-  keyboard selection renders as `Theme.bgBarAlt` row + `Theme.fgBright` medium-weight
-  label — never invisible.
+* **Selection style:** environment convention (NetworkCenter/ControlCenter parity) —
+  selected row = `Theme.bgSelected` + `Theme.borderSelected` border; hover =
+  `Theme.bgHover`, no border. Labels stay plain `Theme.fg` (no weight/brightness
+  deviations).
 
 ## 3. Behaviour
 
@@ -68,7 +69,9 @@ leaving the keyboard.
 | `l`, `Right` | options view | **forward only** — drill into a submenu (never triggers) |
 | `h`, `Left` | options view | **back** — pop submenu level / back to apps list |
 | `/` | both views | focus filter `TextField` (substring, case-insensitive; apps: title/id, menu: entry text) |
-| `Esc` | filter focused | clear filter, back to list |
+| `Esc` | filter focused | text set → **keep the filter**, focus the list (results stay navigable); empty → hide the bar |
+| `Enter` | filter focused | apply the filter, hide the bar, focus the list (NetworkCenter convention) |
+| — | drill/back (`l`/`h`) | the filter **clears on level change** — it applies only to the level where it was typed (a stale parent filter must not hide suboptions) |
 | `Esc` | options view | pop submenu level / back to apps list |
 | `Esc` | apps view | close manager |
 | mouse | apps view | row left-click = open app; right-click = options view |
@@ -95,7 +98,7 @@ the lists.
 
 * Tokens only — `Theme.bgLauncher` card, `Theme.border`/`Theme.borderActive` hairlines,
   `Theme.fg`/`Theme.fgMuted`/`Theme.fgDim` text, `Theme.bgSelected` selection,
-  `Theme.roundingLauncher` card, `Theme.fontFamily`, spacing per `STYLE.md` §2.
+  `Theme.roundingManager` card, `Theme.fontFamily`, spacing per `STYLE.md` §2.
 * Icons/glyphs via `Icons.*` (submenu chevron, fallback glyph). No hard-coded hex/glyphs.
 
 ## 7. Registration

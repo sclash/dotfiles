@@ -222,7 +222,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Shutdown-Launcher | `SUPER+q` | `Shutdown-Launcher.md` |
 | Key-Launcher | `SUPER+/` | `Key-Launcher.md` |
 
-All launchers share `LauncherBase.qml` (centered card, 560–640 px wide, `rounding: 12`, `focusable: true`, Esc/vim nav).
+All launchers share `LauncherBase.qml` (centered card, 560–640 px wide, `rounding: Theme.roundingLauncher` (= hyprland rounding 7), `focusable: true`, Esc/vim nav).
 
 ---
 

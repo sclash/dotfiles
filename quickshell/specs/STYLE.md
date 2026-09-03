@@ -11,7 +11,7 @@
 
 * **Dark & low-chrome.** The shell should recede; content stays primary.
 * **Icons carry meaning; colour carries state.** Idle/muted is desaturated white/grey; warning/critical uses red.
-* **Flat bar, rounded cards.** Bar is a flat strip (`roundingBar: 0`); launchers and toasts are floating cards (`roundingLauncher` / `roundingItem`).
+* **Flat bar, rounded cards.** Bar is a flat strip (`roundingBar: 0`); launchers and toasts are floating cards (`roundingLauncher` / `roundingItem`). All card/row/menu corner rounding follows `hyprland.lua` `decoration.rounding = 7` — `rounding_power 4` (squircle) is not reproducible with QML `Rectangle`, corners are circular arcs.
 * **Keyboard-first.** Every interactive surface has a visible selection ring (border, not background — see §6).
 
 ---
@@ -75,9 +75,10 @@ all equal `bgLauncher` (`#000000`), so rows render `transparent` and switch bord
 
 ```qml
 property int roundingBar:       0     // flat top bar — no pill
-property int roundingLauncher:  16    // floating cards
-property int roundingItem:      10    // rows, tiles, fields, toasts
-property int roundingMenu:      4     // tray menus & bar tooltips — tighter corners
+property int roundingLauncher:  7     // floating cards — hyprland decoration.rounding
+property int roundingItem:      7     // rows, tiles, fields, toasts — hyprland rounding
+property int roundingMenu:      7     // tray menus & bar tooltips — hyprland rounding
+property int roundingManager:   7     // TrayManager card — hyprland rounding
 property int borderWidth:       1
 property int shadowRange:       16
 property int shadowPower:       3
