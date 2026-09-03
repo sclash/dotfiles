@@ -75,7 +75,7 @@ WlrLayershell {
         filterBar.visible = false;
         filterField.text = "";
         root.refreshApps();
-        appsList.forceActiveFocus();
+        card.forceActiveFocus(); // key handling lives on the card — never park focus on the list
     }
 
     function moveSelection(list, indexProp, step) {
@@ -146,10 +146,7 @@ WlrLayershell {
     function hideFilter() {
         filterBar.visible = false;
         filterField.text = "";
-        if (root.view === 0)
-            appsList.forceActiveFocus();
-        else
-            menuList.forceActiveFocus();
+        card.forceActiveFocus();
     }
 
     onIsOpenChanged: if (isOpen) Qt.callLater(() => card.forceActiveFocus())
@@ -202,6 +199,12 @@ WlrLayershell {
 
         width: 560
         height: Math.min(480, col.implicitHeight + Theme.padL * 2)
+        Behavior on height {
+            NumberAnimation {
+                duration: Theme.durationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
@@ -311,46 +314,71 @@ WlrLayershell {
                 }
             }
 
-            // apps view
-            ListView {
-                id: appsList
+            // view area — both views overlap here; level-based parking spots
+            // (apps left, options right) make forward/back slides direction-correct
+            Item {
+                id: viewArea
 
-                visible: root.view === 0
                 Layout.fillWidth: true
-                // content-based height so all rows render at once, capped with scroll
-                Layout.preferredHeight: Math.min(contentHeight, 360)
+                Layout.preferredHeight: Math.min(root.view === 0 ? appsList.contentHeight : menuList.contentHeight, 360)
                 Layout.fillHeight: true
-                model: root.appRows
-                currentIndex: root.appsIndex
-                onCurrentIndexChanged: root.appsIndex = currentIndex
-                interactive: false
                 clip: true
-                delegate: Rectangle {
-                    id: appRow
 
-                    required property var modelData
+                // apps view
+                ListView {
+                    id: appsList
 
-                    width: appsList.width
-                    height: 38
-                    radius: Theme.roundingMenu
-                    // bgSelected token equals the card background on this theme —
-                    // use bgBarAlt + bright medium-weight text for visibility
-                    color: appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgBarAlt : "transparent"
+                    anchors.fill: parent
+                    opacity: root.view === 0 ? 1 : 0
+                    x: root.view === 0 ? 0 : -60
+                    visible: opacity > 0.01
+                    enabled: root.view === 0
+                    model: root.appRows
+                    currentIndex: root.appsIndex
+                    onCurrentIndexChanged: root.appsIndex = currentIndex
+                    interactive: false
+                    clip: true
 
-                    MouseArea {
-                        id: rowMA
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: (mouse) => {
-                            appsList.currentIndex = index;
-                            if (mouse.button === Qt.RightButton)
-                                root.openOptions(); // right-click parity with the bar icon
-                            else
-                                root.activateCurrent(); // left-click opens the app
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Theme.durationNormal
+                            easing.type: Easing.OutCubic
                         }
+                    }
+
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: Theme.durationNormal
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    delegate: Rectangle {
+                        id: appRow
+
+                        required property var modelData
+
+                        width: appsList.width
+                        height: 38
+                        radius: Theme.roundingMenu
+                        // bgSelected token equals the card background on this theme —
+                        // use bgBarAlt + bright medium-weight text for visibility
+                        color: appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgBarAlt : "transparent"
+
+                        MouseArea {
+                            id: rowMA
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: (mouse) => {
+                                appsList.currentIndex = index;
+                                if (mouse.button === Qt.RightButton)
+                                    root.openOptions(); // right-click parity with the bar icon
+                                else
+                                    root.activateCurrent(); // left-click opens the app
+                            }
                     }
                     RowLayout {
                         anchors.fill: parent
@@ -390,29 +418,44 @@ WlrLayershell {
 
             // empty state (apps)
             Text {
+                anchors.centerIn: parent
                 visible: root.view === 0 && root.appRows.length === 0
                 text: filterBar.visible ? "no matches" : "no tray apps registered"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.fgMuted
-                Layout.alignment: Qt.AlignHCenter
             }
 
-            // options view
-            ListView {
-                id: menuList
+                // options view
+                ListView {
+                    id: menuList
 
-                visible: root.view === 1
-                Layout.fillWidth: true
-                // content-based height so all options render at once, capped with scroll
-                Layout.preferredHeight: Math.min(contentHeight, 360)
-                Layout.fillHeight: true
-                model: root.menuRows
-                currentIndex: root.menuIndex
-                onCurrentIndexChanged: root.menuIndex = currentIndex
-                interactive: false
-                clip: true
-                delegate: Rectangle {
+                    anchors.fill: parent
+                    opacity: root.view === 1 ? 1 : 0
+                    x: root.view === 1 ? 0 : 60
+                    visible: opacity > 0.01
+                    enabled: root.view === 1
+                    model: root.menuRows
+                    currentIndex: root.menuIndex
+                    onCurrentIndexChanged: root.menuIndex = currentIndex
+                    interactive: false
+                    clip: true
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Theme.durationNormal
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: Theme.durationNormal
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    delegate: Rectangle {
                     id: menuRow
 
                     required property var modelData
@@ -517,13 +560,14 @@ WlrLayershell {
 
             // empty / loading state (options)
             Text {
+                anchors.centerIn: parent
                 visible: root.view === 1 && root.menuRows.length === 0
                 text: menuClient.busy ? "loading menu…" : (filterBar.visible ? "no matches" : "no options available")
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.fgMuted
-                Layout.alignment: Qt.AlignHCenter
             }
+        }
 
             // footer hints
             Text {
