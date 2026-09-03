@@ -112,20 +112,20 @@ QtObject {
                 const radioPart = wifiRaw.split("---RADIO---")[1] || ""
                 if (radioPart.trim() !== "") root.wifiEnabled = radioPart.trim() === "enabled"
                 const lines = devSection.trim().split("\n").filter(Boolean)
-                let foundWifi = false
-                let foundEth = false
-                let activeSsid = ""
+                let ethName = ""
+                let wifiName = ""
                 for (const l of lines) {
                     const segs = l.split(":")
                     if (segs.length < 3) continue
                     const t = segs[0], state = segs[1], name = segs.slice(2).join(":")
-                    if (state.indexOf("connected") !== -1) {
-                        if (t === "wifi") { foundWifi = true; activeSsid = name; root.type = "wifi"; root.connected = true }
-                        else if (t === "ethernet") { foundEth = true; if (!foundWifi) { root.type = "ethernet"; root.connected = true; activeSsid = name } }
-                    }
+                    if (state.indexOf("connected") === -1) continue
+                    if (t === "ethernet") { if (!ethName) ethName = name }
+                    else if (t === "wifi") { if (!wifiName) wifiName = name }
                 }
-                if (!foundWifi && !foundEth) { root.connected = false; root.type = "none"; activeSsid = ""; root.essid = "" }
-                else { root.essid = activeSsid }
+                // Ethernet takes precedence when both wired and wifi are connected
+                if (ethName !== "") { root.connected = true; root.type = "ethernet"; root.essid = ethName }
+                else if (wifiName !== "") { root.connected = true; root.type = "wifi"; root.essid = wifiName }
+                else { root.connected = false; root.type = "none"; root.essid = "" }
                 if (wifiPart) {
                     const wlines = wifiPart.trim().split("\n")
                     for (const wl of wlines) if (wl.startsWith("*")) { const segs = wl.split(":"); if (segs.length >= 3) root.signalStrength = parseInt(segs[1]) || -1 }

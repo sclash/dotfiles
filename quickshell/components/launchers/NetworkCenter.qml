@@ -144,7 +144,7 @@ WlrLayershell {
                         ColumnLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: currentCard.isConnecting ? "Connecting to " + (NetworkService.connectingSsid || "network") + "…" : (NetworkService.connected ? NetworkService.essid + " · " + NetworkService.signalStrength + "%" : "Not connected")
+                                text: currentCard.isConnecting ? "Connecting to " + (NetworkService.connectingSsid || "network") + "…" : (NetworkService.connected ? NetworkService.essid + (NetworkService.type === "wifi" ? " · " + NetworkService.signalStrength + "%" : "") : "Not connected")
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 14
                                 font.weight: Theme.fontWeightMedium

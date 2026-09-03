@@ -15,7 +15,7 @@ Text {
     }
     color: {
         if (!NetworkService.available || !NetworkService.connected) return Theme.fgDim
-        if (NetworkService.signalStrength >=0 && NetworkService.signalStrength < 30) return Theme.warning
+        if (NetworkService.type === "wifi" && NetworkService.signalStrength >=0 && NetworkService.signalStrength < 30) return Theme.warning
         return Theme.fg
     }
     Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
