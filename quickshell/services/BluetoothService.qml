@@ -20,20 +20,22 @@ QtObject {
     function connect(address) { root.btConnProc.command = ["bluetoothctl", "connect", address]; root.btConnProc.running = true }
     function forget(address) { root.btRemoveProc.command = ["bluetoothctl", "remove", address]; root.btRemoveProc.running = true }
     function trust(address) { root.btTrustProc.command = ["bluetoothctl", "trust", address]; root.btTrustProc.running = true }
-    function togglePower() { if (root.powered) root.btPowerOff.running=true; else root.btPowerOn.running=true }
+    function togglePower() { if (root.powered) { root.stopScan(); root.btPowerOff.running=true } else root.btPowerOn.running=true }
     function pairAndConnect(address) {
         root.btPairProc.command = ["sh", "-c", "bluetoothctl --agent NoInputNoOutput pair " + address + "; bluetoothctl trust " + address + "; bluetoothctl --agent NoInputNoOutput connect " + address + " 2>/dev/null"]
         root.btPairProc.running = true
     }
 
     function startScan() {
+        // Scanning must never change the power state — if the adapter is off,
+        // stay off and let the UI surface the hint (power is user-controlled).
+        if (!root.powered) { root.scanning = false; return }
         root.nearby = []
         root.seenAddrs = {}
-        if (!root.powered) { root.btPowerOn.running = true; root.scanning = true; root.deferredScan.running = true }
-        else beginScan()
+        beginScan()
     }
     function beginScan() {
-        if (!root.powered) { root.btPowerOn.running = true; root.deferredScan.running = true; return }
+        if (!root.powered) { root.scanning = false; return }
         root.seenAddrs = {}
         root.scanning = true
         root.btDiscoverableOn.running = true
@@ -189,7 +191,6 @@ QtObject {
     property Process btDiscoverableOff: Process { command: ["bluetoothctl", "discoverable", "off"] }
 
     property Timer scanTimer: Timer { interval: 10000; running: false; repeat: false; onTriggered: root.stopScan() }
-    property Timer deferredScan: Timer { interval: 1500; running: false; repeat: false; onTriggered: root.beginScan() }
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
 
     // Bluetooth powered off by default at session start

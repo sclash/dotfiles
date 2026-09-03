@@ -155,18 +155,6 @@ WlrLayershell {
                         MouseArea { anchors.fill: parent; onClicked: root.disconnectCurrent() }
                     }
                 }
-                Text {
-                    id: curEmpty
-                    visible: root.connectedDevice === null
-                    anchors.centerIn: parent
-                    width: Math.min(parent.width - Theme.padM*2, implicitWidth)
-                    text: BluetoothService.powered ? "Not connected — scan or pick a known device" : "Bluetooth is off — power on to connect"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 12
-                    color: Theme.fgMuted
-                    horizontalAlignment: Text.AlignHCenter
-                    elide: Text.ElideRight
-                }
             }
 
             Text { visible: root.view === "nearby"; text: "Nearby"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
