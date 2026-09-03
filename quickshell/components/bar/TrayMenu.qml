@@ -56,7 +56,7 @@ PopupWindow {
     // --- card ----------------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        radius: Theme.roundingItem
+        radius: Theme.roundingMenu
         color: Theme.bgLauncher
         border.width: Theme.borderWidth
         border.color: Theme.borderActive
@@ -117,7 +117,7 @@ PopupWindow {
 
                             width: root.menuWidth
                             height: 30
-                            radius: Theme.roundingItem / 2
+                            radius: Theme.roundingMenu
                             color: entryMA.containsMouse && item.enabled ? Theme.bgBarAlt : "transparent"
                             opacity: item.enabled ? 1.0 : 0.5
 
@@ -215,7 +215,7 @@ PopupWindow {
                 width: root.menuWidth
                 height: root.menuStack.length > 0 ? 26 : 0
                 visible: root.menuStack.length > 0
-                radius: Theme.roundingItem / 2
+                radius: Theme.roundingMenu
                 color: backMA.containsMouse ? Theme.bgBarAlt : "transparent"
 
                 RowLayout {

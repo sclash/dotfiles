@@ -38,6 +38,7 @@ QtObject {
     property int roundingBar:       0             // flat top bar, no pill
     property int roundingLauncher:  16            // more rounded for floating cards
     property int roundingItem:      10
+    property int roundingMenu:      4             // tray menus & bar tooltips — tighter corners
     property int borderWidth:       1
     property int shadowRange:       16
     property int shadowPower:       3
