@@ -57,7 +57,12 @@ Item {
     }
 
     function drill(index) {
-        const e = root.entries[index];
+        root.drillEntry(root.entries[index]);
+    }
+
+    // object-based drill — REQUIRED when the caller navigates a filtered view:
+    // filtered-row indices do not map onto root.entries indices
+    function drillEntry(e) {
         if (!e || !e.hasChildren)
             return;
         root.stack = root.stack.concat([{

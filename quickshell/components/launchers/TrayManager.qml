@@ -57,16 +57,16 @@ WlrLayershell {
         const q = filterField.text.toLowerCase();
         const src = root.trayItems;
         root.appRows = q ? src.filter(it => root.appLabel(it).toLowerCase().indexOf(q) !== -1) : src;
-        if (root.appsIndex >= root.appRows.length)
-            root.appsIndex = Math.max(0, root.appRows.length - 1);
+        // clamp BOTH sides — a model swap resets ListView.currentIndex to -1,
+        // which left appsIndex at -1 and made l/Enter silently no-op after filtering
+        root.appsIndex = Math.min(Math.max(root.appsIndex, 0), Math.max(0, root.appRows.length - 1));
     }
 
     function refreshMenu() {
         const q = filterField.text.toLowerCase();
         const src = menuClient.entries;
         root.menuRows = q ? src.filter(e => e.label.toLowerCase().indexOf(q) !== -1) : src;
-        if (root.menuIndex >= root.menuRows.length)
-            root.menuIndex = Math.max(0, root.menuRows.length - 1);
+        root.menuIndex = Math.min(Math.max(root.menuIndex, 0), Math.max(0, root.menuRows.length - 1));
     }
 
     function backToApps() {
@@ -95,14 +95,18 @@ WlrLayershell {
 
     // apps view: open the app itself (same as left-click on its bar icon)
     function activateCurrent() {
-        const it = root.appRows[root.appsIndex];
+        const idx = root.appRows.length ? Math.min(Math.max(root.appsIndex, 0), root.appRows.length - 1) : -1;
+        root.appsIndex = idx;
+        const it = idx >= 0 ? root.appRows[idx] : null;
         if (it)
             it.activate();
     }
 
     // apps view: drill into the app's SNI menu (same as right-click on the icon)
     function openOptions() {
-        const it = root.appRows[root.appsIndex];
+        const idx = root.appRows.length ? Math.min(Math.max(root.appsIndex, 0), root.appRows.length - 1) : -1;
+        root.appsIndex = idx;
+        const it = idx >= 0 ? root.appRows[idx] : null;
         if (!it)
             return;
         if (it.hasMenu) {
@@ -119,23 +123,37 @@ WlrLayershell {
 
     // options view: trigger focused entry (Enter)
     function activateMenuEntry() {
-        const e = root.menuRows[root.menuIndex];
+        const idx = root.menuRows.length ? Math.min(Math.max(root.menuIndex, 0), root.menuRows.length - 1) : -1;
+        root.menuIndex = idx;
+        const e = idx >= 0 ? root.menuRows[idx] : null;
         if (!e || e.isSeparator || !e.enabled)
             return;
-        menuClient.trigger(root.menuIndex); // submenu → drills; leaf → fires + refetches toggles
-        if (!e.hasChildren)
-            root.backToApps(); // spec: back to list, manager stays open
+        if (e.hasChildren) {
+            root.drillIntoCurrent(); // stack-model drill (accordion is TrayMenu-only)
+            return;
+        }
+        menuClient.triggerEntry(e); // leaf → fires + refetches toggles
+        root.backToApps(); // spec: back to list, manager stays open
     }
 
     // options view: drill into a submenu (l) — never triggers
     function drillIntoCurrent() {
-        menuClient.drill(root.menuIndex);
+        const idx = root.menuRows.length ? Math.min(Math.max(root.menuIndex, 0), root.menuRows.length - 1) : -1;
+        root.menuIndex = idx;
+        const e = idx >= 0 ? root.menuRows[idx] : null;
+        // the filter belongs to the level it was typed on — a stale parent
+        // filter (e.g. "netw") would hide every child (wifi names don't match)
+        filterField.text = "";
+        menuClient.drillEntry(e);
     }
 
     // options view: pop a submenu level, or return to the apps list
     function backOneLevel() {
-        if (!menuClient.back())
+        if (menuClient.back()) {
+            filterField.text = ""; // level changed → filter does not carry over
+        } else {
             root.backToApps();
+        }
     }
 
     function showFilter() {
@@ -144,9 +162,13 @@ WlrLayershell {
     }
 
     function hideFilter() {
-        filterBar.visible = false;
-        filterField.text = "";
-        card.forceActiveFocus();
+        // Esc convention: keep the applied filter — only an empty field hides the bar
+        if (filterField.text.length > 0) {
+            card.forceActiveFocus();
+        } else {
+            filterBar.visible = false;
+            card.forceActiveFocus();
+        }
     }
 
     onIsOpenChanged: if (isOpen) Qt.callLater(() => card.forceActiveFocus())
@@ -206,7 +228,7 @@ WlrLayershell {
             }
         }
         anchors.centerIn: parent
-        radius: Theme.roundingLauncher
+        radius: Theme.roundingManager
         color: Theme.bgLauncher
         border.width: Theme.borderWidth
         border.color: Theme.borderActive
@@ -282,35 +304,66 @@ WlrLayershell {
                 }
             }
 
-            // filter bar — hidden until `/`
-            RowLayout {
+            // filter bar — hidden until `/` (NetworkCenter parity)
+            Rectangle {
                 id: filterBar
 
                 visible: false
                 Layout.fillWidth: true
-                spacing: Theme.gapS
+                Layout.preferredHeight: 36
+                radius: Theme.roundingItem
+                color: Theme.bgActive
+                border.color: filterField.activeFocus ? Theme.borderSelected : Theme.border
+                border.width: 1
 
-                Text {
-                    text: Icons.search
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 16
-                    color: Theme.fgMuted
-                }
-                TextField {
-                    id: filterField
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.padM
+                    anchors.rightMargin: Theme.padM
+                    spacing: Theme.gapM
 
-                    Layout.fillWidth: true
-                    placeholderText: root.view === 0 ? "Filter tray apps…" : "Filter options…"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 13
-                    color: Theme.fg
-                    onTextChanged: {
-                        if (root.view === 0)
-                            root.refreshApps();
-                        else
-                            root.refreshMenu();
+                    Text {
+                        text: Icons.search
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 14
+                        color: Theme.fgMuted
                     }
-                    Keys.onEscapePressed: root.hideFilter()
+                    TextField {
+                        id: filterField
+
+                        Layout.fillWidth: true
+                        placeholderText: root.view === 0 ? "Filter tray apps…" : "Filter options…"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 13
+                        color: Theme.fg
+                        placeholderTextColor: Theme.fgDim
+                        background: null
+                        cursorDelegate: Rectangle {
+                            width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                            height: Math.round(parent.font.pixelSize * 1.5)
+                            color: Theme.fg
+                        }
+                        onTextChanged: {
+                            if (root.view === 0)
+                                root.refreshApps();
+                            else
+                                root.refreshMenu();
+                        }
+                        // environment convention: Esc keeps the filter (so the
+                        // filtered results stay navigable) unless the field is empty
+                        Keys.onEscapePressed: {
+                            if (text.length > 0) {
+                                card.forceActiveFocus();
+                            } else {
+                                filterBar.visible = false;
+                                card.forceActiveFocus();
+                            }
+                        }
+                        onAccepted: {
+                            filterBar.visible = false; // apply + hide, filter stays active
+                            card.forceActiveFocus();
+                        }
+                    }
                 }
             }
 
@@ -361,9 +414,11 @@ WlrLayershell {
                         width: appsList.width
                         height: 38
                         radius: Theme.roundingMenu
-                        // bgSelected token equals the card background on this theme —
-                        // use bgBarAlt + bright medium-weight text for visibility
-                        color: appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgBarAlt : "transparent"
+                        // environment selection style (NetworkCenter parity):
+                        // bgSelected bg + borderSelected border; hover = bgHover
+                        color: appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgSelected : Theme.bgHover
+                        border.width: Theme.borderWidth
+                        border.color: appRow.ListView.isCurrentItem ? Theme.borderSelected : "transparent"
 
                         MouseArea {
                             id: rowMA
@@ -400,8 +455,7 @@ WlrLayershell {
                             text: root.appLabel(appRow.modelData)
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeLauncher
-                            font.weight: appRow.ListView.isCurrentItem ? Theme.fontWeightMedium : Theme.fontWeightNormal
-                            color: appRow.ListView.isCurrentItem ? Theme.fgBright : Theme.fg
+                            color: Theme.fg
                             elide: Text.ElideRight
                         }
                         Text {
@@ -463,9 +517,10 @@ WlrLayershell {
                     width: menuList.width
                     height: modelData.isSeparator ? 1 + Theme.padS : 30
                     radius: Theme.roundingMenu
-                    // selection visible: bgBarAlt + bright medium-weight text
-                    // (bgSelected token equals the card background on this theme)
-                    color: !modelData.isSeparator && (menuRow.ListView.isCurrentItem || rowMA2.containsMouse) ? Theme.bgBarAlt : "transparent"
+                    // environment selection style (NetworkCenter parity)
+                    color: !modelData.isSeparator && (menuRow.ListView.isCurrentItem || rowMA2.containsMouse) ? Theme.bgSelected : Theme.bgHover
+                    border.width: Theme.borderWidth
+                    border.color: !modelData.isSeparator && menuRow.ListView.isCurrentItem ? Theme.borderSelected : "transparent"
                     opacity: modelData.isSeparator || modelData.enabled ? 1.0 : 0.5
 
                     MouseArea {
@@ -543,8 +598,7 @@ WlrLayershell {
                             text: menuRow.modelData.label
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeLauncher
-                            font.weight: menuRow.ListView.isCurrentItem ? Theme.fontWeightMedium : Theme.fontWeightNormal
-                            color: menuRow.ListView.isCurrentItem ? Theme.fgBright : (menuRow.modelData.enabled ? Theme.fg : Theme.fgDim)
+                            color: menuRow.modelData.enabled ? Theme.fg : Theme.fgDim
                             elide: Text.ElideRight
                         }
                         Text {
