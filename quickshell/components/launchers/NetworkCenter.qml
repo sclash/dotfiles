@@ -135,6 +135,7 @@ WlrLayershell {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Theme.gapM
+                        Layout.rightMargin: disconnectBtn.visible ? disconnectBtn.width + Theme.gapM : 0
                         Rectangle {
                             width: 40; height: 40
                             radius: 8
@@ -159,18 +160,22 @@ WlrLayershell {
                                 color: Theme.fgMuted
                             }
                         }
-                        Rectangle {
-                            visible: NetworkService.connected && !currentCard.isConnecting
-                            width: 90; height: 32
-                            radius: Theme.roundingItem
-                            color: Theme.bgBar
-                            border.color: Theme.critical
-                            border.width: 1
-                            Text { anchors.centerIn: parent; text: "Disconnect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.critical }
-                            MouseArea { anchors.fill: parent; onClicked: NetworkService.disconnect() }
-                        }
                     }
                     Text { visible: !NetworkService.connected && !currentCard.isConnecting; text: NetworkService.wifiEnabled ? "Pick a known network or scan" : "Wi-Fi is off — power on to connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
+                }
+                Rectangle {
+                    id: disconnectBtn
+                    visible: NetworkService.connected && !currentCard.isConnecting
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: Theme.padM
+                    width: 90; height: 32
+                    radius: Theme.roundingItem
+                    color: Theme.bgBar
+                    border.color: Theme.critical
+                    border.width: 1
+                    Text { anchors.centerIn: parent; text: "Disconnect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.critical }
+                    MouseArea { anchors.fill: parent; onClicked: NetworkService.disconnect() }
                 }
             }
 
