@@ -8,7 +8,8 @@ import "../../theme"
 // tray context menus rendered with Theme tokens instead of the Qt platform
 // palette. Backed by DBusMenuClient — quickshell 0.3.0 cannot open submenu
 // handles via QsMenuOpener, so this client speaks DBusMenu over busctl.
-// Submenus push a level inside this one window; the "back" row pops.
+// Suboptions expand IN PLACE (accordion) under their parent on hover —
+// no navigation stack, no back row.
 PopupWindow {
     id: root
 
@@ -44,10 +45,33 @@ PopupWindow {
     anchor.gravity: Edges.Bottom
     anchor.margins.top: Theme.padXS
 
-    onVisibleChanged: if (!visible) menuClient.openForItem(null)
+    onVisibleChanged: if (!visible)
+        menuClient.openForItem(null)
 
     DBusMenuClient {
         id: menuClient
+    }
+
+    // flat display model: root entries with expanded children inline
+    readonly property var rows: {
+        const out = [];
+        const entries = menuClient.entries;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            out.push({
+                "entry": e,
+                "depth": 0
+            });
+            if (menuClient.expandedId === e.id) {
+                const kids = menuClient.childEntries;
+                for (let j = 0; j < kids.length; j++)
+                    out.push({
+                        "entry": kids[j],
+                        "depth": 1
+                    });
+            }
+        }
+        return out;
     }
 
     // --- card ----------------------------------------------------------
@@ -59,8 +83,8 @@ PopupWindow {
         border.color: Theme.borderActive
 
         Keys.onEscapePressed: {
-            if (menuClient.canGoBack)
-                menuClient.back();
+            if (menuClient.expandedId !== -1)
+                menuClient.collapseExpanded();
             else
                 root.close();
         }
@@ -72,14 +96,14 @@ PopupWindow {
             spacing: 0
 
             Repeater {
-                model: menuClient.entries
+                model: root.rows
 
                 delegate: Loader {
                     id: entryLoader
 
                     required property var modelData
 
-                    sourceComponent: entryLoader.modelData.isSeparator ? separatorComp : entryComp
+                    sourceComponent: entryLoader.modelData.entry.isSeparator ? separatorComp : entryComp
 
                     Component {
                         id: separatorComp
@@ -103,7 +127,8 @@ PopupWindow {
                         Rectangle {
                             id: entryRoot
 
-                            readonly property var item: entryLoader.modelData
+                            readonly property var item: entryLoader.modelData.entry
+                            readonly property int depth: entryLoader.modelData.depth
 
                             width: root.menuWidth
                             height: 30
@@ -111,6 +136,7 @@ PopupWindow {
                             color: entryMA.containsMouse && item.enabled ? Theme.bgBarAlt : "transparent"
                             opacity: item.enabled ? 1.0 : 0.5
 
+                            // click-to-open: submenu parents toggle on click
                             MouseArea {
                                 id: entryMA
 
@@ -121,9 +147,13 @@ PopupWindow {
                                     if (!entryRoot.item.enabled)
                                         return;
                                     if (entryRoot.item.hasChildren) {
-                                        menuClient.drill(index);
+                                        // toggle: click an expanded parent to collapse it
+                                        if (menuClient.expandedId === entryRoot.item.id)
+                                            menuClient.collapseExpanded();
+                                        else
+                                            menuClient.expandEntry(entryRoot.item);
                                     } else {
-                                        menuClient.trigger(index);
+                                        menuClient.triggerEntry(entryRoot.item);
                                         root.close();
                                     }
                                 }
@@ -131,7 +161,7 @@ PopupWindow {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: Theme.padM
+                                anchors.leftMargin: Theme.padM + entryRoot.depth * Theme.padL
                                 anchors.rightMargin: Theme.padM
                                 spacing: Theme.gapS
 
@@ -190,7 +220,7 @@ PopupWindow {
 
                                 Text {
                                     visible: entryRoot.item.hasChildren
-                                    text: Icons.chevronRight
+                                    text: menuClient.expandedId === entryRoot.item.id ? Icons.collapse : Icons.expand
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
                                     color: Theme.fgMuted
@@ -198,44 +228,6 @@ PopupWindow {
                             }
                         }
                     }
-                }
-            }
-
-            // back row when inside a submenu (mouse way back up the stack)
-            Rectangle {
-                width: root.menuWidth
-                height: menuClient.canGoBack ? 26 : 0
-                visible: menuClient.canGoBack
-                radius: Theme.roundingMenu
-                color: backMA.containsMouse ? Theme.bgBarAlt : "transparent"
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.padM
-                    anchors.rightMargin: Theme.padM
-                    spacing: Theme.gapS
-
-                    Text {
-                        text: Icons.chevronLeft
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fgMuted
-                    }
-                    Text {
-                        text: "back"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.italic: true
-                        color: Theme.fgMuted
-                    }
-                }
-                MouseArea {
-                    id: backMA
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: menuClient.back()
                 }
             }
 
