@@ -264,7 +264,7 @@ WlrLayershell {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.view === 0 ? "Tray Manager" : "Tray Manager › " + menuClient.breadcrumb
+                    text: root.view === 0 ? "Tray Manager" : root.appLabel(root.selectedItem) + (menuClient.breadcrumb !== "" ? " › " + menuClient.breadcrumb : "")
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.fgMuted
@@ -506,7 +506,7 @@ WlrLayershell {
                         }
                         Text {
                             visible: !menuRow.modelData.isSeparator && menuRow.modelData.hasChildren
-                            text: Icons.chevronRight
+                            text: Icons.collapse
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSizeSmall
                             color: Theme.fgMuted

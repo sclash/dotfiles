@@ -27,7 +27,8 @@ Item {
     readonly property string breadcrumb: {
         let parts = [];
         for (let i = 0; i < root.stack.length; i++)
-            parts.push(root.stack[i].label);
+            if (root.stack[i].label)
+                parts.push(root.stack[i].label);
         if (root.currentLabel)
             parts.push(root.currentLabel);
         return parts.join(" › ");

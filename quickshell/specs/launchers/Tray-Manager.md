@@ -19,9 +19,9 @@ leaving the keyboard.
 * **Two views** in one card, switched in place:
   * **Apps view** (root): header `Tray Manager`; rows = tray apps — icon (`item.icon`,
     20px, same fallback glyph rule as `AppTray.qml`) + label (`tooltipTitle` or `id`).
-  * **Options view**: breadcrumb header `Tray Manager › <app label>`; rows = the
-    focused app's menu entries — text, enabled, checkbox/radio indicator,
-    submenu chevron (same row language as `TrayMenu.qml`).
+  * **Options view**: breadcrumb header `<app label> › <submenu path>` (app name
+    only at the menu root); rows = the focused app's menu entries — text, enabled,
+    checkbox/radio indicator, submenu chevron (same row language as `TrayMenu.qml`).
 * Row height 38 (apps) / 30 (options); selected row `Theme.bgSelected`, hover `Theme.bgBarAlt`.
 * Footer hint: `enter open/trigger · l forward · h back · j/k navigate · / filter` at `Theme.fgDim`.
 * **Selection visibility:** the `bgSelected` token is `#000000` on this theme, so

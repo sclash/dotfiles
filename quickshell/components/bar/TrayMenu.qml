@@ -220,7 +220,7 @@ PopupWindow {
 
                                 Text {
                                     visible: entryRoot.item.hasChildren
-                                    text: menuClient.expandedId === entryRoot.item.id ? Icons.collapse : Icons.expand
+                                    text: menuClient.expandedId === entryRoot.item.id ? Icons.expand : Icons.collapse
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
                                     color: Theme.fgMuted
