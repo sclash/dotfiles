@@ -102,6 +102,34 @@ Scope {
                         width: Theme.barIconSlot
                         height: Theme.barIconSlot
                         radius: Theme.roundingItem
+                        color: usbMA.containsMouse ? Theme.bgHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                        Text {
+                            anchors.centerIn: parent
+                            text: UsbService.anyMounted ? Icons.usbDrive : Icons.usb
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.barIconSize
+                            color: {
+                                if (!UsbService.available) return Theme.fgDim
+                                if (UsbService.busyNode !== "") return Theme.warning
+                                if (UsbService.anyMounted) return Theme.accent
+                                if (UsbService.hasStorage) return Theme.fg
+                                return Theme.fgDim
+                            }
+                        }
+                        MouseArea {
+                            id: usbMA
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.launcherToggleRequested("usb")
+                        }
+                    }
+
+                    Rectangle {
+                        width: Theme.barIconSlot
+                        height: Theme.barIconSlot
+                        radius: Theme.roundingItem
                         color: audioMA.containsMouse ? Theme.bgHover : "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
                         RowLayout {

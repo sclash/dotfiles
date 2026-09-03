@@ -10,6 +10,8 @@ QtObject {
     readonly property bool available: udisksAvailable && lsusbAvailable
     // Mountable leaves folded under their USB disk (LUKS children flattened)
     property var storage: []
+    readonly property bool hasStorage: storage.length > 0
+    readonly property bool anyMounted: storage.some(r => !!r.mountPoint)
     // Every USB device reported by lsusb
     property var allDevices: []
     property string lastError: ""

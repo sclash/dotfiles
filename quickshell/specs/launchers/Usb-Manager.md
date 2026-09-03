@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Center-screen window to manage plug-and-play USB devices: mount / unmount / power-off USB storage, and inspect every other USB device currently connected (hubs, HID, audio, video, …). The lists update automatically on plug/unplug — event-driven via udev, no polling — so the launcher reflects reality the moment it is opened. There is no bar icon: state is self-contained in `UsbService`.
+Center-screen window to manage plug-and-play USB devices: mount / unmount / power-off USB storage, and inspect every other USB device currently connected (hubs, HID, audio, video, …). The lists update automatically on plug/unplug — event-driven via udev, no polling — so the launcher reflects reality the moment it is opened. A **bar icon** in the right group next to Bluetooth (inline in `Bar.qml`) mirrors mount state read-only from `UsbService`: `Icons.usbDrive` at `Theme.accent` when at least one storage device is mounted, `Icons.usb` at `Theme.fg` when storage is present but unmounted, `Theme.warning` while a mount/unmount/power-off is in flight (`busyNode`), `Theme.fgDim` when no storage is attached or the service is unavailable; click toggles the launcher (`usb`).
 
 ## 2. Window
 

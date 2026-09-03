@@ -45,10 +45,11 @@ itself never captures text input.
   1. `Bar-performance.md` drawer handle + collapsed/expanded metrics (`PerfDrawer.qml`)
   2. `Audio.md` (`AudioIcon.qml`)
   3. `Bluetooth.md` (`BluetoothIcon.qml`)
-  4. `Wifi.md` (`WifiIcon.qml`)
-  5. `KeyBoard.md` (`KeyboardIcon.qml`)
-  6. `Battery` (`BatteryIcon.qml`, rightmost — hidden when no battery present)
-  7. `SystemTray` (`AppTray.qml` tray overflow or inline — see decision below)
+  4. USB storage indicator (`launchers/Usb-Manager.md` — inline in `Bar.qml`, `UsbService`)
+  5. `Wifi.md` (`WifiIcon.qml`)
+  6. `KeyBoard.md` (`KeyboardIcon.qml`)
+  7. `Battery` (`BatteryIcon.qml`, rightmost — hidden when no battery present)
+  8. `SystemTray` (`AppTray.qml` tray overflow or inline — see decision below)
 
 Order is normative; do not reorder without updating `SPECS.md:5.1`.
 
@@ -61,6 +62,7 @@ Each bar icon is a **pure view** over a shared singleton service:
 | Wifi | `NetworkService` | `status`, `signalStrength`, `vpnActive` |
 | Audio | `AudioService` / `Pipewire` | `volume`, `muted`, `sinkName` |
 | Bluetooth | `BluetoothService` | `powered`, `connected`, `connectedCount` |
+| USB storage | `UsbService` | `available`, `hasStorage`, `anyMounted`, `busyNode` |
 | Keyboard | Hyprland IPC | `layoutName` (e.g., `US`, `IT`) |
 | Battery | `BatteryService` | `capacity`, `charging`, `available` |
 | Perf | `PerfService` | `cpu/gpu`, `mem`, `disk`, `temp` |
