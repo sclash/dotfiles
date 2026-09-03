@@ -74,6 +74,13 @@ leaving the keyboard.
 | mouse | apps view | row left-click = open app; right-click = options view |
 | mouse | options view | row click = trigger; dim overlay click = close |
 
+**View transitions (STYLE.md §2.5):** apps/options swaps are animated — the
+incoming view slides in (forward = from the right, back = from the left) while
+the outgoing exits opposite, cross-faded over `Theme.durationNormal` OutCubic;
+the card `height` animates to the incoming view's content height. Focus always
+returns to the card after any transition — key handling lives there, never on
+the lists.
+
 ## 5. Error Handling
 
 * No tray items → empty-state hint `"no tray apps registered"` at `Theme.fgMuted`.
@@ -107,4 +114,8 @@ leaving the keyboard.
 * [ ] `l` shows the app's options in a list that displays all entries at once
       (scroll only past the height cap); triggering returns to apps view, still open.
 * [ ] Submenus drill in and out (`l`/`Enter` in, `h`/`Esc` out); `Esc` at root closes.
+* [ ] `h`/`l` keep working across any number of enter/back cycles (focus returns
+      to the card after every transition).
+* [ ] View swaps animate per STYLE.md §2.5 — directional slide + cross-fade,
+      card height animates; no cut.
 * [ ] `Tokens only` audit passes (no hex/glyphs outside `theme/`).

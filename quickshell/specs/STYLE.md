@@ -126,6 +126,24 @@ property string easingStandard: "easeOutCubic"
 property string easingEmphasis: "easeInOutCubic"
 ```
 
+**View transitions (navigation).** When a launcher swaps between in-card views
+(e.g. list ↔ subviews — Tray-Manager pattern), animate the swap instead of cutting:
+
+* **Directional slide:** each view parks on its level's side while inactive —
+  level 0 at `x: -60`, level 1 at `x: +60`; the active view rests at `x: 0`.
+  Forward navigation slides the new view in from the right, back navigation
+  from the left — direction falls out of the parking spots automatically.
+* **Cross-fade:** the outgoing view animates to `opacity: 0`, the incoming to `1`.
+* **Height animation:** the card animates its `height` when the incoming view's
+  content height differs — never snap.
+* All three via `Behavior on …` + `NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic }`.
+* Inactive views set `visible: opacity > 0.01` and `enabled: <active>` so they
+  can neither intercept clicks nor linger on screen.
+
+Keyboard pairing for drill-down hierarchies: `l`/`Right` = **forward**,
+`h`/`Left` = **back** — at every level (SPECS.md general rules; precedent:
+`launchers/Tray-Manager.md` §4).
+
 ---
 
 ## 3. Icons — `theme/Icons.qml`

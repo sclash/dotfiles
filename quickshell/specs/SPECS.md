@@ -14,6 +14,7 @@ The shell replaces Waybar and provides:
 
 * A top bar (`Bar`) with left / center / right groups.
 * Center-screen launchers toggled via `SUPER+<key>`, closed with `Esc`, navigable with vim motions.
+* Launchers with in-card drill-down (nested views) use `h`/`l` as **back/forward at every level**, and animate view swaps per `STYLE.md` §2.5 "View transitions" — convention set by Tray-Manager; apply whenever a launcher gains subviews.
 * Consistent dark/minimal styling (Waybar colours + Omarchy iconography).
 
 We are **not building generic DE scaffolding** — only the shell surface described below.
