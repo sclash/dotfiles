@@ -8,6 +8,8 @@
 
 Center-screen window to manage Hyprland monitors: inspect connected outputs, connect/disconnect, mirror/extend, orientation.
 
+A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`) mirrors monitor state read-only from `HyprService`: `Icons.display` at `Theme.accent` when an external monitor is connected **and enabled** (`externalConnected`), `Theme.fg` when an external output is plugged but not enabled (`externalAvailable`), `Theme.fgDim` when only the reference monitor exists or Hyprland is unavailable. The reference monitor is the built-in panel (`eDP*` / `DSI*` output name); when none exists, the first active output is the reference, so "another monitor" means a second one. Click toggles the launcher (`display`).
+
 ## 2. Window
 
 * `LauncherBase.qml`: `width: 640`, `radius: Theme.roundingLauncher`, vim nav, `/` filter, `Esc` closes.
@@ -16,13 +18,13 @@ Center-screen window to manage Hyprland monitors: inspect connected outputs, con
 
 ### 3.1 Current Monitors
 
-* Source: `hyprctl monitors -j` JSON array.
+* Source: `hyprctl monitors -j` JSON array, exposed as `HyprService.monitors`.
 * Each row: `name` (e.g., `eDP-1`, `HDMI-A-1`) + `resolution@refresh` (e.g., `1920x1080@60.05`) + `scale` + `position` (`0x0`) + `focused` badge if `focused === true`.
 * No action here beyond info; disconnect lives in 3.3.
 
 ### 3.2 Available Monitors to Connect
 
-* Source: `hyprctl monitors all -j` or `wlr-randr`/`kscreen-doctor -o` equivalent to list **plugged but not yet enabled** outputs (those with `disabled: true` or absent from `monitors` but present in `hyprctl monitors all`).
+* Source: `hyprctl monitors all -j` (fallback `hyprctl monitors -j`), exposed as `HyprService.availableMonitors` — **plugged but not yet enabled** outputs (those with `disabled: true` or absent from `monitors` but present in `hyprctl monitors all`).
 * Each row: `name` + `preferred mode` (from `availableModes`).
 * **Connect actions** (mutually exclusive modes — pick one):
 
@@ -50,6 +52,7 @@ Center-screen window to manage Hyprland monitors: inspect connected outputs, con
 
 ## 5. Backend Notes
 
+* Monitor listing is owned by `HyprService.qml` (single `Process` for both `monitors -j` and `monitors all -j`, event-driven via Hyprland `monitoradded` / `monitorremoved` / `configreloaded` with a 300 ms debounce). The launcher is a pure view over `HyprService.monitors` / `HyprService.availableMonitors` — no ad-hoc listing `Process`.
 * Hyprland monitor config is **ephemeral** (`keyword`); it does not persist across restarts. That's correct — persistence belongs in `hyprland.lua` `hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "1" })` (already present). The launcher mutates **runtime** state only; users bake persistence by editing `hyprland.lua`.
 * Alternative backends (`wlr-randr`, `kscreen-doctor`) are not required; `hyprctl` is sufficient. If `hyprctl` lacks a needed query (e.g., disconnected outputs), fall back to `hyprctl monitors all -j`.
 

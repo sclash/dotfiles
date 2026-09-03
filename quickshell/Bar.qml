@@ -130,6 +130,33 @@ Scope {
                         width: Theme.barIconSlot
                         height: Theme.barIconSlot
                         radius: Theme.roundingItem
+                        color: dispMA.containsMouse ? Theme.bgHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                        Text {
+                            anchors.centerIn: parent
+                            text: Icons.display
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.barIconSize
+                            color: {
+                                if (!HyprService.available) return Theme.fgDim
+                                if (HyprService.externalConnected) return Theme.accent
+                                if (HyprService.externalAvailable) return Theme.fg
+                                return Theme.fgDim
+                            }
+                        }
+                        MouseArea {
+                            id: dispMA
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.launcherToggleRequested("display")
+                        }
+                    }
+
+                    Rectangle {
+                        width: Theme.barIconSlot
+                        height: Theme.barIconSlot
+                        radius: Theme.roundingItem
                         color: audioMA.containsMouse ? Theme.bgHover : "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
                         RowLayout {

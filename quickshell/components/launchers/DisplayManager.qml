@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import "../../theme"
+import "../../services"
 
 WlrLayershell {
     id: root
@@ -235,14 +236,13 @@ WlrLayershell {
         else if(it.kind==="orient") orient(it.dir)
         else if(it.kind==="refresh") refresh()
     }
-    property var monitors: []
-    property var availableMonitors: []
+    readonly property var monitors: HyprService.monitors
+    readonly property var availableMonitors: HyprService.availableMonitors
     onMonitorsChanged: updateNav()
     onAvailableMonitorsChanged: updateNav()
     function refresh(){
-        monitorsProc.running=true
-        allMonitorsProc.running=true
-        errorText.text=""
+        HyprService.refreshMonitors()
+        errorText.text = HyprService.monitors.length === 0 && HyprService.available ? "hyprctl failed" : ""
     }
     function connectProc(mode, name){
         let cmd=[]
@@ -267,30 +267,6 @@ WlrLayershell {
         else if(dir==="bottom") pos="0x1080"
         connectCmdProc.command=["hyprctl","keyword","monitor", name+",preferred,"+pos+",1"]
         connectCmdProc.running=true
-    }
-    property Process monitorsProc: Process {
-        command: ["hyprctl","monitors","-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const arr=JSON.parse(this.text)
-                    monitors = arr.map(m=> ({ name: m.name, mode: (m.width+"x"+m.height+"@"+m.refreshRate), scale: m.scale, pos: m.x+"x"+m.y, focused: m.focused }))
-                } catch(e){ errorText.text="hyprctl failed"; monitors=[] }
-            }
-        }
-    }
-    property Process allMonitorsProc: Process {
-        command: ["sh","-c","hyprctl monitors all -j 2>/dev/null || hyprctl monitors -j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const arr=JSON.parse(this.text)
-                    const currentNames = monitors.map(m=>m.name)
-                    const avail = arr.filter(m=> currentNames.indexOf(m.name)===-1 || m.disabled)
-                    availableMonitors = avail.map(m=> ({ name: m.name, mode: m.width ? (m.width+"x"+m.height) : "preferred" }))
-                } catch(e){ availableMonitors=[] }
-            }
-        }
     }
     property Process connectCmdProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }
     property Process disconnectProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }

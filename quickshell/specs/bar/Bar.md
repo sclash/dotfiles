@@ -46,10 +46,11 @@ itself never captures text input.
   2. `Audio.md` (`AudioIcon.qml`)
   3. `Bluetooth.md` (`BluetoothIcon.qml`)
   4. USB storage indicator (`launchers/Usb-Manager.md` — inline in `Bar.qml`, `UsbService`)
-  5. `Wifi.md` (`WifiIcon.qml`)
-  6. `KeyBoard.md` (`KeyboardIcon.qml`)
-  7. `Battery` (`BatteryIcon.qml`, rightmost — hidden when no battery present)
-  8. `SystemTray` (`AppTray.qml` tray overflow or inline — see decision below)
+  5. Display indicator (`launchers/Display-manager.md` — inline in `Bar.qml`, `HyprService`)
+  6. `Wifi.md` (`WifiIcon.qml`)
+  7. `KeyBoard.md` (`KeyboardIcon.qml`)
+  8. `Battery` (`BatteryIcon.qml`, rightmost — hidden when no battery present)
+  9. `SystemTray` (`AppTray.qml` tray overflow or inline — see decision below)
 
 Order is normative; do not reorder without updating `SPECS.md:5.1`.
 
@@ -63,6 +64,7 @@ Each bar icon is a **pure view** over a shared singleton service:
 | Audio | `AudioService` / `Pipewire` | `volume`, `muted`, `sinkName` |
 | Bluetooth | `BluetoothService` | `powered`, `connected`, `connectedCount` |
 | USB storage | `UsbService` | `available`, `hasStorage`, `anyMounted`, `busyNode` |
+| Display | `HyprService` | `available`, `externalAvailable`, `externalConnected` |
 | Keyboard | Hyprland IPC | `layoutName` (e.g., `US`, `IT`) |
 | Battery | `BatteryService` | `capacity`, `charging`, `available` |
 | Perf | `PerfService` | `cpu/gpu`, `mem`, `disk`, `temp` |
@@ -77,6 +79,8 @@ No icon polls on its own; only services poll or listen to DBus/PipeWire.
   * Wifi → `Network-Center` (`SUPER+w`)
   * Audio → `Audio-Center` (`SUPER+a`)
   * Bluetooth → `Bluetooth-Center` (`SUPER+b`)
+  * USB storage → `USB-Manager` (`SUPER+u`)
+  * Display → `Display-Manager` (`SUPER+d`)
   * Keyboard → `hyprctl switchxkblayout … next` (no launcher; cycles layout)
   * Perf handle → expands/collapses the perf drawer (also `SUPER+p`)
   * Date → toggles `Notification-Center` (`SUPER+SHIFT+a`) — see `Date.md`

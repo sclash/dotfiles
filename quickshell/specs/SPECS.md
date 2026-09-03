@@ -197,12 +197,13 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 | Keyboard | Right | `bar/KeyBoard.md` | Hyprland IPC |
 | Bluetooth | Right | `bar/Bluetooth.md` | `BluetoothService` |
 | USB storage indicator (next to Bluetooth) | Right | `launchers/Usb-Manager.md` | `UsbService` |
+| Display indicator (next to USB) | Right | `launchers/Display-manager.md` | `HyprService` |
 | Wifi | Right | `bar/Wifi.md` | `NetworkService` |
 | Audio | Right | `bar/Audio.md` | `AudioService` (PipeWire) |
 | Perf drawer (CPU/RAM/Disk/Temp) | Right (collapsible) | `bar/Bar-performance.md` | `PerfService` |
 | Notification bell (next to Date) | Center | `bar/Date.md` | `NotifService` |
 
-Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | Bluetooth | USB | Wifi | Keyboard | Tray`.
+Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | Bluetooth | USB | Display | Wifi | Keyboard | Tray`.
 
 ### 5.2 Launchers (`./launchers`)
 
