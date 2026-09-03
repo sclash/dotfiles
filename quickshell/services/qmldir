@@ -6,3 +6,4 @@ singleton PerfService 1.0 PerfService.qml
 singleton NotifService 1.0 NotifService.qml
 singleton HyprService 1.0 HyprService.qml
 singleton BatteryService 1.0 BatteryService.qml
+singleton UsbService 1.0 UsbService.qml

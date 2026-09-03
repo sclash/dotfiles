@@ -23,6 +23,7 @@ Scope {
     BluetoothCenter { id: bluetoothCenter }
     AudioCenter { id: audioCenter }
     DisplayManager { id: displayManager }
+    UsbManager { id: usbManager }
     NotificationCenter { id: notificationCenter }
     ShutdownLauncher { id: shutdownLauncher }
     KeyLauncher { id: keyLauncher }
@@ -46,6 +47,7 @@ Scope {
             if (except !== "bluetooth") bluetoothCenter.close()
             if (except !== "audio") audioCenter.close()
             if (except !== "display") displayManager.close()
+            if (except !== "usb") usbManager.close()
             if (except !== "notification") notificationCenter.close()
             if (except !== "shutdown") shutdownLauncher.close()
             if (except !== "keys" && except !== "key") keyLauncher.close()
@@ -58,6 +60,7 @@ Scope {
             else if (name === "bluetooth") { if (bluetoothCenter.isOpen) bluetoothCenter.close(); else { closeAllExcept("bluetooth"); bluetoothCenter.open() } }
             else if (name === "audio") { if (audioCenter.isOpen) audioCenter.close(); else { closeAllExcept("audio"); audioCenter.open() } }
             else if (name === "display") { if (displayManager.isOpen) displayManager.close(); else { closeAllExcept("display"); displayManager.open() } }
+            else if (name === "usb") { if (usbManager.isOpen) usbManager.close(); else { closeAllExcept("usb"); usbManager.open() } }
             else if (name === "notification") { if (notificationCenter.isOpen) notificationCenter.close(); else { closeAllExcept("notification"); notificationCenter.open() } }
             else if (name === "shutdown") { if (shutdownLauncher.isOpen) shutdownLauncher.close(); else { closeAllExcept("shutdown"); shutdownLauncher.open() } }
             else if (name === "keys" || name === "key") { if (keyLauncher.isOpen) keyLauncher.close(); else { closeAllExcept("keys"); keyLauncher.open() } }
@@ -68,7 +71,7 @@ Scope {
 
         function closeAll(): void {
             appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close()
-            displayManager.close(); notificationCenter.close(); shutdownLauncher.close(); keyLauncher.close(); controlCenter.close()
+            displayManager.close(); usbManager.close(); notificationCenter.close(); shutdownLauncher.close(); keyLauncher.close(); controlCenter.close()
         }
 
         function open(name: string): void { toggle(name) }
@@ -78,6 +81,7 @@ Scope {
             else if (name==="bluetooth") bluetoothCenter.close()
             else if (name==="audio") audioCenter.close()
             else if (name==="display") displayManager.close()
+            else if (name==="usb") usbManager.close()
             else if (name==="notification") notificationCenter.close()
             else if (name==="shutdown") shutdownLauncher.close()
             else if (name==="keys") keyLauncher.close()

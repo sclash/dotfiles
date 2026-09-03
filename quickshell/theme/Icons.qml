@@ -29,6 +29,11 @@ QtObject {
     property string batteryCharging:  "󰂄"
     property string batteryPlugged:   "󰚥"
     property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"
+    // USB
+    property string usb:              "\uf0553"
+    property string usbDrive:         "\uf129e"
+    property string usbPort:          "\uf11f0"
+    property string eject:            "\uf01ea"
     // Custom app icons — per-workspace tray overrides (see Workspaces.qml)
     property url appGhostty: Qt.resolvedUrl("../icons/ghostty-light.svg")
     property url appChrome: Qt.resolvedUrl("../icons/googlechrome-dark.svg")

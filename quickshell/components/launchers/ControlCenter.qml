@@ -171,7 +171,8 @@ WlrLayershell {
         { label: "Notifications", key: "SUPER+SHIFT+A", icon: Icons.notification, target: "notification" },
         { label: "App Launcher", key: "SUPER+r", icon: Icons.search, target: "app" },
         { label: "Shutdown", key: "SUPER+q", icon: Icons.power, target: "shutdown" },
-        { label: "Key Hints", key: "SUPER+k", icon: Icons.key, target: "keys" }
+        { label: "Key Hints", key: "SUPER+k", icon: Icons.key, target: "keys" },
+        { label: "USB", key: "SUPER+u", icon: Icons.usb, target: "usb" }
     ]
     property var filteredModel: entries
     function fuzzyMatch(text, q){
