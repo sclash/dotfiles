@@ -18,6 +18,15 @@ Rectangle {
     readonly property var n: toastData && toastData.notification ? toastData.notification : null
     readonly property string summaryText: toastData ? (toastData.summary || "") : ""
     readonly property string bodyText: toastData ? (toastData.body || "") : ""
+    readonly property string iconUrl: {
+        if (!toastData || !toastData.appIcon) return ""
+        const a = String(toastData.appIcon)
+        if (a.indexOf("file://") === 0) return a
+        if (a.indexOf("/") === 0) return "file://" + a
+        return ""
+    }
+    property bool iconFailed: false
+    onIconUrlChanged: iconFailed = false
 
     opacity: 0
     Behavior on opacity { NumberAnimation { duration: Theme.durationFast; easing.type: Easing.OutCubic } }
@@ -40,12 +49,25 @@ Rectangle {
             Layout.fillWidth: true
             spacing: Theme.gapS
 
+            Image {
+                visible: card.iconUrl !== "" && !card.iconFailed
+                source: card.iconUrl
+                asynchronous: true
+                width: 16
+                height: 16
+                fillMode: Image.PreserveAspectFit
+                mipmap: true
+                Layout.preferredWidth: 16
+                Layout.preferredHeight: 16
+                onStatusChanged: if (status === Image.Error) card.iconFailed = true
+            }
+
             Text {
-                text: toastData && toastData.appIcon ? toastData.appIcon : Icons.notification
+                visible: card.iconUrl === "" || card.iconFailed
+                text: Icons.notification
                 font.family: Theme.fontFamily
                 font.pixelSize: 16
                 color: Theme.fgMuted
-                visible: text.length > 0
             }
 
             Text {
