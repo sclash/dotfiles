@@ -99,6 +99,9 @@
     ++ (with pkgs-unstable; [
       # markitdown-mcp
       rtk
+      # https://github.com/rtk-ai/rtk
+      # rtk init -g
+      # rtk init -g opencode
       zennotes-desktop
     ]);
 
