@@ -1,0 +1,9 @@
+# Walker user config — merged over walker's built-in defaults.
+# Deployed as ~/.config/walker via home.file out-of-store symlink
+# (nixos/programs/quickshell.nix). Styling tokens mirror quickshell/theme/Theme.qml.
+
+theme = "quickshell"         # -> themes/quickshell/style.css
+force_keyboard_focus = true  # parity with LauncherBase keyboardFocus Exclusive
+
+[placeholders]
+"default" = { input = "Search apps…", list = "No results" }

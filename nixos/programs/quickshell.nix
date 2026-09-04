@@ -40,5 +40,11 @@
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell";
       force = true;
     };
+    # Walker (AppLauncher backend) — config.toml + themes/, raw files in
+    # quickshell/walker-style/. Out-of-store: CSS edits only need a walker restart.
+    ".config/walker" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell/walker-style";
+      force = true;
+    };
   };
 }

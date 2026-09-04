@@ -76,9 +76,7 @@
       gemini-cli
       ffmpeg
 
-      impala
       fastfetch
-      bluetui
       lazydocker
       lazysql
       lazyssh
@@ -97,7 +95,6 @@
       # tailwindcss-language-server
       # python313Packages.markitdown
       # playwright
-      telegram-desktop
     ])
     ++ (with pkgs-unstable; [
       # markitdown-mcp

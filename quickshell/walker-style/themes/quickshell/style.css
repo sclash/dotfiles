@@ -1,0 +1,208 @@
+/* walker theme "quickshell" — mapped 1:1 from quickshell/theme/Theme.qml
+ * (matte-black Omarchy palette, JetBrainsMono, rounding 7, flat/chromeless).
+ * Selectors per walker 2.16.2 widget tree (resources/themes/default).
+ * Deployed as ~/.config/walker/themes/quickshell/style.css via
+ * nixos/programs/quickshell.nix (out-of-store symlink — edit + restart walker, no rebuild).
+ *
+ * Theme.qml token reference:
+ *   bgLauncher #000000 · bgBarAlt #1e1e1e · border #2a2a2a · borderActive #3a3a3a
+ *   borderSelected #4a4a4a · fg #bebebe · fgMuted #8a8a8d · fgDim #555555
+ *   accent/fgBright #eaeaea · warning #c63d3d · critical #D35F5F · bgCritical #631e1e
+ *   overlay #00000099 · rounding 7 · padM 10 · fontFamily JetBrainsMono Nerd Font
+ *   fontSizeLauncher 14 · fontSizeSmall 11
+ */
+
+@define-color window_bg_color #000000;   /* Theme.bgLauncher */
+@define-color accent_bg_color #4a4a4a;   /* Theme.borderSelected */
+@define-color theme_fg_color #bebebe;    /* Theme.fg */
+@define-color error_bg_color #631e1e;    /* Theme.bgCritical */
+@define-color error_fg_color #D35F5F;    /* Theme.critical */
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font"; /* Theme.fontFamily */
+}
+
+/* Full-surface dim behind the card — Theme.overlay (#00000099).
+ * click_to_close (default) matches LauncherBase's dim-overlay click-to-close. */
+window {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+popover {
+  background: @window_bg_color;
+  border: 1px solid #3a3a3a;              /* Theme.borderActive */
+  border-radius: 7px;                     /* Theme.roundingMenu */
+  padding: 10px;                          /* Theme.padM */
+}
+
+.normal-icons {
+  -gtk-icon-size: 16px;
+}
+
+.large-icons {
+  -gtk-icon-size: 32px;
+}
+
+scrollbar {
+  opacity: 0;
+}
+
+/* Card — LauncherBase: bgLauncher, borderActive, roundingLauncher, padM, no shadow */
+.box-wrapper {
+  box-shadow: none;
+  background: @window_bg_color;
+  padding: 10px;                          /* Theme.padM */
+  border-radius: 7px;                     /* Theme.roundingLauncher */
+  border: 1px solid #3a3a3a;              /* Theme.borderActive */
+}
+
+.preview-box,
+.elephant-hint,
+.placeholder {
+  color: #555555;                         /* Theme.fgDim */
+}
+
+.search-container {
+  border-radius: 7px;                     /* Theme.roundingItem */
+}
+
+.input placeholder {
+  color: #555555;                         /* Theme.fgDim */
+}
+
+.input selection {
+  background: #2a2a2a;                    /* Theme.border */
+}
+
+.input {
+  caret-color: @theme_fg_color;
+  background: @window_bg_color;
+  padding: 10px;                          /* Theme.padM */
+  color: @theme_fg_color;
+  font-size: 14px;                        /* Theme.fontSizeLauncher */
+}
+
+.list {
+  color: @theme_fg_color;
+}
+
+/* Rows — roundingItem + padM */
+.item-box {
+  border-radius: 7px;                     /* Theme.roundingItem */
+  padding: 10px;                          /* Theme.padM */
+}
+
+.item-quick-activation {
+  background: rgba(138, 138, 141, 0.15);  /* Theme.fgMuted @ 15% */
+  border-radius: 5px;
+  padding: 10px;
+}
+
+/* Hover/selected row — bgBarAlt fill + borderSelected outline */
+child:hover .item-box {
+  background: #1e1e1e;                    /* Theme.bgBarAlt */
+}
+
+child:selected .item-box,
+row:selected .item-box {
+  background: #1e1e1e;                    /* Theme.bgBarAlt */
+  border: 1px solid #4a4a4a;              /* Theme.borderSelected */
+}
+
+.item-text {
+  font-size: 14px;                        /* Theme.fontSizeLauncher */
+  color: @theme_fg_color;
+}
+
+.item-subtext {
+  font-size: 11px;                        /* Theme.fontSizeSmall */
+  color: #8a8a8d;                         /* Theme.fgMuted */
+}
+
+.providerlist .item-subtext {
+  font-size: unset;
+  opacity: 0.75;
+}
+
+.item-image-text {
+  font-size: 28px;
+}
+
+.preview {
+  border: 1px solid #2a2a2a;              /* Theme.border */
+  border-radius: 7px;                     /* Theme.roundingItem */
+  color: @theme_fg_color;
+}
+
+.preview .large-icons {
+  -gtk-icon-size: 64px;
+}
+
+.calc .item-text {
+  font-size: 24px;
+}
+
+.symbols .item-image {
+  font-size: 24px;
+}
+
+.todo.done .item-text-box {
+  opacity: 0.25;
+}
+
+.todo.urgent {
+  font-size: 24px;
+  color: #c63d3d;                         /* Theme.warning */
+}
+
+.todo.active {
+  font-weight: bold;
+}
+
+.bluetooth.disconnected {
+  opacity: 0.5;
+}
+
+/* Keybind hints — fgMuted + border */
+.keybinds {
+  padding-top: 10px;
+  border-top: 1px solid #2a2a2a;          /* Theme.border */
+  font-size: 11px;                        /* Theme.fontSizeSmall */
+  color: #8a8a8d;                         /* Theme.fgMuted */
+}
+
+.keybind-button {
+  opacity: 0.5;
+}
+
+.keybind-button:hover {
+  opacity: 0.75;
+}
+
+.keybind-bind {
+  text-transform: lowercase;
+  opacity: 0.35;
+}
+
+.keybind-label {
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid #2a2a2a;              /* Theme.border */
+}
+
+.error {
+  padding: 10px;
+  background: @error_bg_color;
+  color: @error_fg_color;
+}
+
+:not(.calc).current {
+  font-style: italic;
+}
+
+.preview-content.archlinuxpkgs,
+.preview-content.dnfpackages,
+.preview-content.aptpackages {
+  font-family: "JetBrainsMono Nerd Font"; /* Theme.fontFamily */
+}
