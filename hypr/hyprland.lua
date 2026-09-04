@@ -50,6 +50,8 @@ hl.on("hyprland.start", function ()
 		-- hl.exec_cmd("swaync-client --daemon")
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'") --# for GTK4 apps
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'") --# for GTK3 apps
+		--# static block caret (quickshell launchers parity; see quickshell/gtk4/settings.ini)
+		hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-blink false")
 	end
 )
 

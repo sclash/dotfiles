@@ -46,5 +46,11 @@
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell/walker-style";
       force = true;
     };
+    # GTK4 global settings — block caret, no blink (walker search parity).
+    # Raw file in quickshell/gtk4/settings.ini.
+    ".config/gtk-4.0" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell/gtk4";
+      force = true;
+    };
   };
 }

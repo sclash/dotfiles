@@ -44,7 +44,6 @@
 					"options": {
 						"provider": {
 							"order": [
-								"baidu/fp8",
 								"open-inference/fp8",
 								"akashml/fp8"
 							],

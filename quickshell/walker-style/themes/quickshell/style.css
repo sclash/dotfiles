@@ -63,8 +63,24 @@ scrollbar {
   color: #555555;                         /* Theme.fgDim */
 }
 
+/* Search field — KeyLauncher filterBar pattern: one bordered container holding
+ * the search glyph (theme layout.xml override) + entry. bgActive fill,
+ * borderActive outline shifting to borderSelected on focus, roundingItem radius. */
 .search-container {
+  background: @window_bg_color;
+  border: 1px solid #3a3a3a;              /* Theme.borderActive */
   border-radius: 7px;                     /* Theme.roundingItem */
+}
+
+.search-container:focus-within {
+  border-color: #4a4a4a;                  /* Theme.borderSelected */
+}
+
+.search-icon {
+  color: #8a8a8d;                         /* Theme.fgMuted */
+  font-family: "JetBrainsMono Nerd Font"; /* Theme.fontFamily — Icons.search */
+  font-size: 16px;                        /* KeyLauncher icon size */
+  padding-left: 10px;                     /* Theme.padM */
 }
 
 .input placeholder {
@@ -76,8 +92,8 @@ scrollbar {
 }
 
 .input {
-  caret-color: @theme_fg_color;
-  background: @window_bg_color;
+  caret-color: @theme_fg_color;           /* Theme.fg — caret shape is GTK-hardcoded */
+  background: transparent;
   padding: 10px;                          /* Theme.padM */
   color: @theme_fg_color;
   font-size: 14px;                        /* Theme.fontSizeLauncher */
