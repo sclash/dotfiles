@@ -39,6 +39,7 @@
     ./programs/opencode/opencode.nix
     ./programs/quickshell.nix
     ./programs/herdr.nix
+    ./programs/nvim-lsp.nix
     # ./programs/sops.nix
   ];
 
