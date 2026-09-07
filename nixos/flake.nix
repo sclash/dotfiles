@@ -30,7 +30,8 @@
     # my-dotfiles.url = "github:sclash/dotfiles";
 
     my-dotfiles = {
-      url = "github:sclash/dotfiles?ref=home-manager";
+      url = "github:sclash/dotfiles?ref=quickshell";
+      # url = "github:sclash/dotfiles?ref=home-manager";
       # url = "https://github.com/sclash/dotfiles?ref=master";
       # `rev` pins to a specific commit
       # `ref` pins to a branch (optional, defaults to default branch)
@@ -38,11 +39,12 @@
       # ref = "master";  # track master branch
     };
 
-    # neovimrc = {
-    #   url = "github:sclash/neovimrc?ref=master";
-    #   # url = "https://github.com/sclash/neovimrc?ref=master";
-    #   flake = false; # if the repo is not a flake
-    # };
+    neovimrc = {
+      url = "github:sclash/neovimrc?ref=native";
+      # url = "github:sclash/neovimrc?ref=master";
+      # url = "https://github.com/sclash/neovimrc?ref=master";
+      flake = false; # if the repo is not a flake
+    };
     #    ashell = {
     # url = "github:MalpenZibo/ashell";
     #    };
