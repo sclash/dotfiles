@@ -239,12 +239,12 @@ in
       "${claude-plugins-official}/external_plugins/playwright"
       superpowers
       # firecrawl
-      claude-mem
+      # claude-mem
       # context-mode-clean
-      context-mode
-      caveman
-      wshobson-agents
-      "${wshobson-agents}/plugins/data-engineering"
+      # context-mode
+      # caveman
+      # wshobson-agents
+      # "${wshobson-agents}/plugins/data-engineering"
       ecc
     ];
 
