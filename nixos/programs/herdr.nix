@@ -3,6 +3,7 @@
   lib,
   pkgs,
   pkgs-unstable,
+  pkgs-master,
   # my-dotfiles,
   ...
 }:
@@ -10,7 +11,7 @@
 {
   programs.herdr = {
     enable = true;
-    package = pkgs-unstable.herdr;
+    package = pkgs-master.herdr;
   };
 
   home.file = {
