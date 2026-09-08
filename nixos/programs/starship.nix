@@ -12,7 +12,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableNuIntegration = true;
+    enableNushellIntegration = true;
     enableTransience = true;
     configPath = "${config.xdg.configHome}/starship/starship.toml";
   };
