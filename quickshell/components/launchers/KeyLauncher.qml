@@ -9,11 +9,11 @@ WlrLayershell {
     id: root
     property bool isOpen: false
     function open(){ isOpen=true }
-    function close(){ isOpen=false }
+    function close(){ isOpen=false; resetFilter() }
     function toggle(){ if(isOpen) close(); else open() }
 
     anchors { top:true; bottom:true; left:true; right:true }
-    onIsOpenChanged: if(isOpen) Qt.callLater(()=> listView.forceActiveFocus())
+    onIsOpenChanged: if(isOpen) { resetFilter(); Qt.callLater(()=> listView.forceActiveFocus()) }
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
@@ -148,5 +148,10 @@ Keys.onPressed: (e)=>{
         const q=filterField.text.toLowerCase()
         if(!q) return bindings
         return bindings.filter(b=> b.key.toLowerCase().indexOf(q)!==-1 || b.action.toLowerCase().indexOf(q)!==-1)
+    }
+    function resetFilter(){
+        if(filterField) filterField.text = ""
+        if(filterBar) filterBar.visible = false
+        if(listView) { listView.model = bindings; listView.contentY = 0 }
     }
 }
