@@ -39,14 +39,49 @@ WlrLayershell {
     // tray items snapshot (reactive — .values is a notifying property)
     readonly property var trayItems: SystemTray.items ? SystemTray.items.values : []
 
+    // two-step quit (x): first press arms, second press executes. Never quits
+    // on a single press — a stray x only shows the confirm hint.
+    property string confirmQuitId: ""
+    property string quitNote: ""
+    property bool quitBusy: false
+
     function resetView() {
         root.view = 0;
         root.selectedItem = null;
         root.appsIndex = 0;
         root.menuIndex = 0;
+        root.confirmQuitId = "";
+        root.quitNote = "";
         filterBar.visible = false;
         filterField.text = "";
         root.refreshApps();
+    }
+
+    function disarmQuit() {
+        root.confirmQuitId = "";
+    }
+
+    function currentQuitApp() {
+        const idx = root.appRows.length ? Math.min(Math.max(root.appsIndex, 0), root.appRows.length - 1) : -1;
+        return idx >= 0 ? root.appRows[idx] : null;
+    }
+
+    // x / Delete in apps view: arm on first press, execute on second.
+    function requestQuitCurrent() {
+        if (root.quitBusy)
+            return;
+        const it = root.currentQuitApp();
+        if (!it || !it.id)
+            return;
+        if (root.confirmQuitId !== it.id) {
+            root.confirmQuitId = it.id;
+            root.quitNote = "";
+            return;
+        }
+        root.confirmQuitId = "";
+        root.quitBusy = true;
+        root.quitNote = "Quitting " + root.appLabel(it) + "…";
+        quitClient.quitAppById(it.id);
     }
 
     function appLabel(item) {
@@ -60,6 +95,8 @@ WlrLayershell {
         // clamp BOTH sides — a model swap resets ListView.currentIndex to -1,
         // which left appsIndex at -1 and made l/Enter silently no-op after filtering
         root.appsIndex = Math.min(Math.max(root.appsIndex, 0), Math.max(0, root.appRows.length - 1));
+        // the list changed under us — a stale arm could quit the wrong app
+        root.confirmQuitId = "";
     }
 
     function refreshMenu() {
@@ -195,6 +232,24 @@ WlrLayershell {
         onEntriesChanged: root.refreshMenu()
     }
 
+    // dedicated client for x-quit so a quit never clobbers the options view
+    DBusMenuClient {
+        id: quitClient
+
+        onQuitFinished: (outcome) => {
+            root.quitBusy = false;
+            const it = root.currentQuitApp();
+            const label = it ? root.appLabel(it) : "";
+            if (outcome.startsWith("OK menu"))
+                root.quitNote = "Quit " + label;
+            else if (outcome.startsWith("OK term"))
+                root.quitNote = "Terminated " + label + " (no Quit action — process " + outcome.split(" ").pop() + ")";
+            else
+                root.quitNote = "Quit failed (" + outcome.replace(/^FAIL\s*/, "") + ")";
+            root.refreshApps();
+        }
+    }
+
     // --- chrome ----------------------------------------------------------
     anchors {
         top: true
@@ -240,9 +295,13 @@ WlrLayershell {
             const list = inApps ? root.appRows : root.menuRows;
             const idxProp = inApps ? "appsIndex" : "menuIndex";
             if (e.key === Qt.Key_J || e.key === Qt.Key_Down) {
+                if (inApps)
+                    root.disarmQuit(); // moving away cancels a pending quit arm
                 root.moveSelection(list, idxProp, 1);
                 e.accepted = true;
             } else if (e.key === Qt.Key_K || e.key === Qt.Key_Up) {
+                if (inApps)
+                    root.disarmQuit();
                 root.moveSelection(list, idxProp, -1);
                 e.accepted = true;
             } else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) {
@@ -250,6 +309,9 @@ WlrLayershell {
                     root.activateCurrent();
                 else
                     root.activateMenuEntry();
+                e.accepted = true;
+            } else if (inApps && (e.key === Qt.Key_X || e.key === Qt.Key_Delete)) {
+                root.requestQuitCurrent(); // first x arms, second x quits
                 e.accepted = true;
             } else if (inApps && (e.key === Qt.Key_L || e.key === Qt.Key_Right)) {
                 root.openOptions(); // l = see the app's options
@@ -263,6 +325,9 @@ WlrLayershell {
             } else if (e.key === Qt.Key_Escape) {
                 if (filterBar.visible) {
                     root.hideFilter();
+                } else if (root.confirmQuitId !== "") {
+                    root.disarmQuit(); // Esc cancels the arm before anything else
+                    root.quitNote = "";
                 } else if (root.view === 1) {
                     root.backOneLevel();
                 } else {
@@ -415,10 +480,12 @@ WlrLayershell {
                         height: 38
                         radius: Theme.roundingMenu
                         // environment selection style (NetworkCenter parity):
-                        // bgSelected bg + borderSelected border; hover = bgHover
-                        color: appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgSelected : Theme.bgHover
+                        // bgSelected bg + borderSelected border; hover = bgHover.
+                        // an armed quit row gets the warning border instead.
+                        readonly property bool quitArmed: root.confirmQuitId !== "" && appRow.modelData.id === root.confirmQuitId
+                        color: appRow.quitArmed ? Theme.bgHover : (appRow.ListView.isCurrentItem || rowMA.containsMouse ? Theme.bgSelected : Theme.bgHover)
                         border.width: Theme.borderWidth
-                        border.color: appRow.ListView.isCurrentItem ? Theme.borderSelected : "transparent"
+                        border.color: appRow.quitArmed ? Theme.warning : (appRow.ListView.isCurrentItem ? Theme.borderSelected : "transparent")
 
                         MouseArea {
                             id: rowMA
@@ -623,9 +690,20 @@ WlrLayershell {
             }
         }
 
+            // quit confirm / status line (apps view only)
+            Text {
+                visible: root.view === 0 && (root.confirmQuitId !== "" || root.quitNote !== "")
+                text: root.confirmQuitId !== "" ? "press x again to quit — Esc cancels" : root.quitNote
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                font.italic: true
+                color: root.confirmQuitId !== "" ? Theme.warning : Theme.fgMuted
+                Layout.alignment: Qt.AlignHCenter
+            }
+
             // footer hints
             Text {
-                text: "enter open/trigger · l forward · h back · j/k navigate · / filter"
+                text: "enter open/trigger · l forward · h back · j/k navigate · x quit · / filter"
                 font.family: Theme.fontFamily
                 font.pixelSize: 10
                 font.italic: true

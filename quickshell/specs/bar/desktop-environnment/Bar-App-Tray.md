@@ -27,6 +27,7 @@ apps "common to all desktop environments" — i.e., not tied to a single workspa
 |---|---|
 | Left click | `item.activate()` — app-defined (often opens the app) |
 | Right click | themed popup menu (`TrayMenu.qml` + `DBusMenuClient`) — `DBusMenuClient` is a `busctl`-backed DBusMenu client because quickshell 0.3.0 cannot open submenu handles via `QsMenuOpener`. Submenus expand **in place (accordion) on click**; clicking an expanded parent collapses it; leaf entries fire and close |
+| `x` in popup / Quit footer row | two-step quit, same guard as Tray-Manager: first `x`/click arms (`press x again to quit — Esc cancels` in `Theme.warning`), second executes via `DBusMenuClient.quitAppById` (menu Quit entry preferred, else `SIGTERM` the owner PID, never `SIGKILL`); success closes the popup, failure shows `Quit failed (<reason>)` |
 | Hover | tooltip |
 
 No keyboard binding; tray is mouse/touch affordance within a keyboard-driven bar. Optional: `SUPER+t` could focus the tray row for keyboard activation — nice-to-have.

@@ -106,6 +106,50 @@ Item {
         root.childBusy = false;
     }
 
+    // --- graceful quit --------------------------------------------------
+    // outcome: "OK menu <entryId>" | "OK term <pid>" | "FAIL <reason>"
+    signal quitFinished(string outcome)
+    property string quitStatus: ""
+
+    // python: stdin = GetLayout --json=short; stdout = quit entry id or NOQUIT.
+    // prefers top-level Quit/Exit/Shutdown; falls back to a bare Close label;
+    // separators, disabled and invisible entries never match.
+    readonly property string quitPython: "import json,sys,re\nraw=sys.stdin.read()\ntry:\n  obj=json.loads(raw)\n  data=obj.get(\"data\",[])\n  layout=data[1] if len(data)>1 else None\n  kids=layout[2] if layout and len(layout)>2 else []\n  def lab(p):\n    l=(p.get(\"label\") or {}).get(\"data\",\"\") or \"\"\n    return re.sub(r\"_([^_])\",r\"\\1\",l).replace(\"__\",\"_\")\n  best=\"\"\n  fall=\"\"\n  for c in kids:\n    d=c.get(\"data\",[])\n    if len(d)<2:\n      continue\n    pr=d[1] or {}\n    if (pr.get(\"visible\") or {}).get(\"data\",True) is False:\n      continue\n    if (pr.get(\"enabled\") or {}).get(\"data\",True) is False:\n      continue\n    if (pr.get(\"type\") or {}).get(\"data\",\"\"):\n      continue\n    t=lab(pr).strip().lower()\n    if re.match(r\"^(quit|exit|shutdown)\\b\",t):\n      best=str(d[0])\n      break\n    if (not fall) and re.match(r\"^close\\b\",t):\n      fall=str(d[0])\n  print(best or fall or \"NOQUIT\")\nexcept Exception:\n  print(\"NOQUIT\")\n";
+
+    function quitAppById(rawId) {
+        const clean = ((rawId || "").toString()).replace(/[^A-Za-z0-9._-]/g, "");
+        if (clean === "")
+            return;
+        root.quitStatus = "Quitting " + clean + "…";
+        const script = "IID=\"" + clean + "\"\n"
+            + "svc=\"\"; menu=\"\"\n"
+            + "items=$(busctl --user call org.kde.StatusNotifierWatcher /StatusNotifierWatcher org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierWatcher RegisteredStatusNotifierItems 2>/dev/null | tr -d '\"')\n"
+            + "for sp in $items; do\n"
+            + "  case \"$sp\" in */*) ;;\n"
+            + "    *) continue;;\n"
+            + "  esac\n"
+            + "  s=${sp%%/*}; p=/${sp#*/}\n"
+            + "  id=$(timeout 3 busctl --user call \"$s\" \"$p\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Id 2>/dev/null | sed -n 's/.*\"\\(.*\\)\"/\\1/p')\n"
+            + "  if [ \"$id\" = \"$IID\" ]; then svc=\"$s\"; menu=$(timeout 3 busctl --user call \"$s\" \"$p\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Menu 2>/dev/null | sed -n 's/.*\"\\(.*\\)\"/\\1/p'); break; fi\n"
+            + "done\n"
+            + "[ -z \"$svc\" ] && { echo \"FAIL noresolve\"; exit 0; }\n"
+            + "busctl --user call \"$svc\" \"$menu\" com.canonical.dbusmenu AboutToShow i 0 >/dev/null 2>&1\n"
+            + "qid=$(timeout 3 busctl --user --json=short call \"$svc\" \"$menu\" com.canonical.dbusmenu GetLayout iias 0 1 7 label enabled children-display type toggle-type toggle-state visible 2>/dev/null | python3 -c '" + root.quitPython + "')\n"
+            + "if [ -n \"$qid\" ] && [ \"$qid\" != \"NOQUIT\" ]; then timeout 3 busctl --user call \"$svc\" \"$menu\" com.canonical.dbusmenu Event isvu \"$qid\" clicked v s '' 0 >/dev/null 2>&1; echo \"OK menu $qid\"; exit 0; fi\n"
+            + "pid=$(busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus GetConnectionUnixProcessID s \"$svc\" 2>/dev/null | awk '{print $NF}')\n"
+            + "case \"$pid\" in ''|*[!0-9]*) echo \"FAIL nopid\"; exit 0;; esac\n"
+            + "if [ \"$pid\" = \"1\" ]; then echo \"FAIL refused\"; exit 0; fi\n"
+            + "kill -TERM \"$pid\" 2>/dev/null && echo \"OK term $pid\" || echo \"FAIL kill\"\n";
+        quitProc.command = ["sh", "-c", script];
+        quitProc.running = true;
+    }
+
+    function onQuitOutput(text) {
+        const line = (text || "").trim().split("\n")[0] || "";
+        root.quitStatus = line;
+        root.quitFinished(line);
+    }
+
     function trigger(index) {
         root.triggerEntry(root.entries[index]);
     }
@@ -123,10 +167,16 @@ Item {
         eventProc.running = true;
     }
 
+    // JSON parser for GetLayout — VLC ships large `icon-data ay …` blobs that
+    // break the legacy busctl-text parser (labels came back empty, so both
+    // TrayMenu and TrayManager showed blank rows). --json=short + python3
+    // decodes props natively; falls back to parseLayout() text parsing.
+    readonly property string fetchPython: "import json,sys,re\nraw=sys.stdin.read()\ntry:\n  obj=json.loads(raw)\n  data=obj.get(\"data\",[])\n  layout=data[1] if len(data)>1 else None\n  children=layout[2] if layout and len(layout)>2 else []\n  out=[]\n  for c in children:\n    d=c.get(\"data\",[])\n    if len(d)<2:\n      continue\n    cid=d[0]\n    props=d[1] or {}\n    def get(k,default=None):\n      v=props.get(k)\n      return v.get(\"data\",default) if isinstance(v,dict) else default\n    label=get(\"label\",\"\") or \"\"\n    label=re.sub(r\"_([^_])\",r\"\\1\",label).replace(\"__\",\"_\")\n    enabled=get(\"enabled\",True)\n    if enabled is None:\n      enabled=True\n    typ=get(\"type\",\"\") or \"\"\n    cdisp=get(\"children-display\",\"\") or \"\"\n    ttype=get(\"toggle-type\",\"\") or \"\"\n    tstate=get(\"toggle-state\",0) or 0\n    vis=get(\"visible\",True)\n    if vis is None:\n      vis=True\n    out.append({\"id\":cid,\"label\":label,\"enabled\":bool(enabled),\"type\":typ,\"childrenDisplay\":cdisp,\"toggleType\":ttype,\"toggleState\":int(tstate) if isinstance(tstate,int) else 0,\"visible\":bool(vis)})\n  print(json.dumps(out))\nexcept Exception as e:\n  print(\"[]\")\n";
+
     function fetch(id, mode) {
         root.fetchMode = mode || "replace";
         root.busy = true;
-        fetchProc.command = ["sh", "-c", "busctl --user call " + root.svc + " " + root.menuPath + " com.canonical.dbusmenu AboutToShow i " + id + " >/dev/null 2>&1; sleep 0.12; timeout 3 busctl --user call " + root.svc + " " + root.menuPath + " com.canonical.dbusmenu GetLayout iias " + id + " 1 6 label enabled children-display type toggle-type toggle-state 2>/dev/null"];
+        fetchProc.command = ["sh", "-c", "busctl --user call " + root.svc + " " + root.menuPath + " com.canonical.dbusmenu AboutToShow i " + id + " >/dev/null 2>&1; sleep 0.12; timeout 3 busctl --user --json=short call " + root.svc + " " + root.menuPath + " com.canonical.dbusmenu GetLayout iias " + id + " 1 7 label enabled children-display type toggle-type toggle-state visible 2>/dev/null | python3 -c '" + root.fetchPython + "'"];
         fetchProc.running = true;
     }
 
@@ -137,7 +187,7 @@ Item {
     // --- internals ------------------------------------------------------
     property bool pendingRefetch: false
 
-    readonly property string resolveScript: "items=$(busctl --user call org.kde.StatusNotifierWatcher /StatusNotifierWatcher org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierWatcher RegisteredStatusNotifierItems 2>/dev/null | tr -d '\"')\n" + "for sp in $items; do\n" + "  svc=${sp%%/*}; path=/${sp#*/}\n" + "  id=$(timeout 3 busctl --user call \"$svc\" \"$path\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Id 2>/dev/null | tr -d '\"' | awk '{print $NF}')\n" + "  if [ \"$id\" = \"" + root.itemId + "\" ]; then\n" + "    menu=$(timeout 3 busctl --user call \"$svc\" \"$path\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Menu 2>/dev/null | tr -d '\"' | awk '{print $NF}')\n" + "    echo \"$svc $menu\"\n" + "    exit 0\n" + "  fi\n" + "done\n";
+    readonly property string resolveScript: "items=$(busctl --user call org.kde.StatusNotifierWatcher /StatusNotifierWatcher org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierWatcher RegisteredStatusNotifierItems 2>/dev/null | tr -d '\"')\n" + "for sp in $items; do\n" + "  case \"$sp\" in */*) ;;\n" + "    *) continue;;\n" + "  esac\n" + "  svc=${sp%%/*}; path=/${sp#*/}\n" + "  id=$(timeout 3 busctl --user call \"$svc\" \"$path\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Id 2>/dev/null | sed -n 's/.*\"\\(.*\\)\"/\\1/p')\n" + "  if [ \"$id\" = \"" + root.itemId + "\" ]; then\n" + "    menu=$(timeout 3 busctl --user call \"$svc\" \"$path\" org.freedesktop.DBus.Properties Get ss org.kde.StatusNotifierItem Menu 2>/dev/null | sed -n 's/.*\"\\(.*\\)\"/\\1/p')\n" + "    echo \"$svc $menu\"\n" + "    exit 0\n" + "  fi\n" + "done\n";
 
     function unescapeValue(s) {
         // busctl escapes non-ASCII as \NNN octal (UTF-8 bytes) and \" \\ \n
@@ -240,6 +290,40 @@ Item {
             rest = rest.slice(cm[0].length);
             for (;;) {
                 rest = rest.replace(/^\s+/, "");
+                // Legacy text fallback: skip array props (VLC `icon-data ay …`)
+                // before the scalar parser — otherwise the loop breaks and the
+                // entry's later `label` is never read (blank rows).
+                const am = rest.match(/^"((?:[^"\\]|\\.)*)"\s+(a[A-Za-z{}()]*)\s+/);
+                if (am) {
+                    rest = rest.slice(am[0].length);
+                    const at = am[2];
+                    if (at === "ay" || at === "au" || at === "ai" || at === "ax" || at === "ayay") {
+                        const cn = rest.match(/^(\d+)\s*/);
+                        if (cn) {
+                            rest = rest.slice(cn[0].length);
+                            let n = parseInt(cn[1]);
+                            while (n-- > 0) {
+                                const nm = rest.match(/^(-?\d+)\s*/);
+                                if (!nm)
+                                    break;
+                                rest = rest.slice(nm[0].length);
+                            }
+                        }
+                    } else if (at === "as") {
+                        const cn2 = rest.match(/^(\d+)\s*/);
+                        if (cn2) {
+                            rest = rest.slice(cn2[0].length);
+                            let n2 = parseInt(cn2[1]);
+                            while (n2-- > 0) {
+                                const sm = rest.match(/^"((?:[^"\\]|\\.)*)"\s*/);
+                                if (!sm)
+                                    break;
+                                rest = rest.slice(sm[0].length);
+                            }
+                        }
+                    }
+                    continue;
+                }
                 const km = rest.match(/^"((?:[^"\\]|\\.)*)"\s+(s|b|i|u|v)\s+/);
                 if (!km)
                     break;
@@ -300,8 +384,43 @@ Item {
         root.fetch(0);
     }
 
+    function fromJsonEntries(arr) {
+        const rows = [];
+        for (let i = 0; i < arr.length; i++) {
+            const j = arr[i];
+            if (j.visible === false)
+                continue; // DBusMenu visible=false → hidden (VLC has none hidden now, others do)
+            rows.push({
+                "id": j.id,
+                "label": j.label || "",
+                "enabled": j.enabled !== false,
+                "isSeparator": j.type === "separator",
+                "hasChildren": j.childrenDisplay === "submenu",
+                "toggleType": j.toggleType || "",
+                "toggleState": j.toggleState || 0
+            });
+        }
+        return rows;
+    }
+
     function onFetch(text) {
-        const rows = root.parseLayout(text.trim());
+        const t = (text || "").trim();
+        // Preferred: JSON array from fetchPython. Fall back to legacy text parser.
+        if (t.startsWith("[") || t.startsWith("{")) {
+            try {
+                const arr = JSON.parse(t);
+                const rows = root.fromJsonEntries(Array.isArray(arr) ? arr : []);
+                if (root.fetchMode === "expand") {
+                    root.childEntries = rows;
+                    root.childBusy = false;
+                } else {
+                    root.entries = rows;
+                    root.busy = false;
+                }
+                return;
+            } catch (e) {}
+        }
+        const rows = root.parseLayout(t);
         if (root.fetchMode === "expand") {
             root.childEntries = rows;
             root.childBusy = false;
@@ -355,5 +474,18 @@ Item {
         id: eventProc
 
         onExited: root.onEvent()
+    }
+
+    Process {
+        id: quitProc
+
+        stdout: StdioCollector {
+            onStreamFinished: root.onQuitOutput(text)
+        }
+        onExited: function (exitCode) {
+            if (exitCode !== 0 && root.quitStatus.startsWith("Quitting")) {
+                root.onQuitOutput("FAIL quitproc");
+            }
+        }
     }
 }

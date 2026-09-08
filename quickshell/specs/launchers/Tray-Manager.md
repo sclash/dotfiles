@@ -23,7 +23,10 @@ leaving the keyboard.
     only at the menu root); rows = the focused app's menu entries — text, enabled,
     checkbox/radio indicator, submenu chevron (same row language as `TrayMenu.qml`).
 * Row height 38 (apps) / 30 (options); selected row `Theme.bgSelected`, hover `Theme.bgBarAlt`.
-* Footer hint: `enter open/trigger · l forward · h back · j/k navigate · / filter` at `Theme.fgDim`.
+  An armed quit row keeps `Theme.bgHover` with a `Theme.warning` border instead.
+* Footer hint: `enter open/trigger · l forward · h back · j/k navigate · x quit · / filter` at `Theme.fgDim`.
+* Quit confirm/status line above the footer (apps view only): `press x again to quit — Esc cancels`
+  in `Theme.warning` while armed, outcome note in `Theme.fgMuted` afterwards.
 * **Selection style:** environment convention (NetworkCenter/ControlCenter parity) —
   selected row = `Theme.bgSelected` + `Theme.borderSelected` border; hover =
   `Theme.bgHover`, no border. Labels stay plain `Theme.fg` (no weight/brightness
@@ -37,6 +40,12 @@ leaving the keyboard.
     left-clicking its bar icon; the manager stays open.
   * `l`/`Right` (or row right-click): open the **options view** for that app —
     same entries as right-clicking its bar icon; `!hasMenu` → `secondaryActivate()`.
+  * `x`/`Delete`: two-step quit — first press **arms** (warning border + confirm
+    hint, nothing happens), second press **executes** via `DBusMenuClient.quitAppById`.
+    Quit prefers the app's own top-level Quit/Exit entry (graceful `Event`), else
+    `SIGTERM`s the menu owner's bus PID (never `SIGKILL`). Moving selection,
+    filtering, `Esc`, or leaving the view disarms. The manager stays open;
+    the row vanishes via the normal tray update.
 * **Options view**
   * Rows source: `DBusMenuClient` (`components/launchers/DBusMenuClient.qml`) — a
     `busctl`-backed `org.canonical.dbusmenu` client. Required because quickshell
@@ -62,8 +71,10 @@ leaving the keyboard.
 
 | Key | Context | Action |
 |---|---|---|
-| `j/k`, `Up/Down` | both views | move selection (real `currentIndex`, skips separators) |
+| `j/k`, `Up/Down` | both views | move selection (real `currentIndex`, skips separators; in apps view also disarms a quit arm) |
 | `Enter` | apps view | `item.activate()` — open the app (stays open) |
+| `x`, `Delete` | apps view | arm quit on first press, execute on second (`Esc`/move/filter disarms) |
+| `Esc` | apps view, quit armed | cancel the arm (does not close) |
 | `l`, `Right` | apps view | open options view (`!hasMenu` → `secondaryActivate()`) |
 | `Enter` | options view | trigger entry / drill into submenu |
 | `l`, `Right` | options view | **forward only** — drill into a submenu (never triggers) |
@@ -90,6 +101,9 @@ the lists.
 * Menu missing/unloadable (`DBusMenuClient` resolves nothing) → hint row
   `"no options available"` at `Theme.fgMuted`; while fetching → `"loading menu…"`;
   `Esc` still returns.
+* Quit failure (`FAIL noresolve/nopid/kill/quitproc`) → status note `Quit failed (<reason>)`,
+  manager stays open; quit uses its own `DBusMenuClient` instance so the options
+  view state is never disturbed.
 * Menu entries arriving async never resize the card below its minimum; rows are
   plain delegates (no `Loader` required-property pitfalls).
 * Stale selection (tray item vanishes while open) → snap back to apps view.
@@ -117,6 +131,8 @@ the lists.
 * [ ] `l` shows the app's options in a list that displays all entries at once
       (scroll only past the height cap); triggering returns to apps view, still open.
 * [ ] Submenus drill in and out (`l`/`Enter` in, `h`/`Esc` out); `Esc` at root closes.
+* [ ] `x` arms (warning border + hint, app untouched) and `x` again quits via the
+      app's Quit entry or `SIGTERM` fallback; `Esc`/move/filter cancels the arm.
 * [ ] `h`/`l` keep working across any number of enter/back cycles (focus returns
       to the card after every transition).
 * [ ] View swaps animate per STYLE.md §2.5 — directional slide + cross-fade,

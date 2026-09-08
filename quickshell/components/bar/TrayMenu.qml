@@ -21,12 +21,38 @@ PopupWindow {
     function openFor(item, anchorItem) {
         root.trayItem = item;
         root.anchorItem = anchorItem;
+        root.quitArm = "";
+        root.quitNote = "";
         menuClient.openForItem(item);
         visible = true;
     }
 
     function close() {
         visible = false;
+    }
+
+    // two-step quit (x): first press/click arms, second executes. A stray x
+    // only shows the confirm hint — it never quits on its own.
+    property string quitArm: ""
+    property string quitNote: ""
+    property bool quitBusy: false
+
+    function disarmQuit() {
+        root.quitArm = "";
+    }
+
+    function requestQuit() {
+        if (root.quitBusy || !root.trayItem || !root.trayItem.id)
+            return;
+        if (root.quitArm !== root.trayItem.id) {
+            root.quitArm = root.trayItem.id;
+            root.quitNote = "";
+            return;
+        }
+        root.quitArm = "";
+        root.quitBusy = true;
+        root.quitNote = "Quitting…";
+        quitClient.quitAppById(root.trayItem.id);
     }
 
     // --- window ------------------------------------------------------
@@ -45,11 +71,27 @@ PopupWindow {
     anchor.gravity: Edges.Bottom
     anchor.margins.top: Theme.padXS
 
-    onVisibleChanged: if (!visible)
-        menuClient.openForItem(null)
+    onVisibleChanged: if (!visible) {
+        menuClient.openForItem(null);
+        root.quitArm = "";
+        root.quitNote = "";
+    }
 
     DBusMenuClient {
         id: menuClient
+    }
+
+    // dedicated client for x-quit so quitting never disturbs the open menu
+    DBusMenuClient {
+        id: quitClient
+
+        onQuitFinished: (outcome) => {
+            root.quitBusy = false;
+            if (outcome.startsWith("OK"))
+                root.close(); // app is gone — dismiss the popup
+            else
+                root.quitNote = "Quit failed (" + outcome.replace(/^FAIL\s*/, "") + ")";
+        }
     }
 
     // flat display model: root entries with expanded children inline
@@ -83,10 +125,20 @@ PopupWindow {
         border.color: Theme.borderActive
 
         Keys.onEscapePressed: {
-            if (menuClient.expandedId !== -1)
+            if (root.quitArm !== "") {
+                root.disarmQuit();
+                root.quitNote = "";
+            } else if (menuClient.expandedId !== -1)
                 menuClient.collapseExpanded();
             else
                 root.close();
+        }
+
+        Keys.onPressed: (e) => {
+            if (e.key === Qt.Key_X) {
+                root.requestQuit();
+                e.accepted = true;
+            }
         }
 
         Column {
@@ -238,6 +290,48 @@ PopupWindow {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.fgMuted
+            }
+
+            // quit footer — same two-step guard as the x key
+            Rectangle {
+                width: root.menuWidth
+                height: 30
+                radius: Theme.roundingMenu
+                color: quitMA.containsMouse ? Theme.bgBarAlt : "transparent"
+                border.width: root.quitArm !== "" ? Theme.borderWidth : 0
+                border.color: Theme.warning
+
+                MouseArea {
+                    id: quitMA
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.requestQuit()
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.padM
+                    anchors.rightMargin: Theme.padM
+                    spacing: Theme.gapS
+
+                    Text {
+                        text: Icons.close
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: root.quitArm !== "" ? Theme.warning : Theme.fgMuted
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.quitNote !== "" ? root.quitNote : (root.quitArm !== "" ? "press x again to quit — Esc cancels" : "Quit (x)")
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.italic: true
+                        color: root.quitArm !== "" ? Theme.warning : Theme.fgMuted
+                        elide: Text.ElideRight
+                    }
+                }
             }
         }
     }
