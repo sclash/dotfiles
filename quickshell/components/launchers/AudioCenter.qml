@@ -319,10 +319,12 @@ WlrLayershell {
         Qt.callLater(()=> mainCol.forceActiveFocus())
     }
     function adjustSel(delta){
+        const step = delta < 0 ? -0.05 : 0.05
         const it = navItems[selIndex]
         if(!it) return
-        if(it.kind==="volMinus"||it.kind==="volSlider"||it.kind==="volPlus"){ AudioService.adjustVolume(it.kind==="volMinus"?-0.05: it.kind==="volPlus"?0.05:0) }
-        else if(it.kind==="micMinus"||it.kind==="micSlider"||it.kind==="micPlus"){ if(AudioService.source&&AudioService.source.audio){ AudioService.source.audio.volume=Math.max(0,Math.min(1,AudioService.source.audio.volume+(it.kind==="micMinus"?-0.05: it.kind==="micPlus"?0.05:0))) } }
+        if(it.kind==="volMinus"||it.kind==="volSlider"||it.kind==="volPlus"){ AudioService.adjustVolume(step) }
+        else if(it.kind==="micMinus"||it.kind==="micSlider"||it.kind==="micPlus"){ if(AudioService.source&&AudioService.source.audio){ AudioService.source.audio.volume=Math.max(0,Math.min(1,AudioService.source.audio.volume+step)) } }
+        else { AudioService.adjustVolume(step) }
     }
     function ensureVisible(){
         const it = navItems[selIndex]
