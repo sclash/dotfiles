@@ -569,6 +569,16 @@
       force = true;
       # recursive = true;
     };
+    ".config/opencode/plugins" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/plugins";
+      force = true;
+      # recursive = true;
+    };
+    ".config/opencode/tools" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/tools";
+      force = true;
+      # recursive = true;
+    };
     ".config/opencode/agents" = {
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agents";
       force = true;
