@@ -26,6 +26,7 @@ Scope {
     UsbManager { id: usbManager }
     NotificationCenter { id: notificationCenter }
     ShutdownLauncher { id: shutdownLauncher }
+    PowerCenter { id: powerCenter }
     KeyLauncher { id: keyLauncher }
     TrayManager { id: trayManager }
     ControlCenter {
@@ -51,6 +52,7 @@ Scope {
             if (except !== "usb") usbManager.close()
             if (except !== "notification") notificationCenter.close()
             if (except !== "shutdown") shutdownLauncher.close()
+            if (except !== "power") powerCenter.close()
             if (except !== "keys" && except !== "key") keyLauncher.close()
             if (except !== "control") controlCenter.close()
             if (except !== "tray") trayManager.close()
@@ -65,6 +67,7 @@ Scope {
             else if (name === "usb") { if (usbManager.isOpen) usbManager.close(); else { closeAllExcept("usb"); usbManager.open() } }
             else if (name === "notification") { if (notificationCenter.isOpen) notificationCenter.close(); else { closeAllExcept("notification"); notificationCenter.open() } }
             else if (name === "shutdown") { if (shutdownLauncher.isOpen) shutdownLauncher.close(); else { closeAllExcept("shutdown"); shutdownLauncher.open() } }
+            else if (name === "power") { if (powerCenter.isOpen) powerCenter.close(); else { closeAllExcept("power"); powerCenter.open() } }
             else if (name === "keys" || name === "key") { if (keyLauncher.isOpen) keyLauncher.close(); else { closeAllExcept("keys"); keyLauncher.open() } }
             else if (name === "control") { if (controlCenter.isOpen) controlCenter.close(); else { closeAllExcept("control"); controlCenter.open() } }
             else if (name === "tray") { if (trayManager.isOpen) trayManager.close(); else { closeAllExcept("tray"); trayManager.open() } }
@@ -74,7 +77,7 @@ Scope {
 
         function closeAll(): void {
             appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close()
-            displayManager.close(); usbManager.close(); notificationCenter.close(); shutdownLauncher.close(); keyLauncher.close(); controlCenter.close(); trayManager.close()
+            displayManager.close(); usbManager.close(); notificationCenter.close(); shutdownLauncher.close(); powerCenter.close(); keyLauncher.close(); controlCenter.close(); trayManager.close()
         }
 
         function open(name: string): void { toggle(name) }
@@ -87,6 +90,7 @@ Scope {
             else if (name==="usb") usbManager.close()
             else if (name==="notification") notificationCenter.close()
             else if (name==="shutdown") shutdownLauncher.close()
+            else if (name==="power") powerCenter.close()
             else if (name==="keys") keyLauncher.close()
             else if (name==="control") controlCenter.close()
             else if (name==="tray") trayManager.close()

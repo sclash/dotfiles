@@ -20,8 +20,8 @@ Collapsible metrics strip in the **right pill**, hidden by default to keep the b
   ```
   Order is normative: **disk → cpu → memory → temperature → endpoint bar** — matches Waybar `group/expand.modules: [custom/expand, disk, cpu, memory, temperature, custom/endpoint]`.
 * **Toggle triggers:**
-  1. Click on ``/`` handle.
-  2. `SUPER+p` (Hyprland bind → `quickshell ipc call perf toggle`).
+  1. Click on `  /  ` handle.
+  2. `SUPER+SHIFT+p` (Hyprland bind → `quickshell ipc call perf toggle`; `SUPER+p` toggles Power-Center).
   3. Hover is **not** a toggle — click only, to avoid accidental expand.
 * **Animation:** `transition-duration: Theme.durationDrawer (600ms)`, `easeOutQuint`. Prefer `Behavior on width` or `NumberAnimation` on a `RowLayout` width. Launcher-style implicit resize is acceptable if Waybar `transition-to-left: true` parity is preserved (drawer expands leftwards).
 
@@ -83,7 +83,7 @@ Expanded:   [  💿 12Gb 34%  󰻠 18% 0.42   3.2GiB 41%   52°C  |]
 
 ## 6. Interaction
 
-* Click handle → `PerfService.toggle()` + `launcher` IPC only for `SUPER+p` path; both toggle the same `expanded` property.
+* Click handle → `PerfService.toggle()` + `launcher` IPC only for `SUPER+SHIFT+p` path; both toggle the same `expanded` property.
 * Hover on any metric → tooltip with more detail (e.g., CPU per-core, memory `free -h`, disk `df -h`).
 * No keyboard focus inside the drawer — it's display-only. Full details live elsewhere if needed.
 
@@ -95,7 +95,7 @@ Expanded:   [  💿 12Gb 34%  󰻠 18% 0.42   3.2GiB 41%   52°C  |]
 ## 8. Acceptance
 
 * [ ] Collapsed shows only ``; expanded shows four metrics + handle + endpoint in the specified order.
-* [ ] `SUPER+p` and click both toggle; animation is 600ms `easeOutQuint`.
+* [ ] `SUPER+SHIFT+p` and click both toggle; animation is 600ms `easeOutQuint`.
 * [ ] No polling when collapsed (verified via `ps` / `PerfService` timer `running`).
 * [ ] Colours and `blink` on critical match `waybar/style.css` parity.
 * [ ] Temperature falls back to `--°C` when no sensor.

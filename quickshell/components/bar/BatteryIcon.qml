@@ -6,6 +6,7 @@ import "../../services"
 Rectangle {
     id: root
     visible: BatteryService.available
+    signal clicked()
     height: Theme.barIconSlot
     Layout.preferredWidth: batRow.implicitWidth + 14
     radius: Theme.roundingItem
@@ -60,5 +61,6 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
     }
 }

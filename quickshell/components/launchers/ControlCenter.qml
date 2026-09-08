@@ -173,6 +173,7 @@ WlrLayershell {
         { label: "Shutdown", key: "SUPER+q", icon: Icons.power, target: "shutdown" },
         { label: "Key Hints", key: "SUPER+/", icon: Icons.key, target: "keys" },
         { label: "USB", key: "SUPER+u", icon: Icons.usb, target: "usb" },
+        { label: "Power", key: "SUPER+p", icon: Icons.battery, target: "power" },
         { label: "Tray", key: "SUPER+t", icon: Icons.app, target: "tray" }
     ]
     property var filteredModel: entries

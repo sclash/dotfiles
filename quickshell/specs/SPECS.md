@@ -40,7 +40,7 @@ We are **not building generic DE scaffolding** — only the shell surface descri
 | Date / time | `Process { command: ["date"] }` + `Timer` | `Bar.qml:27-50` already does this; refine to `Qt.formatDateTime` |
 | Launchers (center overlay) | `PanelWindow { anchors.centerIn }` or `PopupWindow` + Hyprland `layerrule` | Standard Quickshell launcher pattern |
 | Notifications | `Quickshell.Services.Notifications` | Replaces `swaync` daemon |
-| Battery | `Quickshell.Services.UPower` | Optional — present in Waybar config but not required for this spec |
+| Battery | `services/BatteryService.qml` (sysfs `BAT*`, no UPower dep) | `Power-Center.md` — bar icon + `SUPER+p` launcher |
 | Keybinding dispatch | Hyprland `bind = SUPER, <key>, exec, quickshell ipc call ...` | Quickshell `IpcHandler` |
 | App launcher backend | `elephant` / `walker` already in autostart (`hyprland.lua:38`) | Reuse verbatim; QML just renders results |
 | Multi-monitor | `Variants { model: Quickshell.screens }` | Each screen gets its own `PanelWindow` |
@@ -109,6 +109,7 @@ quickshell/
 │   ├── BluetoothService.qml  # Singleton — BlueZ DBus wrapper
 │   ├── AudioService.qml      # Thin wrapper over Quickshell.Services.Pipewire
 │   ├── PerfService.qml       # CPU/RAM/Disk/Temp polling (pause when hidden)
+│   ├── BatteryService.qml    # Singleton — sysfs BAT* status/capacity/energy/power + time-left estimate
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   └── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
@@ -121,6 +122,7 @@ quickshell/
 │   │   ├── AudioIcon.qml
 │   │   ├── BluetoothIcon.qml
 │   │   ├── KeyboardIcon.qml
+│   │   ├── BatteryIcon.qml
 │   │   └── PerfDrawer.qml
 │   └── launchers/
 │       ├── LauncherBase.qml  # Shared: centered PopupWindow, Esc, vim nav, focus
@@ -131,6 +133,7 @@ quickshell/
 │       ├── ControlCenter.qml
 │       ├── NotificationCenter.qml
 │       ├── ShutdownLauncher.qml
+│       ├── PowerCenter.qml
 │       ├── KeyLauncher.qml
 │       ├── DisplayManager.qml
 │       ├── TrayManager.qml
@@ -161,6 +164,8 @@ Hyprland config (`hyprland.lua`) binds `SUPER+<key>` to `quickshell ipc call <ha
 ```
 bind = SUPER, SPACE, exec, quickshell ipc call launcher toggle control
 bind = SUPER, r, exec, quickshell ipc call launcher toggle app
+bind = SUPER, p, exec, quickshell ipc call launcher toggle power
+bind = SUPER SHIFT, p, exec, quickshell ipc call perf toggle
 ...
 ```
 
@@ -202,10 +207,11 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 | Display indicator (next to USB) | Right | `launchers/Display-manager.md` | `HyprService` |
 | Wifi | Right | `bar/Wifi.md` | `NetworkService` |
 | Audio | Right | `bar/Audio.md` | `AudioService` (PipeWire) |
+| Battery | Right | `launchers/Power-Center.md` (§1 bar icon) | `BatteryService` |
 | Perf drawer (CPU/RAM/Disk/Temp) | Right (collapsible) | `bar/Bar-performance.md` | `PerfService` |
 | Notification bell (next to Date) | Center | `bar/Date.md` | `NotifService` |
 
-Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | Bluetooth | USB | Display | Wifi | Keyboard | Tray`.
+Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | Bluetooth | USB | Display | Wifi | Battery | Keyboard | Tray`.
 
 ### 5.2 Launchers (`./launchers`)
 
@@ -220,6 +226,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
 | Shutdown-Launcher | `SUPER+q` | `Shutdown-Launcher.md` |
+| Power-Center | `SUPER+p` | `Power-Center.md` |
 | Key-Launcher | `SUPER+/` | `Key-Launcher.md` |
 
 All launchers share `LauncherBase.qml` (centered card, 560–640 px wide, `rounding: Theme.roundingLauncher` (= hyprland rounding 7), `focusable: true`, Esc/vim nav).
@@ -245,7 +252,7 @@ Summary:
 1. `theme/Theme.qml` + `Icons.qml` + `services/*` skeletons (shared foundation).
 2. `Bar.qml` shell + `LauncherBase.qml` (so builders have the canvas).
 3. Bar workstreams: `Date` → `Workspaces/AppTray` → `Keyboard` → `Wifi`/`Bluetooth`/`Audio` → `PerfDrawer`.
-4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Notification-Center` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
+4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Power-Center` → `Notification-Center` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
 5. Wire `hyprland.lua` keybindings + `quickshell ipc` handlers end-to-end.
 6. Final pass: perf/idle measurement, memory audit, Herdr demo.
 

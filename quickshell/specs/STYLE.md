@@ -175,6 +175,7 @@ property string keyboard:         "󰌌"
 property string notification:     ""
 property string notificationDnd:  "󰂠"
 property string notificationMuted:"󰂛"
+property string battery:          "󰁹"
 property string batteryCharging:  "󰂄"
 property string batteryPlugged:   "󰚥"
 property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"
@@ -258,7 +259,7 @@ property string control:          "󰀻"
   with `margins: Theme.padM, spacing: Theme.gapM`. Some launchers
   (ControlCenter, NotificationToast) inline the same chrome instead.
 * **Card widths by launcher:** ControlCenter 600 · AudioCenter / NotificationCenter /
-  ShutdownLauncher 620 · KeyLauncher / DisplayManager / BluetoothCenter /
+  ShutdownLauncher / PowerCenter 620 · KeyLauncher / DisplayManager / BluetoothCenter /
   NetworkCenter 640. Height is content-driven (ControlCenter caps at 560).
 
 ### 5.2 Card anatomy

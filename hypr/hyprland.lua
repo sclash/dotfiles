@@ -362,8 +362,8 @@ hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("quickshell ipc call launcher toggle 
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("quickshell ipc call launcher toggle tray"))
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(lock))
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd(browser))
--- perf drawer (was pseudo toggle — moved to SHIFT+P if needed)
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("quickshell ipc call perf toggle"))
+-- power center (was perf drawer — moved to SHIFT+P)
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("quickshell ipc call perf toggle"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({action = "toggle"}))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.layout(notifications))    -- dwindle only
@@ -661,5 +661,6 @@ hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("quickshell ipc call launcher
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call launcher toggle shutdown"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("quickshell ipc call launcher toggle usb"))
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("quickshell ipc call launcher toggle power"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("quickshell ipc call launcher closeAll"))
--- NOTE: SUPER+R (app) and SUPER+P (perf) already bound above        
+-- NOTE: SUPER+R (app) already bound above; SUPER+SHIFT+P toggles the perf drawer

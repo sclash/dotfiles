@@ -82,7 +82,8 @@ No icon polls on its own; only services poll or listen to DBus/PipeWire.
   * USB storage → `USB-Manager` (`SUPER+u`)
   * Display → `Display-Manager` (`SUPER+d`)
   * Keyboard → `hyprctl switchxkblayout … next` (no launcher; cycles layout)
-  * Perf handle → expands/collapses the perf drawer (also `SUPER+p`)
+   * Perf handle → expands/collapses the perf drawer (also `SUPER+SHIFT+p`)
+   * Battery → toggles `Power-Center` (`SUPER+p`) — see `launchers/Power-Center.md`
   * Date → toggles `Notification-Center` (`SUPER+SHIFT+a`) — see `Date.md`
   * Workspaces → `hyprctl dispatch workspace <id>` (handled by `Hyprland` singleton)
 * **Hover** → `Theme.durationNormal` colour transition; tooltip shows detail (see each icon spec).

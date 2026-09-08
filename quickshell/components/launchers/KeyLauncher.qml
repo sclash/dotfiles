@@ -138,7 +138,8 @@ Keys.onPressed: (e)=>{
         { key: "SUPER+/", action: "Key Hints", desc: "this" },
         { key: "SUPER+U", action: "USB Devices", desc: "usb" },
         { key: "SUPER+T", action: "Tray Manager", desc: "tray" },
-        { key: "SUPER+P", action: "Perf Drawer", desc: "metrics" },
+        { key: "SUPER+P", action: "Power Center", desc: "battery" },
+        { key: "SUPER+SHIFT+P", action: "Perf Drawer", desc: "metrics" },
         { key: "SUPER+1..9", action: "Workspace", desc: "switch" },
         { key: "ALT+SHIFT", action: "Keyboard", desc: "layout" },
         { key: "ESC", action: "Close", desc: "dismiss" }

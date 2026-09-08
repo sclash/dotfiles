@@ -26,6 +26,7 @@ QtObject {
     property string notificationDnd:  "󰂠"
     property string notificationMuted:"󰂛"
     // Battery
+    property string battery:          "󰁹"
     property string batteryCharging:  "󰂄"
     property string batteryPlugged:   "󰚥"
     property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"

@@ -251,7 +251,9 @@ Scope {
                         }
                     }
 
-                    BatteryIcon { }
+                    BatteryIcon {
+                        onClicked: root.launcherToggleRequested("power")
+                    }
 
                     Rectangle {
                         height: Theme.barIconSlot
