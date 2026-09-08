@@ -64,6 +64,6 @@ Center pill: the primary temporal anchor. The **date text** opens the
 
 * [ ] Renders `"Mon Aug 31, 21:14:52"` updating every second with no `Process` spawn.
 * [ ] Bell shows correct states: idle / unread / silenced with badge/overlay.
-* [ ] Date-text click and `SUPER+SHIFT+c` both open `Calendar-Launcher`; bell click and `SUPER+SHIFT+a` both open `Notification-Center`.
+* [ ] Date-text click and `SUPER+c` both open `Calendar-Launcher`; bell click and `SUPER+SHIFT+a` both open `Notification-Center`.
 * [ ] Hover shows calendar tooltip (at least `cal` output).
 * [ ] Silenced state is visually distinct.
