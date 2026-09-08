@@ -40,6 +40,8 @@
     ./programs/quickshell.nix
     ./programs/herdr.nix
     ./programs/nvim-lsp.nix
+    ./programs/devenv.nix
+    ./programs/nushell.nix
     # ./programs/sops.nix
   ];
 
