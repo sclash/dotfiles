@@ -120,8 +120,9 @@ WlrLayershell {
             Rectangle {
                 id: currentCard
                 Layout.fillWidth: true
-                height: curCol.implicitHeight + Theme.padM*2
+                implicitHeight: curCol.implicitHeight + Theme.padM*2
                 radius: Theme.roundingItem
+                clip: true
                 readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "current"
                 readonly property bool isConnecting: NetworkService.connecting
                 color: NetworkService.connected ? Theme.bgActive : (isSel ? Theme.bgSelected : Theme.bgHover)
@@ -154,11 +155,47 @@ WlrLayershell {
                             }
                             Text {
                                 visible: NetworkService.connected && !currentCard.isConnecting
-                                text: (NetworkService.ipaddr || "") + (NetworkService.vpnActive ? " · via " + NetworkService.vpnName : "")
+                                text: (NetworkService.ipaddr || "") + (NetworkService.iface !== "" ? " · " + NetworkService.iface : "") + (NetworkService.vpnActive ? " · via " + NetworkService.vpnName : "")
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                                 color: Theme.fgMuted
+                                elide: Text.ElideRight
                             }
+                        }
+                    }
+                    Rectangle {
+                        visible: NetworkService.connected && !currentCard.isConnecting
+                        Layout.fillWidth: true
+                        height: 1
+                        color: Theme.border
+                    }
+                    RowLayout {
+                        visible: NetworkService.connected && !currentCard.isConnecting
+                        Layout.fillWidth: true
+                        spacing: Theme.gapM
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { Layout.fillWidth: true; text: Icons.download + " Receiving"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; text: NetworkService.iface !== "" ? NetworkService.formatRate(NetworkService.rxRate) : "—"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg; elide: Text.ElideRight }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { Layout.fillWidth: true; text: Icons.upload + " Sending"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; text: NetworkService.iface !== "" ? NetworkService.formatRate(NetworkService.txRate) : "—"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg; elide: Text.ElideRight }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { Layout.fillWidth: true; text: Icons.download + " Downloaded"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; text: NetworkService.iface !== "" ? NetworkService.formatBytes(NetworkService.rxTotal) : "—"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg; elide: Text.ElideRight }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { Layout.fillWidth: true; text: Icons.upload + " Uploaded"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; text: NetworkService.iface !== "" ? NetworkService.formatBytes(NetworkService.txTotal) : "—"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fg; elide: Text.ElideRight }
                         }
                     }
                     Text { visible: !NetworkService.connected && !currentCard.isConnecting; text: NetworkService.wifiEnabled ? "Pick a known network or scan" : "Wi-Fi is off — power on to connect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
@@ -167,8 +204,9 @@ WlrLayershell {
                     id: disconnectBtn
                     visible: NetworkService.connected && !currentCard.isConnecting
                     anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
                     anchors.rightMargin: Theme.padM
+                    anchors.topMargin: Theme.padM
                     width: 90; height: 32
                     radius: Theme.roundingItem
                     color: Theme.bgBar

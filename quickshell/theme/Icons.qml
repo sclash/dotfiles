@@ -59,6 +59,9 @@ QtObject {
     property string collapse:         ""
     // VPN
     property string vpn:              "󰖂"
+    // Network traffic
+    property string download:         ""
+    property string upload:           ""
     // Common
     property string search:           ""
     property string close:            ""

@@ -19,6 +19,15 @@ QtObject {
     property var vpnConnections: []
     property string lastError: ""
     property bool wifiEnabled: true
+    property string iface: ""
+    property double rxTotal: 0
+    property double txTotal: 0
+    property double rxRate: 0
+    property double txRate: 0
+    property double _prevRx: -1
+    property double _prevTx: -1
+    property double _prevTs: 0
+    property string _trafficIface: ""
     readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running
     signal dataUpdated()
 
@@ -40,6 +49,15 @@ QtObject {
         out.push(cur)
         return out
     }
+    function formatBytes(b) {
+        let v = Number(b) || 0
+        if (v <= 0) return "0 B"
+        const units = ["B", "KB", "MB", "GB", "TB"]
+        let u = 0
+        while (v >= 1024 && u < units.length - 1) { v /= 1024; u++ }
+        return (u === 0 ? Math.round(v) : (Math.round(v * 10) / 10)) + " " + units[u]
+    }
+    function formatRate(bps) { return formatBytes(bps) + "/s" }
 
     function disconnect() {
         if (!connected || busy) return
@@ -97,7 +115,7 @@ QtObject {
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "nmcli -t -f TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep vpn || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
+        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep vpn || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
@@ -114,18 +132,20 @@ QtObject {
                 const lines = devSection.trim().split("\n").filter(Boolean)
                 let ethName = ""
                 let wifiName = ""
+                let ethIface = ""
+                let wifiIface = ""
                 for (const l of lines) {
                     const segs = l.split(":")
-                    if (segs.length < 3) continue
-                    const t = segs[0], state = segs[1], name = segs.slice(2).join(":")
+                    if (segs.length < 4) continue
+                    const dev = segs[0], t = segs[1], state = segs[2], name = segs.slice(3).join(":")
                     if (state.indexOf("connected") === -1) continue
-                    if (t === "ethernet") { if (!ethName) ethName = name }
-                    else if (t === "wifi") { if (!wifiName) wifiName = name }
+                    if (t === "ethernet") { if (!ethName) { ethName = name; ethIface = dev } }
+                    else if (t === "wifi") { if (!wifiName) { wifiName = name; wifiIface = dev } }
                 }
                 // Ethernet takes precedence when both wired and wifi are connected
-                if (ethName !== "") { root.connected = true; root.type = "ethernet"; root.essid = ethName }
-                else if (wifiName !== "") { root.connected = true; root.type = "wifi"; root.essid = wifiName }
-                else { root.connected = false; root.type = "none"; root.essid = "" }
+                if (ethName !== "") { root.connected = true; root.type = "ethernet"; root.essid = ethName; root.iface = ethIface }
+                else if (wifiName !== "") { root.connected = true; root.type = "wifi"; root.essid = wifiName; root.iface = wifiIface }
+                else { root.connected = false; root.type = "none"; root.essid = ""; root.iface = ""; root.rxRate = 0; root.txRate = 0 }
                 if (wifiPart) {
                     const wlines = wifiPart.trim().split("\n")
                     for (const wl of wlines) if (wl.startsWith("*")) { const segs = wl.split(":"); if (segs.length >= 3) root.signalStrength = parseInt(segs[1]) || -1 }
@@ -136,6 +156,7 @@ QtObject {
                 root.vpnActive = vpnLines.length > 0
                 root.vpnName = vpnLines.length > 0 ? vpnLines[0].split(":")[0] : ""
                 root.dataUpdated()
+                if (root.iface !== "" && !root.trafficProc.running) root.trafficProc.running = true
             }
         }
     }
@@ -226,6 +247,53 @@ QtObject {
     property Process vpnEditorProc: Process { command: ["nm-connection-editor"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
     property Process vpnAddProc: Process { command: ["nm-connection-editor", "-c", "-t", "vpn"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
 
+    // Traffic for the current active connection: totals from /proc/net/dev,
+    // rates derived from successive polls (bytes/sec).
+    property Process trafficProc: Process {
+        command: ["sh", "-c", "cat /proc/net/dev 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const dev = root.iface
+                if (!dev) return
+                const lines = this.text.split("\n")
+                let rx = -1, tx = -1
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim()
+                    if (line.indexOf(dev + ":") !== 0) continue
+                    const fields = line.slice(line.indexOf(":") + 1).trim().split(/\s+/)
+                    if (fields.length < 9) return
+                    rx = parseFloat(fields[0]); tx = parseFloat(fields[8])
+                    break
+                }
+                if (rx < 0 || tx < 0) return
+                const now = Date.now()
+                if (root._trafficIface !== dev) {
+                    root._trafficIface = dev
+                    root._prevRx = rx; root._prevTx = tx; root._prevTs = now
+                    root.rxTotal = rx; root.txTotal = tx
+                    root.rxRate = 0; root.txRate = 0
+                    root.dataUpdated()
+                    return
+                }
+                const dt = (now - root._prevTs) / 1000
+                if (root._prevRx >= 0 && dt > 0.3) {
+                    let drx = rx - root._prevRx, dtx = tx - root._prevTx
+                    if (drx < 0) drx = 0
+                    if (dtx < 0) dtx = 0
+                    root.rxRate = drx / dt
+                    root.txRate = dtx / dt
+                    root._prevRx = rx; root._prevTx = tx; root._prevTs = now
+                }
+                root.rxTotal = rx; root.txTotal = tx
+                root.dataUpdated()
+            }
+        }
+    }
+
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
+    property Timer trafficTimer: Timer {
+        interval: 2000; running: true; repeat: true
+        onTriggered: { if (root.iface !== "" && !root.trafficProc.running) root.trafficProc.running = true }
+    }
     Component.onCompleted: { root.knownProc.running = true; root.vpnProc.running = true }
 }
