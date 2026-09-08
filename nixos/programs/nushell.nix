@@ -11,6 +11,6 @@
 {
   programs.nushell = {
     enable = true;
-    package = pkgs-master.herdr;
+    package = pkgs-master.nushell;
   };
 }
