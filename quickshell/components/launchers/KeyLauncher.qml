@@ -285,29 +285,6 @@ WlrLayershell {
                     else if(e.text==="/") { filterBar.visible=true; filterField.forceActiveFocus(); e.accepted=true }
                 }
             }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.gapL
-                Text {
-                    text: "1-5/tab sections · / filter · j/k scroll · esc close"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    color: Theme.fgDim
-                    Layout.minimumWidth: 0
-                    elide: Text.ElideRight
-                }
-                Text {
-                    text: "sync: hyprland.lua · ghostty · tmux · herdr"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    color: Theme.fgDim
-                    font.italic: true
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    horizontalAlignment: Text.AlignRight
-                    elide: Text.ElideRight
-                }
-            }
         }
     }
 
