@@ -6,62 +6,55 @@
 
 ## 1. Purpose
 
-Reference popup: a filterable table of all `SUPER+<key>` bindings. Read-only, keyboard-navigable. The single source of truth for "which key does what".
+Reference popup: a **sectioned**, filterable table of keybindings grouped by config source — Shell (quickshell launchers), Hyprland, Ghostty, Tmux, Herdr. Read-only, keyboard-navigable, sections seamlessly navigable. The single source of truth for "which key does what, where".
 
 ## 2. Window
 
-* `LauncherBase.qml`: `width: 640`, `radius: Theme.roundingLauncher`, `maxHeight: 70vh` scrollable, `Esc` closes.
+* `LauncherBase.qml`: `width: 640`, `radius: Theme.roundingLauncher`, card grows with rows, list capped ~430 px scrollable (`70vh` max card), `Esc` closes.
 * No dispatch — this launcher **does not execute** bindings; it documents them.
 
-## 3. Content — Table
+## 3. Content — Sectioned Table
 
-* **Columns:** `Key` (left, `Theme.fg`, monospace-ish via `Theme.fontFamily`) | `Launcher / Action` (left) | `Description` (muted, optional).
-* **Rows — normative bindings** (must match `SPECS.md:5.2` + `hyprland.lua`):
+* **Sections (normative order):** `Shell` · `Hyprland` · `Ghostty` · `Tmux` · `Herdr`, rendered as a pill tab bar under the header (numbered `1..5`).
+* **Columns:** `Key` (left, `Theme.fg`) | `Action` (left) | `Description` (muted) — in filter mode the third column becomes the row's `Section` (muted, italic).
+* **Sources of truth (keep in sync):**
 
-  | Key | Action | Notes |
+  | Section | Source file | Notes |
   |---|---|---|
-  | `SUPER+SPACE` | Control Center | meta-launcher |
-  | `SUPER+r` | App Launcher | `elephant`/`walker` backend |
-  | `SUPER+w` | Network-Center | Wifi |
-  | `SUPER+b` | Bluetooth-Center | Bluetooth |
-  | `SUPER+a` | Audio-Center | Audio |
-  | `SUPER+d` | Display-Manager | monitors |
-  | `SUPER+SHIFT+a` | Notification-Center | notifications |
-| `SUPER+c` | Calendar-Launcher | calendar |
-| `SUPER+SHIFT+c` | Close active window | killactive |
-  | `SUPER+q` | Shutdown-Launcher | power/plane |
-  | `SUPER+/` | Key-Launcher | this popup |
-  | `SUPER+p` | Power-Center | battery |
-  | `SUPER+SHIFT+p` | Toggle Perf Drawer | bar perf |
-  | `SUPER+t` | Tray-Manager | tray apps + menus |
-  | `SUPER+<number>` | Workspace switch | Hyprland dispatch |
-  | `Alt+Shift` | Cycle keyboard layout | Hyprland `kb_options` |
-  | `Esc` | Close launcher | global |
+  | Shell | `hyprland.lua` quickshell-launcher binds + `shell.qml` IpcHandler | launcher toggles only |
+  | Hyprland | `hypr/hyprland.lua` | window/workspace/group/submap/multimedia binds; `kb_options grp:alt_shift_toggle` |
+  | Ghostty | `ghostty/config` `keybind =` lines only | un-commented binds |
+  | Tmux | `~/.config/tmux/tmux.conf` (+ sensible defaults) | `prefix = C-b`; `v/C-v/y` in copy-mode-vi; `alt+*` root binds |
+  | Herdr | `~/.config/herdr/config.toml` `[keys]` | `prefix = ctrl+b` |
 
-* **Source of truth:** bindings are **declared once** in `hyprland.lua` and **consumed** here. To avoid drift, the Key-Launcher should either:
-  * (a) parse `hyprland.lua` / `hyprctl binds -j` at runtime to auto-populate, **or**
-  * (b) import a shared QML `Bindings.qml` singleton that both `hyprland.lua` (via codegen) and `KeyLauncher` read.
-  Minimal v1: **hard-code the table above** with a comment `// keep in sync with hyprland.lua binds`. The spec permits this, but builders must note the sync obligation.
+* Minimal v1: hard-code each section's table in `KeyLauncher.qml` with a `// keep in sync with:` comment block. Spec permits this; builders must note the sync obligation per section.
 
 ## 4. Interaction
 
-* `/` focuses filter `TextField` (`placeholder: "Filter keys…"`) — filters rows by key or action substring (case-insensitive).
-* `j/k` or `Up/Down` moves row focus (no action on `Enter` — or `Enter` copies the key hint to clipboard via `wl-copy`, nice-to-have).
+* **Section navigation (seamless):**
+  * `Tab` / `Shift+Tab` cycles sections forward/backward (wraps).
+  * `←` / `→` also cycle sections.
+  * `1..5` jumps directly to the numbered section.
+  * Clicking a pill switches sections (mouse optional, keyboard-first).
+* `/` focuses filter `TextField` (`placeholder: "Filter keys…"`) — filters **across all sections** by key/action substring (case-insensitive); a section name match shows that whole section. Matched rows show their section in the third column. Clearing the query returns to the current section.
+* `j/k` or `Up/Down` scrolls rows (no action on `Enter` — read-only).
 * `Esc` hierarchy: clear filter → close launcher.
-* Scroll occupies remaining vertical space after the filter field.
+* List occupies remaining vertical space after the tab bar/filter field; card height adapts to section row count (min ~240 px, max ~430 px list).
 
 ## 5. Styling
 
+* Section pills: `radius: Theme.roundingItem`; active — `bg: Theme.bgBarAlt`, `border: Theme.borderActive`, text `Theme.fg`; inactive — transparent, text `Theme.fgMuted`; leading number `Theme.fgDim`.
 * Header row: `font.pixelSize: Theme.fontSizeSmall; color: Theme.fgMuted; text: "KEY · ACTION"` uppercase.
-* Key column: `color: Theme.accent` for the `SUPER+` prefix, `Theme.fg` for the key.
-* Row hover: `Theme.bgHover`; focused: `Theme.bgSelected`.
+* Key column: `color: Theme.fg`; description/section column: `Theme.fgMuted` (section tag: `Theme.fgDim` italic in filter mode).
+* Footer: keyboard hints (left, `Theme.fgDim`) + sync note listing source files (right, `Theme.fgDim` italic).
 * Separator line between header and rows at `Theme.border`.
 
 ## 6. Acceptance
 
-* [ ] Shows every normative binding from the table above; values match `hyprland.lua`.
-* [ ] `/` filter narrows rows substring-wise; `Esc` clears then closes.
+* [ ] Shows all five sections; each section's rows match its source file (`hyprland.lua`, `ghostty/config`, `tmux.conf`, `herdr/config.toml`).
+* [ ] `Tab`/`Shift+Tab`, `←/→` cycle sections; `1..5` jumps; active pill visibly highlighted.
+* [ ] `/` filter narrows rows across all sections and shows section per row; `Esc` clears then closes.
 * [ ] Vim `j/k` scrolls; no dispatch on `Enter` (read-only).
-* [ ] Overflow scrolls within `70vh` card, not the whole screen.
-* [ ] Drift risk documented (source-of-truth comment or shared singleton).
-* [ ] Uses `LauncherBase` + `Theme.*` tokens.
+* [ ] Overflow scrolls within the card, not the whole screen; card adapts to section size.
+* [ ] Drift risk documented per section (source-of-truth comment block).
+* [ ] Uses `Theme.*` tokens — no hard-coded hex/glyphs.
