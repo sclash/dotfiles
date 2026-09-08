@@ -79,6 +79,12 @@
       gemini-cli
       ffmpeg
 
+      # Image and video rendering inside ghostty
+      kitty
+      timg
+      chafa
+      mpv
+
       fastfetch
       lazydocker
       lazysql
