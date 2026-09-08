@@ -28,7 +28,8 @@
       ll = "ls -l";
       edit = "sudo -e";
       update = "sudo nixos-rebuild switch --flake /home/asergi/dotfiles/nixos#nixos-os";
-      ftm = "~/tmux-sessionizer.sh";
+      # ftm = "~/tmux-sessionizer.sh";
+      ftm = "/home/asergi/dotfiles/scripts/tmux-sessionizer.sh";
     };
 
     history.ignoreAllDups = true;

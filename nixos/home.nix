@@ -25,8 +25,9 @@
 {
 
   imports = [
+# ./programs/swaync.nix
+# ./programs/sops.nix
     ./programs/tmux/tmux.nix
-    # ./programs/swaync.nix
     ./programs/zsh.nix
     ./programs/uv/uv.nix
     ./programs/starship.nix
@@ -42,7 +43,6 @@
     ./programs/nvim-lsp.nix
     ./programs/devenv.nix
     ./programs/nushell.nix
-    # ./programs/sops.nix
   ];
 
   nix.settings.experimental-features = [
