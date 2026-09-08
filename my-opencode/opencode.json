@@ -20,7 +20,37 @@
 				"apiKey": "{file:/run/secrets/openrouter}"
 			},
 			"models": {
+				"openai/gtp-6-astra-pro": {
+					"options": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"openai/gtp-6-astra": {
+					"options": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
 				"openai/gtp-5.6-sol-pro": {
+					"options": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"openai/gtp-5.6-sol": {
 					"options": {
 						"provider": {
 							"order": [
@@ -378,6 +408,50 @@
 	},
 	"permission": {
 		"mcp_*": "ask",
+		"read": {
+			"*": "allow",
+			"**/.env": "deny",
+			"**/.env.*": "deny",
+			"**/env": "deny",
+			"**/env.*": "deny",
+			"**/.secrets": "deny",
+			"**/.secrets.*": "deny",
+			"**/secrets": "deny",
+			"**/secrets.*": "deny",
+		},
+		"edit": {
+			"*": "ask",
+			"**/.env": "deny",
+			"**/.env.*": "deny",
+			"**/env": "deny",
+			"**/env.*": "deny",
+			"**/.secrets": "deny",
+			"**/.secrets.*": "deny",
+			"**/secrets": "deny",
+			"**/secrets.*": "deny",
+		},
+		"glob": {
+			"*": "allow",
+			"**/.env": "deny",
+			"**/.env.*": "deny",
+			"**/env": "deny",
+			"**/env.*": "deny",
+			"**/.secrets": "deny",
+			"**/.secrets.*": "deny",
+			"**/secrets": "deny",
+			"**/secrets.*": "deny",
+		},
+		"grep": {
+			"*": "allow",
+			"**/.env": "deny",
+			"**/.env.*": "deny",
+			"**/env": "deny",
+			"**/env.*": "deny",
+			"**/.secrets": "deny",
+			"**/.secrets.*": "deny",
+			"**/secrets": "deny",
+			"**/secrets.*": "deny",
+		},
 		"bash": {
 			"*pip install *": "ask",
 			"*pip3 install *": "ask",
