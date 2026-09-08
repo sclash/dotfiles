@@ -30,11 +30,12 @@ QtObject {
     property string batteryCharging:  "󰂄"
     property string batteryPlugged:   "󰚥"
     property string batteryLevels:    "󰁻󰁼󰁾󰂀󰂂󰁹"
-    // USB
-    property string usb:              "\uf0553"
-    property string usbDrive:         "\uf129e"
-    property string usbPort:          "\uf11f0"
-    property string eject:            "\uf01ea"
+    // USB — MDI codepoints live above the BMP, and QML \u escapes consume
+    // exactly 4 hex digits, so build them with String.fromCodePoint.
+    property string usb:              String.fromCodePoint(0xF0553)   // nf-md-usb
+    property string usbDrive:         String.fromCodePoint(0xF129E)   // nf-md-usb-flash-drive
+    property string usbPort:          String.fromCodePoint(0xF11F0)   // nf-md-usb-port
+    property string eject:            String.fromCodePoint(0xF01EA)   // nf-md-eject
     // Custom app icons — per-workspace tray overrides (see Workspaces.qml)
     property url appGhostty: Qt.resolvedUrl("../icons/ghostty-light.svg")
     property url appChrome: Qt.resolvedUrl("../icons/googlechrome-dark.svg")
@@ -45,9 +46,9 @@ QtObject {
         if (id.indexOf("chrome") !== -1 || id.indexOf("chromium") !== -1) return appChrome;
         return "";
     }
-    // Menus (tray context menu)
-    property string chevronLeft:      "\uf0141"
-    property string chevronRight:     "\uf0142"
+    // Menus (tray context menu) — MDI chevrons, see USB note above
+    property string chevronLeft:      String.fromCodePoint(0xF0141)   // nf-md-chevron-left
+    property string chevronRight:     String.fromCodePoint(0xF0142)   // nf-md-chevron-right
     // Workspaces
     property string workspaceDot:     ""
     property string window:           "󰘔"
@@ -90,4 +91,5 @@ QtObject {
     property string keys:             ""
     property string shutdown:         ""
     property string control:          "󰀻"
+    property string calendar:         ""
 }

@@ -6,7 +6,8 @@
 
 ## 1. Purpose
 
-Center pill: the primary temporal anchor and the entry point to `Notification-Center`.
+Center pill: the primary temporal anchor. The **date text** opens the
+`Calendar-Launcher`; the **bell** opens the `Notification-Center`.
 
 ## 2. Display
 
@@ -33,7 +34,8 @@ Center pill: the primary temporal anchor and the entry point to `Notification-Ce
   | Unread notifications | `` at `Theme.accent` + optional count badge (`•` or number ≤9, `9+` beyond) |
   | **Silenced / DND** | `` with a strike or distinct muted glyph (e.g., `` at `Theme.fgDim` + `󰂛` overlay) + tooltip "Notifications silenced" |
 * **Tooltip (date):** calendar (`<tt>{calendar}</tt>` parity) — Waybar `tooltip-format` shows a mini calendar with today `span color='#fAfBfC'`. Replicate with a `Popup` containing a lightweight month grid or a `Process { command: ["cal"] }` fallback. Minimal v1: show `cal` output on hover; richer grid is optional.
-* **Click:** anywhere on the center pill (date + bell) → `launcher.toggle("notification")` (`SUPER+SHIFT+a`).
+* **Click:** date text → `launcher.toggle("calendar")` (`SUPER+c`).
+  Bell → `launcher.toggle("notification")` (`SUPER+SHIFT+a`).
 * **Right-click (optional):** toggle DND/silence (`NotifService.toggleDnd()`).
 
 ## 4. Interaction Summary
@@ -41,9 +43,11 @@ Center pill: the primary temporal anchor and the entry point to `Notification-Ce
 | Action | Effect |
 |---|---|
 | `Timer` tick (1s) | update displayed time |
-| Click center pill | open `Notification-Center` |
+| Click date text | open `Calendar-Launcher` |
+| Click bell | open `Notification-Center` |
 | Right-click (opt) | toggle silence/DND |
-| `SUPER+SHIFT+a` | same as click (Hyprland bind) |
+| `SUPER+c` | same as clicking the date (Hyprland bind) |
+| `SUPER+SHIFT+a` | same as clicking the bell (Hyprland bind) |
 
 ## 5. Service Contract
 
@@ -60,6 +64,6 @@ Center pill: the primary temporal anchor and the entry point to `Notification-Ce
 
 * [ ] Renders `"Mon Aug 31, 21:14:52"` updating every second with no `Process` spawn.
 * [ ] Bell shows correct states: idle / unread / silenced with badge/overlay.
-* [ ] Click and `SUPER+SHIFT+a` both open `Notification-Center`.
+* [ ] Date-text click and `SUPER+SHIFT+c` both open `Calendar-Launcher`; bell click and `SUPER+SHIFT+a` both open `Notification-Center`.
 * [ ] Hover shows calendar tooltip (at least `cal` output).
 * [ ] Silenced state is visually distinct.

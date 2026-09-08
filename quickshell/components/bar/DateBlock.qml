@@ -8,6 +8,7 @@ RowLayout {
     spacing: Theme.gapM
     property string formatted: Qt.formatDateTime(new Date(), Theme.dateFormat)
     signal toggleNotif()
+    signal toggleCalendar()
 
     Timer {
         interval: 1000
@@ -37,7 +38,7 @@ RowLayout {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.toggleNotif()
+            onClicked: root.toggleCalendar()
         }
     }
 

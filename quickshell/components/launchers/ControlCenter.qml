@@ -169,6 +169,7 @@ WlrLayershell {
         { label: "Audio", key: "SUPER+a", icon: Icons.audioVolume, target: "audio" },
         { label: "Display", key: "SUPER+d", icon: Icons.display, target: "display" },
         { label: "Notifications", key: "SUPER+SHIFT+A", icon: Icons.notification, target: "notification" },
+        { label: "Calendar", key: "SUPER+C", icon: Icons.calendar, target: "calendar" },
         { label: "App Launcher", key: "SUPER+r", icon: Icons.search, target: "app" },
         { label: "Shutdown", key: "SUPER+q", icon: Icons.power, target: "shutdown" },
         { label: "Key Hints", key: "SUPER+/", icon: Icons.key, target: "keys" },

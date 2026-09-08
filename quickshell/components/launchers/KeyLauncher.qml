@@ -134,6 +134,8 @@ Keys.onPressed: (e)=>{
         { key: "SUPER+A", action: "Audio", desc: "sound" },
         { key: "SUPER+D", action: "Display", desc: "monitors" },
         { key: "SUPER+SHIFT+A", action: "Notifications", desc: "bell" },
+        { key: "SUPER+C", action: "Calendar", desc: "dates" },
+        { key: "SUPER+SHIFT+C", action: "Close window", desc: "kill" },
         { key: "SUPER+Q", action: "Shutdown", desc: "power" },
         { key: "SUPER+/", action: "Key Hints", desc: "this" },
         { key: "SUPER+U", action: "USB Devices", desc: "usb" },

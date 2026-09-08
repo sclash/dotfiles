@@ -189,10 +189,12 @@ property string temp:             "󰔏"
 property string expand:           ""
 property string collapse:         ""
 // USB (codepoints verified against installed JetBrainsMono Nerd Font)
-property string usb:              "\uf0553"    // nf-md-usb
-property string usbDrive:         "\uf129e"    // nf-md-usb-flash-drive
-property string usbPort:          "\uf11f0"    // nf-md-usb-port
-property string eject:            "\uf01ea"    // nf-md-eject
+// MDI lives above the BMP — use String.fromCodePoint, NOT \u escapes
+// (\u consumes exactly 4 hex digits and silently splits the codepoint)
+property string usb:              String.fromCodePoint(0xF0553)   // nf-md-usb
+property string usbDrive:         String.fromCodePoint(0xF129E)   // nf-md-usb-flash-drive
+property string usbPort:          String.fromCodePoint(0xF11F0)   // nf-md-usb-port
+property string eject:            String.fromCodePoint(0xF01EA)   // nf-md-eject
 // VPN / Common
 property string vpn:              "󰖂"
 property string search:           ""
@@ -222,6 +224,7 @@ property string bell:             ""
 property string keys:             ""
 property string shutdown:         ""
 property string control:          "󰀻"
+property string calendar:         ""
 ```
 
 * Per-app SVG overrides (`appGhostty`, `appChrome` + `appIconOverride(appId)`) exist
@@ -260,7 +263,8 @@ property string control:          "󰀻"
   (ControlCenter, NotificationToast) inline the same chrome instead.
 * **Card widths by launcher:** ControlCenter 600 · AudioCenter / NotificationCenter /
   ShutdownLauncher / PowerCenter 620 · KeyLauncher / DisplayManager / BluetoothCenter /
-  NetworkCenter 640. Height is content-driven (ControlCenter caps at 560).
+  NetworkCenter 640 · CalendarLauncher 480 (dense 7-column grid — see
+  `launchers/Calendar-Launcher.md` §2). Height is content-driven (ControlCenter caps at 560).
 
 ### 5.2 Card anatomy
 

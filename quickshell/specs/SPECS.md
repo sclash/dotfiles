@@ -132,6 +132,7 @@ quickshell/
 │       ├── AudioCenter.qml
 │       ├── ControlCenter.qml
 │       ├── NotificationCenter.qml
+│       ├── CalendarLauncher.qml
 │       ├── ShutdownLauncher.qml
 │       ├── PowerCenter.qml
 │       ├── KeyLauncher.qml
@@ -225,6 +226,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
+| Calendar-Launcher | `SUPER+c` | `Calendar-Launcher.md` |
 | Shutdown-Launcher | `SUPER+q` | `Shutdown-Launcher.md` |
 | Power-Center | `SUPER+p` | `Power-Center.md` |
 | Key-Launcher | `SUPER+/` | `Key-Launcher.md` |
@@ -252,7 +254,7 @@ Summary:
 1. `theme/Theme.qml` + `Icons.qml` + `services/*` skeletons (shared foundation).
 2. `Bar.qml` shell + `LauncherBase.qml` (so builders have the canvas).
 3. Bar workstreams: `Date` → `Workspaces/AppTray` → `Keyboard` → `Wifi`/`Bluetooth`/`Audio` → `PerfDrawer`.
-4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Power-Center` → `Notification-Center` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
+4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Power-Center` → `Notification-Center` → `Calendar-Launcher` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
 5. Wire `hyprland.lua` keybindings + `quickshell ipc` handlers end-to-end.
 6. Final pass: perf/idle measurement, memory audit, Herdr demo.
 

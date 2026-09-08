@@ -44,6 +44,7 @@ Scope {
                     id: dateBlock
                     anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
                     onToggleNotif: root.launcherToggleRequested("notification")
+                    onToggleCalendar: root.launcherToggleRequested("calendar")
                 }
 
                 RowLayout {

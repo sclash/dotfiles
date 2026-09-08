@@ -26,9 +26,10 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 | 6 | App Launcher | `SUPER+r` | `` | `launcher.toggle("app")` |
 | 7 | Shutdown | `SUPER+q` | `` | `launcher.toggle("shutdown")` |
 | 8 | Key Hints | `SUPER+/` | `` | `launcher.toggle("keys")` |
-| 9 | USB | `SUPER+u` | `\uf0553` (`Icons.usb`) | `launcher.toggle("usb")` |
+| 9 | USB | `SUPER+u` | `Icons.usb` (nf-md-usb) | `launcher.toggle("usb")` |
 | 10 | Tray | `SUPER+t` | `Icons.app` | `launcher.toggle("tray")` |
 | 11 | Power | `SUPER+p` | `󰁹` (`Icons.battery`) | `launcher.toggle("power")` |
+| 12 | Calendar | `SUPER+c` | `` (`Icons.calendar`) | `launcher.toggle("calendar")` |
 
 > The Control Center **does not duplicate** launcher UIs inside itself — it dispatches to them. Selecting an entry closes Control Center and opens that launcher (replace, don't stack).
 
@@ -47,7 +48,7 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 
 ## 6. Acceptance
 
-* [ ] Lists all 11 launchers with correct icons + key hints.
+* [ ] Lists all 12 launchers with correct icons + key hints.
 * [ ] Fuzzy filter + vim nav + `Enter` dispatch works; `Esc` closes.
 * [ ] Dispatching closes self and opens the target launcher (no stacking).
 * [ ] `SUPER+SPACE` toggles open/close.

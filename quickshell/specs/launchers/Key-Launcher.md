@@ -27,6 +27,8 @@ Reference popup: a filterable table of all `SUPER+<key>` bindings. Read-only, ke
   | `SUPER+a` | Audio-Center | Audio |
   | `SUPER+d` | Display-Manager | monitors |
   | `SUPER+SHIFT+a` | Notification-Center | notifications |
+| `SUPER+c` | Calendar-Launcher | calendar |
+| `SUPER+SHIFT+c` | Close active window | killactive |
   | `SUPER+q` | Shutdown-Launcher | power/plane |
   | `SUPER+/` | Key-Launcher | this popup |
   | `SUPER+p` | Power-Center | battery |
