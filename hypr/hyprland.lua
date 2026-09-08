@@ -354,7 +354,8 @@ local down = "j" -- Sets "Windows" key as main modifier ]]
 -- bind = $mainMod, Q, exec, $terminal
 -- terminal on Return (Q reserved for shutdown launcher per SPECS.md)
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + C", hl.dsp.window.close())
+-- killactive on SHIFT+C — SUPER+C is Calendar (SPECS.md 5.2 / Calendar-Launcher.md)
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 -- quickshell app launcher (replaces walker direct bind — backend still elephant/walker via AppLauncher)
@@ -658,6 +659,7 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("quickshell ipc call launcher toggle 
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle audio"))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell ipc call launcher toggle display"))
 hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle notification"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell ipc call launcher toggle calendar"))
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call launcher toggle shutdown"))
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("quickshell ipc call launcher toggle usb"))
