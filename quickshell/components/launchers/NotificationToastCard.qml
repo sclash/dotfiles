@@ -7,7 +7,7 @@ Rectangle {
     id: card
     property var toastData
     signal dismissRequested(string toastId)
-    signal primaryAction(var notification)
+    signal primaryAction(var toastData)
 
     width: 360
     radius: Theme.roundingItem
@@ -15,7 +15,6 @@ Rectangle {
 
     implicitHeight: contentCol.implicitHeight + Theme.padM * 2
 
-    readonly property var n: toastData && toastData.notification ? toastData.notification : null
     readonly property string summaryText: toastData ? (toastData.summary || "") : ""
     readonly property string bodyText: toastData ? (toastData.body || "") : ""
     readonly property string iconUrl: {
@@ -115,8 +114,8 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            if (card.n) card.primaryAction(card.n)
-            else card.dismissRequested(card.toastData._toastId)
+            if (card.toastData) card.primaryAction(card.toastData)
+            else card.dismissRequested("")
         }
     }
 }

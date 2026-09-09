@@ -119,7 +119,8 @@ WlrLayershell {
                 model: filteredHistory
                 currentIndex: 0
                 focus: true
-delegate: Rectangle {
+                delegate: Rectangle {
+                    id: notifCard
                     required property var modelData
                     required property int index
                     readonly property bool selected: ListView.isCurrentItem
@@ -155,14 +156,16 @@ delegate: Rectangle {
                             Repeater {
                                 model: modelData.actions ? modelData.actions.slice(0,3) : []
                                 delegate: Rectangle {
+                                    id: actionBtn
                                     required property var modelData
+                                    required property int index
                                     width: 80; height: 26
                                     radius: 6
                                     color: Theme.bgActive
                                     border.color: Theme.border
                                     border.width: 1
-                                    Text { anchors.centerIn: parent; text: modelData.text || modelData.identifier || "Action"; font.pixelSize: 11; color: Theme.fg; font.family: Theme.fontFamily }
-                                    MouseArea { anchors.fill: parent; onClicked: try { modelData.invoke() } catch(e) {} }
+                                    Text { anchors.centerIn: parent; text: actionBtn.modelData.text || "Action"; font.pixelSize: 11; color: Theme.fg; font.family: Theme.fontFamily }
+                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifService.invokeAction(notifCard.modelData, actionBtn.index) }
                                 }
                             }
                             Rectangle {
@@ -172,7 +175,7 @@ delegate: Rectangle {
                                 border.color: Theme.border
                                 border.width: 1
                                 Text { anchors.centerIn: parent; text: "Dismiss"; font.pixelSize: 11; color: Theme.fg; font.family: Theme.fontFamily }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifService.dismiss(index) }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: NotifService.dismissEntry(notifCard.modelData) }
                             }
                         }
                     }
@@ -180,15 +183,11 @@ delegate: Rectangle {
                 Keys.onPressed: (e)=>{
                     if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { currentIndex=Math.min(count-1, currentIndex+1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
                     else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { currentIndex=Math.max(0, currentIndex-1); positionViewAtIndex(currentIndex, ListView.Contain); e.accepted=true }
-                    else if(e.key===Qt.Key_D || e.key===Qt.Key_Delete) { NotifService.dismiss(currentIndex); e.accepted=true }
+                    else if(e.key===Qt.Key_D || e.key===Qt.Key_Delete) { NotifService.dismissEntry(filteredHistory[currentIndex]); e.accepted=true }
                     else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) {
                         const m=filteredHistory[currentIndex]
-                        if(m && m.notification) {
-                            const acts = m.notification.actions
-                            if(acts && acts.length>0) {
-                                try { acts[0].invoke(); NotifService.dismiss(currentIndex) } catch(err) { NotifService.dismiss(currentIndex) }
-                            } else NotifService.dismiss(currentIndex)
-                        } else NotifService.dismiss(currentIndex)
+                        NotifService.invokePrimary(m)
+                        NotifService.dismissEntry(m)
                         e.accepted=true
                     }
                 }

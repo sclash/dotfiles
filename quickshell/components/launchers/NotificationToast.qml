@@ -46,11 +46,8 @@ PanelWindow {
                 required property var modelData
                 toastData: modelData
                 onDismissRequested: (id) => NotifService.dismissToast(id)
-                onPrimaryAction: (n) => {
-                    try {
-                        const acts = n && n.actions
-                        if (acts && acts.length > 0) acts[0].invoke()
-                    } catch(e) {}
+                onPrimaryAction: (entry) => {
+                    NotifService.invokePrimary(entry)
                     NotifService.dismissToast(modelData._toastId)
                 }
             }

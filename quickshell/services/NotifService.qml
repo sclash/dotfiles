@@ -32,10 +32,20 @@ QtObject {
         onNotification: (n) => root.handleNotification(n)
     }
 
-    function handleNotification(n) {
-        try { n.tracked = true } catch(e) {}
-        const entry = {
-            id: n.id || Date.now(),
+    // Entries must never hold raw Notification/NotificationAction QObjects:
+    // the server destroys them at will, and stale pointers inside the model
+    // crash the QML engine when it re-wraps the map during delegate incubation.
+    // We store only plain data plus notifId and resolve live objects on demand.
+    function makeEntry(n) {
+        const actNames = []
+        if (n.actions) {
+            for (let i = 0; i < n.actions.length; i++) {
+                const a = n.actions[i]
+                actNames.push({ text: a.text || a.identifier || "Action" })
+            }
+        }
+        return {
+            notifId: n.id !== undefined ? n.id : -1,
             appName: n.appName || "Unknown",
             appIcon: n.appIcon || "",
             summary: n.summary || "",
@@ -43,14 +53,54 @@ QtObject {
             urgency: n.urgency !== undefined ? n.urgency : 1,
             timestamp: new Date(),
             image: n.image || "",
-            actions: n.actions ? n.actions : [],
-            notification: n
+            actions: actNames
         }
+    }
+
+    function liveNotification(notifId) {
+        if (!notifServer || notifId === undefined || notifId === null || notifId === -1) return null
+        try {
+            const tracked = notifServer.trackedNotifications.values
+            for (let i = 0; i < tracked.length; i++) {
+                if (tracked[i].id === notifId) return tracked[i]
+            }
+        } catch(e) {}
+        return null
+    }
+
+    function invokePrimary(entry) {
+        return invokeAction(entry, 0)
+    }
+
+    function invokeAction(entry, actionIndex) {
+        const n = entry ? root.liveNotification(entry.notifId) : null
+        if (n && n.actions && actionIndex >= 0 && actionIndex < n.actions.length) {
+            try { n.actions[actionIndex].invoke(); return true } catch(e) {}
+        }
+        return false
+    }
+
+    function dismissEntry(entry) {
+        if (!entry) return
+        const idx = history.findIndex(e => e.notifId === entry.notifId && e.timestamp === entry.timestamp)
+        if (idx < 0) return
+        const live = root.liveNotification(entry.notifId)
+        if (live) try { live.dismiss() } catch(e) {}
+        const copy = history.slice()
+        copy.splice(idx, 1)
+        history = copy
+        if (unreadCount > 0) unreadCount--
+    }
+
+    function handleNotification(n) {
+        try { n.tracked = true } catch(e) {}
+        const entry = root.makeEntry(n)
         const copy = root.history.slice()
         copy.unshift(entry)
         if (copy.length > 50) {
             const removed = copy.pop()
-            if (removed && removed.notification && removed.notification.dismiss) try { removed.notification.dismiss() } catch(e) {}
+            const live = root.liveNotification(removed.notifId)
+            if (live) try { live.dismiss() } catch(e) {}
         }
         root.history = copy
         if (!root.dnd) root.unreadCount++
@@ -142,23 +192,11 @@ QtObject {
 
     function clearHistory() {
         for (let i=0;i<history.length;i++) {
-            const entry = history[i]
-            const n = entry.notification
-            if (n && n.dismiss) try { n.dismiss() } catch(e) {}
-            else if (entry && entry.dismiss) try { entry.dismiss() } catch(e) {}
+            const live = liveNotification(history[i].notifId)
+            if (live) try { live.dismiss() } catch(e) {}
         }
         history = []
         unreadCount = 0
-    }
-    function dismiss(idx) {
-        if (idx <0 || idx >= history.length) return
-        const entry = history[idx]
-        const n = entry.notification
-        if (n && n.dismiss) try { n.dismiss() } catch(e) {}
-        const copy = history.slice()
-        copy.splice(idx,1)
-        history = copy
-        if (unreadCount >0) unreadCount--
     }
     function toggleDnd() { dnd = !dnd }
 
@@ -171,19 +209,7 @@ QtObject {
                     const copy = []
                     const start = Math.max(0, tracked.length - 50)
                     for (let i = tracked.length - 1; i >= start; i--) {
-                        const n = tracked[i]
-                        copy.push({
-                            id: n.id || Date.now()+i,
-                            appName: n.appName || "Unknown",
-                            appIcon: n.appIcon || "",
-                            summary: n.summary || "",
-                            body: n.body || "",
-                            urgency: n.urgency !== undefined ? n.urgency : 1,
-                            timestamp: new Date(),
-                            image: n.image || "",
-                            actions: n.actions ? n.actions : [],
-                            notification: n
-                        })
+                        copy.push(root.makeEntry(tracked[i]))
                     }
                     root.history = copy
                     root.unreadCount = copy.length
