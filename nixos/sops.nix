@@ -15,5 +15,9 @@
       owner = "asergi";
       mode = "0600";
     };
+    secrets.cheaper_inference = {
+      owner = "asergi";
+      mode = "0600";
+    };
   };
 }
