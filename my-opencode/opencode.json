@@ -133,16 +133,16 @@
 					"name": "glm-5.3-flash"
 				},
 				"glm-5.6-sol": {
-					"name": "glm-5.3-flash"
+					"name": "gpt-5.6-sol"
 				},
 				"glm-5.6-luna": {
-					"name": "glm-5.3-flash"
+					"name": "gpt-5.6-luna"
 				},
 				"glm-5.6-terra": {
-					"name": "glm-5.3-flash"
+					"name": "gpt-5.6-terra"
 				},
-				"glm-6-astra": {
-					"name": "glm-5.3-flash"
+				"gpt-6-astra": {
+					"name": "gpt-6-astra"
 				},
 				"fable-5.1": {
 					"name": "fable-5.1"
