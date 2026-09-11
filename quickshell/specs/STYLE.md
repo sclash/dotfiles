@@ -319,6 +319,32 @@ property string calendar:         ""
   `Home`/`End` jump, `Enter` activates, `/` opens the filter field.
 * Every interactive surface has a visible selection ring (`borderSelected`).
 
+### 5.7 Overflow & Underflow (mandatory)
+
+**Neither overflow nor underflow is allowed anywhere in the shell.** This has been
+a recurring defect; treat it as an acceptance blocker for every component.
+
+* **Clip every bounded surface.** Any card, drawer, list, grid, or scroll region
+  with a capped height must set `clip: true` so content can never paint outside
+  its border (e.g. a long list's last row sliding under the card edge).
+* **Cap the child, not the parent.** Never cap a container's `height` with
+  `Math.min(...)` while letting a taller child lay out inside it — that is exactly
+  how content escapes the frame. Constrain the child that scrolls
+  (`Layout.preferredHeight: Math.min(max, Math.max(min, contentHeight))`) and let
+  the container height derive from its content.
+* **No unpainted gaps (underflow).** Content that is shorter than the reserved
+  space must not leave detached rows, dangling dividers, or a collapsed card.
+  Grow/shrink the card with its content, and never render a footer below a region
+  that failed to reserve its minimum height.
+* **Elide or wrap text; never let it spill.** Every `Text` inside a fixed-width
+  slot sets `elide` (and `Layout.fillWidth`/`preferredWidth` as appropriate) or
+  wraps; long labels must be truncated, not allowed to exceed the surface.
+* **Scroll affordance.** When a list is taller than its viewport, it scrolls via
+  the shared `j/k` handlers and its `contentY` is clamped to
+  `[0, contentHeight - height]` — no negative offsets, no over-scroll past the end.
+* **Verify both bounds.** Test each list/grid with zero items, exactly-fitting
+  items, and far more items than fit; all three must render inside the frame.
+
 ---
 
 ## 6. States
@@ -356,6 +382,9 @@ property string calendar:         ""
 * **Do not** add light-theme variants or per-component colour overrides without
   updating `Theme.qml`.
 * **Do not** change selection to a background tint — selection is border-based (§2.1).
+* **Do not** ship any surface that overflows or underflows its frame — bounded
+  content clips, scrolling lists are clamped, text elides, cards size to content
+  (§5.7).
 
 ---
 

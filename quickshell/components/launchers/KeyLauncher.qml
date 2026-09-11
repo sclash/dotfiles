@@ -147,6 +147,7 @@ WlrLayershell {
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
+        clip: true
         border.width: 1
         border.color: Theme.borderActive
         ColumnLayout {

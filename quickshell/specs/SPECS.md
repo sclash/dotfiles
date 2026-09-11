@@ -191,6 +191,10 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 * **Error states:** every icon/launcher must render a degraded state (e.g., `nmcli` missing → `` + tooltip "NetworkManager unavailable").
 * **Polling:** perf drawer paused when hidden; network/bt via DBus signals; audio via PipeWire signals; clock via 1s `Timer`.
 * **Accessibility:** all launchers keyboard-only; `j/k` or `Up/Down`, `Enter` to act, `Esc` to close, `/` to filter where applicable.
+* **Overflow / underflow:** every bounded surface must clip and clamp — no content
+  may paint outside its card/border, and no surface may leave detached or collapsed
+  gaps. Full contract in [`STYLE.md`](./STYLE.md) §5.7; treat violations as
+  acceptance blockers.
 
 ---
 
