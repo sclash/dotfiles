@@ -80,7 +80,6 @@
       ffmpeg
 
       # Image and video rendering inside ghostty
-      kitty
       timg
       chafa
       mpv
