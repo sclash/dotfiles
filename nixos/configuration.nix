@@ -55,7 +55,35 @@
   boot.tmp.cleanOnBoot = true;
 
   programs.wshowkeys.enable = true;
+  # Enable CUPS printing service. Drivers must be listed here (not in
+  # environment.systemPackages) so CUPS picks up their PPDs and filters.
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      epson-escpr
+      epson-escpr2
+    ];
+  };
 
+  # Persist the network printer across rebuilds / reboots.
+  hardware.printers = {
+    ensureDefaultPrinter = "EPSON_XP-2200_Series";
+    ensurePrinters = [
+      {
+        name = "EPSON_XP-2200_Series";
+        location = "Local Printer";
+        deviceUri = "socket://192.168.1.103:9100";
+        model = "epson-inkjet-printer-escpr/Epson-XP-2200_Series-epson-escpr-en.ppd";
+      }
+    ];
+  };
+
+  # Enable Avahi (Bonjour) for network discovery
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;      # Allows resolving .local hostnames
+    openFirewall = true;  # Opens UDP port 5353 for mDNS discovery
+  };
   networking.hostName = "nixos-os"; # Define your hostname.
   # networking.wireless is left unset: with the default wpa_supplicant backend
   # the NetworkManager module enables wpa_supplicant itself (dbusControlled).
@@ -316,6 +344,9 @@
       bat
       zip
       unzip
+
+      ## scanner utility (printer drivers live under services.printing.drivers)
+      epsonscan2
 
       chromium
       chromedriver

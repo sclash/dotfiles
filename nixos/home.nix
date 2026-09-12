@@ -85,6 +85,9 @@
       chafa
       mpv
 
+      cups
+      cups-filters
+
       fastfetch
       lazydocker
       lazysql
@@ -104,6 +107,7 @@
       # tailwindcss-language-server
       # python313Packages.markitdown
       playwright
+      telegram-desktop
     ])
     ++ (with pkgs-unstable; [
       # markitdown-mcp
