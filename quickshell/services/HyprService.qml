@@ -48,23 +48,42 @@ QtObject {
         stdout: StdioCollector { onStreamFinished: root.kbProc.running = true }
     }
 
+    function mapMonitor(m) {
+        return {
+            name: m.name,
+            id: m.id,
+            mode: (m.width > 0) ? (m.width + "x" + m.height + "@" + m.refreshRate) : "preferred",
+            scale: m.scale,
+            pos: m.x + "x" + m.y,
+            focused: !!m.focused,
+            mirrorOf: m.mirrorOf || "none",
+            x: m.x,
+            y: m.y,
+            w: m.width,
+            h: m.height,
+            transform: m.transform || 0
+        }
+    }
+
     property Process monProc: Process {
         command: ["sh", "-c", "hyprctl monitors -j; printf '\\n---SPLIT---\\n'; hyprctl monitors all -j 2>/dev/null || hyprctl monitors -j"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const parts = String(this.text || "").split("---SPLIT---")
-                try {
-                    const active = JSON.parse(parts[0])
-                    root.monitors = active.map(m => ({ name: m.name, mode: (m.width + "x" + m.height + "@" + m.refreshRate), scale: m.scale, pos: m.x + "x" + m.y, focused: m.focused }))
-                } catch (err) { root.monitors = [] }
-                try {
-                    const all = JSON.parse(parts[1])
-                    root.allMonitors = all.map(m => ({ name: m.name, mode: m.width ? (m.width + "x" + m.height) : "preferred" }))
-                    const names = root.monitors.map(m => m.name)
-                    root.availableMonitors = all
-                        .filter(m => names.indexOf(m.name) === -1 || m.disabled)
-                        .map(m => ({ name: m.name, mode: m.width ? (m.width + "x" + m.height) : "preferred" }))
-                } catch (err) { root.allMonitors = []; root.availableMonitors = [] }
+                let active = []
+                let all = []
+                try { active = JSON.parse(parts[0]) } catch (err) { active = [] }
+                try { all = JSON.parse(parts[1]) } catch (err) { all = [] }
+                const activeNames = active.map(m => m.name)
+                const mapped = active.map(root.mapMonitor)
+                for (const m of all) {
+                    if (!m.disabled && activeNames.indexOf(m.name) === -1) mapped.push(root.mapMonitor(m))
+                }
+                root.monitors = mapped
+                root.allMonitors = all.map(m => ({ name: m.name, mode: m.width ? (m.width + "x" + m.height) : "preferred" }))
+                root.availableMonitors = all
+                    .filter(m => m.disabled && activeNames.indexOf(m.name) === -1)
+                    .map(m => ({ name: m.name, mode: m.width ? (m.width + "x" + m.height) : "preferred" }))
             }
         }
     }

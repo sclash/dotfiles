@@ -17,7 +17,7 @@ WlrLayershell {
     function toggle(){ if(isOpen) close(); else open() }
 
     anchors { top:true; bottom:true; left:true; right:true }
-    onIsOpenChanged: if(isOpen) { selIndex=0; updateNav(); refresh(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
+    onIsOpenChanged: if(isOpen) { selIndex=0; transientError=""; updateNav(); refresh(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
@@ -45,13 +45,15 @@ WlrLayershell {
             ListView {
                 id: currentList
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(160, contentHeight)
+                Layout.preferredHeight: Math.min(236, contentHeight)
                 clip: true
                 spacing: 4
                 model: monitors
                 delegate: Rectangle {
+                    id: monitorRow
                     required property var modelData
                     required property int index
+                    readonly property int monIdx: index
                     width: parent.width
                     height: 56
                     radius: Theme.roundingItem
@@ -65,6 +67,7 @@ WlrLayershell {
                         anchors.rightMargin: Theme.padM
                         spacing: Theme.gapM
                         Rectangle {
+                            Layout.alignment: Qt.AlignVCenter
                             width: 36; height: 36
                             radius: 8
                             color: modelData.focused ? Theme.bgSelected : Theme.bgBar
@@ -72,22 +75,51 @@ WlrLayershell {
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
-                            Text { text: modelData.name + (modelData.focused ? " · focused" : ""); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg }
-                            Text { text: modelData.mode + " · scale " + modelData.scale + " · " + modelData.pos; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
+                            Layout.maximumWidth: Number.POSITIVE_INFINITY
+                            Layout.alignment: Qt.AlignVCenter
+                            Text { text: modelData.name + (modelData.focused ? " · focused" : ""); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { text: modelData.mode + " · scale " + modelData.scale + " · " + modelData.pos; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; elide: Text.ElideRight; Layout.fillWidth: true }
+                        }
+                        RowLayout {
+                            visible: root.monitors.length >= 2
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: Theme.gapS
+                            Repeater {
+                                model: [{ dir: "left", label: "L" }, { dir: "right", label: "R" }, { dir: "top", label: "T" }, { dir: "bottom", label: "B" }]
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    readonly property bool activeDir: root.monitorSide(monitorRow.monIdx) === modelData.dir
+                                    width: 26; height: 26
+                                    radius: Theme.roundingItem
+                                    color: dirMouse.containsMouse ? Theme.bgHover : Theme.bgActive
+                                    border.color: activeDir ? Theme.borderSelected : Theme.border
+                                    border.width: 1
+                                    Text { anchors.centerIn: parent; text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 10; color: activeDir ? Theme.fg : Theme.fgMuted }
+                                    MouseArea { id: dirMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.placeMonitor(monitorRow.monIdx, modelData.dir) }
+                                }
+                            }
                         }
                         Rectangle {
-                            visible: monitors.length >=2
-                            width: 90; height: 30
-                            radius: 6
+                            readonly property bool mirrored: root.mirrorName(modelData) !== ""
+                            Layout.alignment: Qt.AlignVCenter
+                            width: 72; height: 30
+                            radius: Theme.roundingItem
                             color: Theme.bgBar
-                            border.color: Theme.critical
+                            border.color: mirrored ? Theme.borderSelected : Theme.border
                             border.width: 1
-                            Text { anchors.centerIn: parent; text: "Disconnect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.critical }
-                            MouseArea { anchors.fill: parent; onClicked: {
-                                if(monitors.length<2){ errorText.text="Cannot disable the only monitor"; return }
-                                disconnectProc.command = ["hyprctl","keyword","monitor", modelData.name+",disable"]
-                                disconnectProc.running=true
-                            } }
+                            Text { anchors.centerIn: parent; text: parent.mirrored ? "Extend" : "Duplicate"; font.family: Theme.fontFamily; font.pixelSize: 11; color: parent.mirrored ? Theme.fg : Theme.fgMuted }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.toggleMirror(index) }
+                        }
+                        Rectangle {
+                            readonly property bool canDisconnect: root.monitors.length >= 2
+                            Layout.alignment: Qt.AlignVCenter
+                            width: 90; height: 30
+                            radius: Theme.roundingItem
+                            color: Theme.bgBar
+                            border.color: canDisconnect ? Theme.critical : Theme.border
+                            border.width: 1
+                            Text { anchors.centerIn: parent; text: "Disconnect"; font.family: Theme.fontFamily; font.pixelSize: 11; color: parent.canDisconnect ? Theme.critical : Theme.fgDim }
+                            MouseArea { anchors.fill: parent; cursorShape: parent.canDisconnect ? Qt.PointingHandCursor : Qt.ArrowCursor; onClicked: root.disconnectIndex(index) }
                         }
                     }
                 }
@@ -107,66 +139,44 @@ WlrLayershell {
                     width: parent.width
                     height: 52
                     radius: Theme.roundingItem
-                    readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "available" && it.idx === index }
-                    color: isSel ? Theme.bgActive : Theme.bgHover
-                    border.color: isSel ? Theme.accent : Theme.border
-                    border.width: isSel ? 2 : 1
+                    readonly property bool rowSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "available" && it.idx === index }
+                    readonly property string selMode: { const it = root.navItems[root.selIndex]; return (it !== undefined && it.kind === "available" && it.idx === index) ? it.mode : "" }
+                    color: rowSel ? Theme.bgActive : Theme.bgHover
+                    border.color: rowSel ? Theme.accent : Theme.border
+                    border.width: rowSel ? 2 : 1
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
                         anchors.rightMargin: Theme.padM
                         spacing: Theme.gapM
-                        Text { text: modelData.name; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; font.weight: Theme.fontWeightMedium }
-                        Text { text: modelData.mode; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; Layout.fillWidth: true }
+                        Text { text: modelData.name; font.family: Theme.fontFamily; font.pixelSize: 13; color: Theme.fg; font.weight: Theme.fontWeightMedium; Layout.alignment: Qt.AlignVCenter }
+                        Text { text: modelData.mode; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; Layout.fillWidth: true; Layout.maximumWidth: Number.POSITIVE_INFINITY; elide: Text.ElideRight; Layout.alignment: Qt.AlignVCenter }
                         Rectangle {
+                            Layout.alignment: Qt.AlignVCenter
                             width: 70; height: 28
-                            radius: 6
+                            radius: Theme.roundingItem
                             color: Theme.bgActive
-                            border.color: Theme.borderActive
-                            border.width: 1
+                            border.color: selMode === "extend" ? Theme.accent : Theme.borderActive
+                            border.width: selMode === "extend" ? 2 : 1
                             Text { anchors.centerIn: parent; text: "Extend"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                            MouseArea { anchors.fill: parent; onClicked: connectProc("extend", modelData.name) }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.connectProc("extend", modelData.name) }
                         }
                         Rectangle {
+                            Layout.alignment: Qt.AlignVCenter
                             width: 80; height: 28
-                            radius: 6
+                            radius: Theme.roundingItem
                             color: Theme.bgActive
+                            border.color: selMode === "duplicate" ? Theme.accent : Theme.borderActive
+                            border.width: selMode === "duplicate" ? 2 : 1
                             Text { anchors.centerIn: parent; text: "Duplicate"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                            MouseArea { anchors.fill: parent; onClicked: connectProc("duplicate", modelData.name) }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.connectProc("duplicate", modelData.name) }
                         }
                     }
                 }
             }
             Text { visible: availableMonitors.length===0; text: "No additional outputs detected"; font.family: Theme.fontFamily; font.pixelSize: 12; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
 
-            ColumnLayout {
-                visible: monitors.length >=2
-                Layout.fillWidth: true
-                spacing: Theme.gapS
-                Text { text: "Orientation"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.gapS
-                    Repeater {
-                        model: ["Left","Right","Top","Bottom"]
-                        delegate: Rectangle {
-                            required property string modelData
-                            required property int index
-                            Layout.fillWidth: true
-                            height: 32
-                            radius: Theme.roundingItem
-                            readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "orient" && it.dir === modelData.toLowerCase() }
-                            color: isSel ? Theme.bgActive : (ma.containsMouse ? Theme.bgHover : Theme.bgActive)
-                            border.color: isSel ? Theme.accent : Theme.border
-                            border.width: isSel ? 2 : 1
-                            Text { anchors.centerIn: parent; text: modelData; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                            MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; onClicked: orient(modelData.toLowerCase()) }
-                        }
-                    }
-                }
-            }
-
-            Text { id: errorText; visible: text.length>0; color: Theme.critical; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { id: errorText; visible: text.length>0; text: root.transientError.length>0 ? root.transientError : root.hyprError; color: Theme.critical; font.family: Theme.fontFamily; font.pixelSize: 11 }
             RowLayout {
                 Layout.fillWidth: true
                 Rectangle {
@@ -178,27 +188,33 @@ WlrLayershell {
                     border.color: isSel ? Theme.accent : Theme.border
                     border.width: isSel ? 2 : 1
                     Text { anchors.centerIn: parent; text: "Refresh"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                    MouseArea { anchors.fill: parent; onClicked: refresh() }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: refresh() }
                 }
                 Item { Layout.fillWidth: true }
-                Text { text: "j/k move · Enter act · d disconnect · r refresh · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim }
+                Text { text: "j/k move · H/J/K/L position · Enter act · d disconnect · r refresh · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim }
             }
         }
         Keys.onPressed: (e)=>{
+            const shift = (e.modifiers & Qt.ShiftModifier) !== 0
             if(e.key===Qt.Key_Escape) root.close()
             else if(e.key===Qt.Key_R) { refresh(); e.accepted=true }
+            else if(shift && e.key===Qt.Key_H) { root.placeFocused("left"); e.accepted=true }
+            else if(shift && e.key===Qt.Key_J) { root.placeFocused("bottom"); e.accepted=true }
+            else if(shift && e.key===Qt.Key_K) { root.placeFocused("top"); e.accepted=true }
+            else if(shift && e.key===Qt.Key_L) { root.placeFocused("right"); e.accepted=true }
             else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { root.moveSel(1); e.accepted=true }
             else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { root.moveSel(-1); e.accepted=true }
             else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.activate(); e.accepted=true }
             else if(e.key===Qt.Key_D) { root.disconnectFocused(); e.accepted=true }
-            else if(e.key===Qt.Key_U) { root.duplicateFocused(); e.accepted=true }
         }
     }
     function updateNav(){
         const items=[]
         for(let i=0;i<monitors.length;i++) items.push({kind:"monitor", idx:i})
-        for(let i=0;i<availableMonitors.length;i++) items.push({kind:"available", idx:i})
-        if(monitors.length>=2) for(const dir of ["Left","Right","Top","Bottom"]) items.push({kind:"orient", dir:dir.toLowerCase()})
+        for(let i=0;i<availableMonitors.length;i++){
+            items.push({kind:"available", idx:i, mode:"extend"})
+            items.push({kind:"available", idx:i, mode:"duplicate"})
+        }
         items.push({kind:"refresh"})
         navItems=items
         selIndex=Math.max(0, Math.min(selIndex, items.length-1))
@@ -213,61 +229,138 @@ WlrLayershell {
         else if(it.kind==="available" && availableList) availableList.positionViewAtIndex(it.idx, ListView.Contain)
         Qt.callLater(()=> mainCol.forceActiveFocus())
     }
+    function logicalSize(m){
+        const sw = (m.transform % 2 === 1) ? m.h : m.w
+        const sh = (m.transform % 2 === 1) ? m.w : m.h
+        return { w: Math.round(sw / m.scale), h: Math.round(sh / m.scale) }
+    }
+    function anchorFor(m){
+        if(!m) return null
+        if(HyprService.refMonitorName && m.name !== HyprService.refMonitorName){
+            const ref = monitors.find(x => x.name === HyprService.refMonitorName)
+            if(ref) return ref
+        }
+        return monitors.find(x => x.name !== m.name) || null
+    }
+    function monitorSide(idx){
+        const m = monitors[idx]
+        if(!m) return ""
+        const s = logicalSize(m)
+        const near = (p,q)=> Math.abs(p-q) <= 2
+        for(const o of monitors){
+            if(o.name === m.name) continue
+            const os = logicalSize(o)
+            if(near(m.y, o.y) && near(m.x + s.w, o.x)) return "left"
+            if(near(m.y, o.y) && near(m.x, o.x + os.w)) return "right"
+            if(near(m.x, o.x) && near(m.y + s.h, o.y)) return "top"
+            if(near(m.x, o.x) && near(m.y, o.y + os.h)) return "bottom"
+        }
+        return ""
+    }
+    function luaQuote(s){
+        return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\""
+    }
+    function luaRule(name, mode, position, scale, mirror){
+        return "hl.monitor({output=" + luaQuote(name)
+            + ", disabled=false, mirror=" + luaQuote(mirror || "")
+            + ", mode=" + luaQuote(mode)
+            + ", position=" + luaQuote(position)
+            + ", scale=" + scale + "})"
+    }
+    function mirrorName(m){
+        if(!m || !m.mirrorOf || m.mirrorOf === "none") return ""
+        const target = monitors.find(x => String(x.id) === String(m.mirrorOf))
+        return target ? target.name : ""
+    }
+    function preserveRules(exceptIdx){
+        let lua = ""
+        for(let i=0;i<monitors.length;i++){
+            if(i===exceptIdx) continue
+            const m = monitors[i]
+            if(mirrorName(m)) continue
+            lua += luaRule(m.name, m.mode, m.x + "x" + m.y, m.scale, "") + "; "
+        }
+        return lua
+    }
+    function runLua(lua){
+        evalProc.command = ["hyprctl","eval",lua]
+        evalProc.running = true
+    }
+    function placeMonitor(idx, dir){
+        const m = monitors[idx]
+        if(!m || monitors.length < 2) return
+        const a = anchorFor(m)
+        if(!a) return
+        const s = logicalSize(m)
+        let x = a.x
+        let y = a.y
+        for(const o of monitors){
+            if(o.name === m.name) continue
+            const os = logicalSize(o)
+            if(dir==="left") x = Math.min(x, o.x - s.w)
+            else if(dir==="right") x = Math.max(x, o.x + os.w)
+            else if(dir==="top") y = Math.min(y, o.y - s.h)
+            else if(dir==="bottom") y = Math.max(y, o.y + os.h)
+        }
+        transientError = ""
+        runLua(luaRule(m.name, m.mode, x + "x" + y, m.scale, "") + "; " + preserveRules(idx))
+    }
+    function placeFocused(dir){
+        const it = navItems[selIndex]
+        if(!it || it.kind!=="monitor") return
+        placeMonitor(it.idx, dir)
+    }
+    function toggleMirror(idx){
+        const m = monitors[idx]
+        if(!m || monitors.length < 2) return
+        const mirrored = mirrorName(m) !== ""
+        let target = ""
+        if(!mirrored){
+            target = (HyprService.refMonitorName && m.name !== HyprService.refMonitorName)
+                ? HyprService.refMonitorName
+                : (anchorFor(m) ? anchorFor(m).name : "")
+            if(!target) return
+        }
+        transientError = ""
+        runLua(luaRule(m.name, "preferred", "auto", 1, target) + "; " + preserveRules(idx))
+    }
+    function disconnectIndex(idx){
+        const m = monitors[idx]
+        if(!m) return
+        if(monitors.length<2){ transientError="Cannot disable the only monitor"; return }
+        transientError = ""
+        runLua("hl.monitor({output=" + luaQuote(m.name) + ", disabled=true}); " + preserveRules(idx))
+    }
     function disconnectFocused(){
         const it = navItems[selIndex]
         if(!it || it.kind!=="monitor") return
-        const m = monitors[it.idx]
-        if(!m) return
-        if(monitors.length<2){ errorText.text="Cannot disable the only monitor"; return }
-        disconnectProc.command = ["hyprctl","keyword","monitor", m.name+",disable"]
-        disconnectProc.running=true
-    }
-    function duplicateFocused(){
-        const it = navItems[selIndex]
-        if(!it || it.kind!=="available") return
-        const m = availableMonitors[it.idx]
-        if(m) connectProc("duplicate", m.name)
+        disconnectIndex(it.idx)
     }
     function activate(){
         const it = navItems[selIndex]
         if(!it) return
         if(it.kind==="monitor") disconnectFocused()
-        else if(it.kind==="available") { const m = availableMonitors[it.idx]; if(m) connectProc("extend", m.name) }
-        else if(it.kind==="orient") orient(it.dir)
+        else if(it.kind==="available") { const m = availableMonitors[it.idx]; if(m) connectProc(it.mode, m.name) }
         else if(it.kind==="refresh") refresh()
     }
     readonly property var monitors: HyprService.monitors
     readonly property var availableMonitors: HyprService.availableMonitors
+    readonly property string hyprError: (monitors.length === 0 && HyprService.available) ? "hyprctl failed" : ""
+    property string transientError: ""
     onMonitorsChanged: updateNav()
     onAvailableMonitorsChanged: updateNav()
     function refresh(){
         HyprService.refreshMonitors()
-        errorText.text = HyprService.monitors.length === 0 && HyprService.available ? "hyprctl failed" : ""
     }
     function connectProc(mode, name){
-        let cmd=[]
-        if(mode==="extend") cmd=["hyprctl","keyword","monitor", name+",preferred,auto,1"]
+        transientError = ""
+        let lua = ""
+        if(mode==="extend") lua = luaRule(name, "preferred", "auto", 1, "")
         else if(mode==="duplicate") {
-            const primary = monitors.length>0 ? monitors[0].name : name
-            cmd=["hyprctl","keyword","monitor", name+",preferred,auto,1,mirror,"+primary]
-        } else if(mode==="only") {
-            for(let i=0;i<monitors.length;i++) if(monitors[i].name!==name) { disconnectProc.command=["hyprctl","keyword","monitor", monitors[i].name+",disable"]; disconnectProc.running=true }
-            cmd=["hyprctl","keyword","monitor", name+",preferred,auto,1"]
+            const primary = HyprService.refMonitorName || (monitors.length>0 ? monitors[0].name : name)
+            lua = luaRule(name, "preferred", "auto", 1, primary)
         }
-        connectCmdProc.command=cmd
-        connectCmdProc.running=true
+        runLua(lua + "; " + preserveRules(-1))
     }
-    function orient(dir){
-        if(availableMonitors.length===0 || monitors.length===0) return
-        const name = availableMonitors[0].name
-        let pos="auto"
-        if(dir==="left") pos="-1920x0"
-        else if(dir==="right") pos="1920x0"
-        else if(dir==="top") pos="0x-1080"
-        else if(dir==="bottom") pos="0x1080"
-        connectCmdProc.command=["hyprctl","keyword","monitor", name+",preferred,"+pos+",1"]
-        connectCmdProc.running=true
-    }
-    property Process connectCmdProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }
-    property Process disconnectProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }
+    property Process evalProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }
 }
