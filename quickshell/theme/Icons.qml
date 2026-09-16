@@ -70,6 +70,7 @@ QtObject {
     property string check:            ""
     property string warning:          ""
     property string display:          "󰍹"
+    property string laptop:           "󰌢"
     property string key:              ""
     property string power:            ""
     property string reboot:           "󰜉"

@@ -99,7 +99,11 @@ No icon polls on its own; only services poll or listen to DBus/PipeWire.
 ## 7. Multi-monitor
 
 * `Variants { model: Quickshell.screens }` — one bar per screen.
-* Workspaces shown are those assigned to that screen (`Hyprland.workspaces` filtered by `monitor`).
+* Each bar renders **all** workspaces, grouped per monitor (`Workspaces.qml`):
+  groups on monitors other than the bar's own screen are dimmed, labelled with
+  a built-in/external glyph + monitor name and separated by a divider. The bar
+  passes `screenName: barWin.screen.name`; no per-screen filtering (keeps
+  cross-monitor workspaces visible and clickable).
 * Center/right pills are identical across screens; no per-screen perf divergence.
 
 ## 8. Acceptance

@@ -10,7 +10,7 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 
 ## 2. Display
 
-* **Glyph:** `Icons.workspaceDot` (``) — Waybar `hyprland/workspaces.format: {icon}`.
+* **Glyph:** `Icons.workspaceDot` (``) — Waybar `hyprland/workspaces.format: {icon}`. Replaced by numerals when multiple monitors are connected (§2.1).
 * **States:**
 
   | State | Colour | Notes |
@@ -32,6 +32,36 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
   In other words: **at least 3 dots; if exactly k are occupied, show k+1 up to the max id; never show fewer than the highest id.**
 * **Per-dot interaction:** `MouseArea { onClicked: Hyprland.dispatch("workspace " + id) }`.
 * **Font size:** `10px` equivalent (Waybar workspace buttons use `padding: 0 5px` with dot glyph ~10px). Use `font.pixelSize: 10` for the dot, with `spacing: Theme.gapS` between dots.
+
+### 2.1 Monitor grouping (external-display UX)
+
+> Makes it obvious which workspaces belong to an external display.
+
+* Workspaces are grouped **per monitor**, ordered by physical position
+  (`Hyprland.monitors` sorted by `x`, then `y`).
+* Each group is prefixed by a micro-label: `Icons.laptop` for built-in
+  (`eDP*`/`DSI*`) + monitor name (`eDP-1`), `Icons.display` for external
+  (`HDMI-A-1`), at `Theme.fontSizeSmall`; label colour `Theme.fgMuted` on the
+  bar's own screen, `Theme.fgDim` otherwise. Tooltip names the display kind
+  (built-in/external) and the monitor `description`.
+* Groups are separated by a 1 px `Theme.border` divider.
+* **Slots switch from glyph to numeral when > 1 monitor is connected:**
+  `text: String(workspaceId)` instead of `Icons.workspaceDot` (focused:
+  13 px + `Theme.fontWeightMedium`; others 12 px; slot widens 20 → 22 px).
+  Identifies the workspace inside each monitor group — the dot alone carries
+  no identity. Single-monitor setups keep the plain dot glyph.
+* Labels and dividers render **only when more than one monitor is connected**;
+  single-monitor setups keep the plain dot row.
+* Groups not matching the bar's `screenName` (passed from `Bar.qml`,
+  `barWin.screen.name`) render at `opacity: 0.55` — other-screen workspaces
+  remain visible and clickable but clearly secondary.
+* Dot colours: focused `Theme.fg`; active on another monitor (`ws.active`)
+  `Theme.fg` @ 0.85; occupied inactive `Theme.fgDim` @ 0.85; synthetic /
+  empty `Theme.fgDim` @ 0.55. Dot size: 10 px focused, 9 px active, 8 px rest.
+* Synthetic dots (no `HyprlandWorkspace` yet) live in the **focused monitor's
+  group** — the monitor where `workspace <id>` creates them; the >= 3 dots
+  rule and the create-workspace affordance are unchanged in count, only their
+  group placement follows focus.
 
 ## 3. Per-Workspace App Tray (Implemented)
 
@@ -66,6 +96,12 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 * [ ] Active workspace is white; others are `Theme.fgDim`.
 * [ ] Clicking a dot dispatches `hyprctl dispatch workspace <id>` and focus follows.
 * [ ] No polling; updates are event-driven via `Quickshell.Hyprland`.
+* [ ] With > 1 monitor: per-monitor labels (laptop/monitor glyph + name) and
+      `Theme.border` dividers; other-screen groups dimmed (opacity 0.55).
+* [ ] With > 1 monitor: slots show workspace numbers (not dots); with a single
+      monitor the dot glyph is used.
+* [ ] Label/dot tooltip names the monitor; external displays read "external".
+* [ ] With a single monitor: no labels/dividers — unchanged flat dot row.
 * [x] Per-workspace app icons appear inline next to each dot, update live on open/close/move.
 * [x] Icon click focuses the window (`focuswindow address:`); dot click switches workspace.
 * [x] Fallback `Icons.window` glyph when no themed icon resolves.

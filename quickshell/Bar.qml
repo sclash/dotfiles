@@ -31,7 +31,7 @@ Scope {
                     id: leftGroup
                     anchors { left: parent.left; leftMargin: Theme.padM; verticalCenter: parent.verticalCenter }
                     spacing: Theme.gapM
-                    Workspaces { }
+                    Workspaces { screenName: barWin.screen ? barWin.screen.name : "" }
                     Rectangle {
                         visible: tray.visible
                         width: 1; height: 18
