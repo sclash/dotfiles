@@ -54,6 +54,7 @@ WlrLayershell {
                     required property var modelData
                     required property int index
                     readonly property int monIdx: index
+                    readonly property var monRelation: root.monitorRelation(monIdx)
                     width: parent.width
                     height: 56
                     radius: Theme.roundingItem
@@ -80,23 +81,34 @@ WlrLayershell {
                             Text { text: modelData.name + (modelData.focused ? " · focused" : ""); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; elide: Text.ElideRight; Layout.fillWidth: true }
                             Text { text: modelData.mode + " · scale " + modelData.scale + " · " + modelData.pos; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; elide: Text.ElideRight; Layout.fillWidth: true }
                         }
-                        RowLayout {
+                        ColumnLayout {
                             visible: root.monitors.length >= 2
                             Layout.alignment: Qt.AlignVCenter
-                            spacing: Theme.gapS
-                            Repeater {
-                                model: [{ dir: "left", label: "L" }, { dir: "right", label: "R" }, { dir: "top", label: "T" }, { dir: "bottom", label: "B" }]
-                                delegate: Rectangle {
-                                    required property var modelData
-                                    readonly property bool activeDir: root.monitorSide(monitorRow.monIdx) === modelData.dir
-                                    width: 26; height: 26
-                                    radius: Theme.roundingItem
-                                    color: dirMouse.containsMouse ? Theme.bgHover : Theme.bgActive
-                                    border.color: activeDir ? Theme.borderSelected : Theme.border
-                                    border.width: 1
-                                    Text { anchors.centerIn: parent; text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 10; color: activeDir ? Theme.fg : Theme.fgMuted }
-                                    MouseArea { id: dirMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.placeMonitor(monitorRow.monIdx, modelData.dir) }
+                            spacing: 2
+                            RowLayout {
+                                Layout.alignment: Qt.AlignHCenter
+                                spacing: Theme.gapS
+                                Repeater {
+                                    model: [{ dir: "left", label: "L" }, { dir: "right", label: "R" }, { dir: "top", label: "T" }, { dir: "bottom", label: "B" }]
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        readonly property bool activeDir: monitorRow.monRelation !== null && monitorRow.monRelation.dir === modelData.dir
+                                        width: 26; height: 26
+                                        radius: Theme.roundingItem
+                                        color: activeDir ? Theme.accent : (dirMouse.containsMouse ? Theme.bgHover : Theme.bgActive)
+                                        border.color: activeDir ? Theme.accent : Theme.border
+                                        border.width: 1
+                                        Text { anchors.centerIn: parent; text: modelData.label; font.family: Theme.fontFamily; font.pixelSize: 10; font.weight: activeDir ? Theme.fontWeightMedium : Theme.fontWeightNormal; color: activeDir ? Theme.bgBar : Theme.fgMuted }
+                                        MouseArea { id: dirMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.placeMonitor(monitorRow.monIdx, modelData.dir) }
+                                    }
                                 }
+                            }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: monitorRow.monRelation !== null ? monitorRow.monRelation.dir + " of " + monitorRow.monRelation.name : modelData.pos
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                color: monitorRow.monRelation !== null ? Theme.fgMuted : Theme.fgDim
                             }
                         }
                         Rectangle {
@@ -242,20 +254,20 @@ WlrLayershell {
         }
         return monitors.find(x => x.name !== m.name) || null
     }
-    function monitorSide(idx){
+    function monitorRelation(idx){
         const m = monitors[idx]
-        if(!m) return ""
+        if(!m) return null
         const s = logicalSize(m)
         const near = (p,q)=> Math.abs(p-q) <= 2
         for(const o of monitors){
             if(o.name === m.name) continue
             const os = logicalSize(o)
-            if(near(m.y, o.y) && near(m.x + s.w, o.x)) return "left"
-            if(near(m.y, o.y) && near(m.x, o.x + os.w)) return "right"
-            if(near(m.x, o.x) && near(m.y + s.h, o.y)) return "top"
-            if(near(m.x, o.x) && near(m.y, o.y + os.h)) return "bottom"
+            if(near(m.y, o.y) && near(m.x + s.w, o.x)) return { dir: "left", name: o.name }
+            if(near(m.y, o.y) && near(m.x, o.x + os.w)) return { dir: "right", name: o.name }
+            if(near(m.x, o.x) && near(m.y + s.h, o.y)) return { dir: "top", name: o.name }
+            if(near(m.x, o.x) && near(m.y, o.y + os.h)) return { dir: "bottom", name: o.name }
         }
-        return ""
+        return null
     }
     function luaQuote(s){
         return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\""

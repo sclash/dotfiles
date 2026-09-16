@@ -39,7 +39,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 * **Disconnect:** per-row `Disconnect` button → `hl.monitor({output={name}, disabled=true})`. Disabled for the last remaining monitor (no-op + inline error "Cannot disable the only monitor" at `Theme.critical`).
 * **Mode toggle:** per-row button labelled with the *action* — `Duplicate` when the output extends, `Extend` when it mirrors — swapped in place via `mirror={reference}` / `mirror=""`. Enabled mirrors are also merged into `HyprService.monitors`, so a mirrored output stays in **Current** (Hyprland 0.56 omits mirroring outputs from `hyprctl monitors`) and remains toggleable/positionable.
-* **Position:** per-row `[L][R][T][B]` picker that repositions *that* output to the left/right/top/bottom edge of the whole layout, computed from every other monitor's geometry (collision-free for 3+ outputs). The picker highlights the monitor's current adjacent side. Position buttons used on a mirrored output unmirror it and place it.
+* **Position:** per-row `[L][R][T][B]` picker that repositions *that* output to the left/right/top/bottom edge of the whole layout, computed from every other monitor's geometry (collision-free for 3+ outputs). The current adjacent side is rendered as a **filled white chip**, captioned with the neighbour, e.g. `bottom of HDMI-A-1` (falls back to the raw `x,y` when the output is not edge-adjacent to any other). Position buttons used on a mirrored output unmirror it and place it.
 
 ## 4. Interaction
 
@@ -65,7 +65,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 * [ ] Current monitors show name, mode, scale, position, focused badge.
 * [ ] Available outputs offer Extend / Duplicate; Extend is default.
-* [ ] Per-monitor `[L][R][T][B]` picker / `H/J/K/L` places that output at the corresponding layout edge without shuffling other outputs, and highlights the current adjacent side.
+* [ ] Per-monitor `[L][R][T][B]` picker / `H/J/K/L` places that output at the corresponding layout edge without shuffling other outputs; the assigned side is filled and captioned (`bottom of HDMI-A-1`).
 * [ ] `j/k` reaches both Extend and Duplicate options for an available output; `Enter` activates the focused option.
 * [ ] Row button toggles Extend ↔ Duplicate in place; a mirrored output stays visible in **Current**.
 * [ ] Disconnect works for `n≥2` and is disabled for last monitor.
