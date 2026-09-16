@@ -61,6 +61,7 @@
   # Install user-specific packages
   home.packages =
     (with pkgs; [
+      (import ./programs/open-research.nix { inherit pkgs; })
       man-pages
       man-pages-posix
       gh
