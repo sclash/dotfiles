@@ -37,7 +37,9 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 
 > Makes it obvious which workspaces belong to an external display.
 
-* Workspaces are grouped **per monitor**, ordered by physical position
+* Workspaces are grouped **per monitor**, ordered by each monitor's lowest
+  workspace id ascending, so the numerals read left-to-right (panels/workspace
+  1 first). Monitors without workspaces fall back to physical position
   (`Hyprland.monitors` sorted by `x`, then `y`).
 * Each group is prefixed by a micro-label: `Icons.laptop` for built-in
   (`eDP*`/`DSI*`) + monitor name (`eDP-1`), `Icons.display` for external
@@ -61,7 +63,8 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 * Synthetic dots (no `HyprlandWorkspace` yet) live in the **focused monitor's
   group** — the monitor where `workspace <id>` creates them; the >= 3 dots
   rule and the create-workspace affordance are unchanged in count, only their
-  group placement follows focus.
+  group placement follows focus. Slots sort numerically inside a group, so a
+  gap-filling create slot sits at its number position (e.g. `3 4`).
 
 ## 3. Per-Workspace App Tray (Implemented)
 
@@ -100,6 +103,8 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
       `Theme.border` dividers; other-screen groups dimmed (opacity 0.55).
 * [ ] With > 1 monitor: slots show workspace numbers (not dots); with a single
       monitor the dot glyph is used.
+* [ ] Monitor groups are ordered by lowest workspace number ascending, and
+      slots sort numerically within each group.
 * [ ] Label/dot tooltip names the monitor; external displays read "external".
 * [ ] With a single monitor: no labels/dividers — unchanged flat dot row.
 * [x] Per-workspace app icons appear inline next to each dot, update live on open/close/move.

@@ -60,7 +60,7 @@ RowLayout {
 
         const order = monList.slice()
             .sort((a, b) => (a.x - b.x) || (a.y - b.y))
-            .map(m => ({ name: m.name, builtin: HyprService.isBuiltinName(m.name), description: m.description || "", ids: [] }))
+            .map((m, i) => ({ name: m.name, builtin: HyprService.isBuiltinName(m.name), description: m.description || "", ids: [], pos: i }))
         const byName = {}
         for (const g of order) byName[g.name] = g
 
@@ -68,7 +68,7 @@ RowLayout {
         for (const w of wsList) {
             const name = w.monitor ? w.monitor.name : ""
             if (name === "" || byName[name]) continue
-            const g = { name: name, builtin: HyprService.isBuiltinName(name), description: "", ids: [] }
+            const g = { name: name, builtin: HyprService.isBuiltinName(name), description: "", ids: [], pos: order.length }
             byName[name] = g
             order.push(g)
         }
@@ -78,9 +78,18 @@ RowLayout {
         }
         for (const g of order) g.ids.sort((a, b) => a - b)
 
+        // Displays with the lowest workspace number come first so the numerals
+        // read ascending across groups; workspace-less monitors fall back to
+        // physical position (x, then y).
+        order.sort((a, b) => {
+            const ka = a.ids.length > 0 ? a.ids[0] : Infinity
+            const kb = b.ids.length > 0 ? b.ids[0] : Infinity
+            return (ka - kb) || (a.pos - b.pos)
+        })
+
         // No monitor info at all (Hyprland IPC down): degrade to 3 dim dots.
         if (order.length === 0)
-            order.push({ name: root.screenName, builtin: HyprService.isBuiltinName(root.screenName), description: "", ids: [] })
+            order.push({ name: root.screenName, builtin: HyprService.isBuiltinName(root.screenName), description: "", ids: [], pos: 0 })
 
         // Synthetic slots live on the focused monitor — the monitor where
         // `workspace <id>` would create a new workspace.
@@ -113,7 +122,10 @@ RowLayout {
             const id = take()
             if (id !== 0) host.slots.push(id)
         }
-        for (const g of order) if (!g.slots) g.slots = g.ids.slice()
+        for (const g of order) {
+            if (!g.slots) g.slots = g.ids.slice()
+            g.slots.sort((a, b) => a - b)
+        }
         return order
     }
 
