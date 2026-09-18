@@ -8,7 +8,11 @@
 {
   programs.opencode = {
     enable = true;
-    package = (pkgs-master.opencode.overrideAttrs (old: {
+    # Build with the older bun from stable nixpkgs (1.3.x): bun 1.4.2 miscompiles
+    # opencode's bundle and every prompt fails with
+    # "TypeError: undefined is not an object (evaluating 'a.name')".
+    # Drop the override once NixOS/nixpkgs#564101 lands in nixpkgs-master.
+    package = ((pkgs-master.opencode.override { bun = pkgs.bun; }).overrideAttrs (old: {
       installPhase = old.installPhase + ''
         wrapProgram $out/bin/opencode \
           --set OPENCODE_DISABLE_CLAUDE_CODE_SKILLS true
