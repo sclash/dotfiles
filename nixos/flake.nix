@@ -58,6 +58,16 @@
       inputs.elephant.follows = "elephant";
     };
 
+    ripwire-src = {
+      url = "github:redhat-et/ripwire/v0.6.1";
+      flake = false;
+    };
+
+    opencode-src = {
+      url = "github:anomalyco/opencode/v1.18.31";
+      flake = false;
+    };
+
   };
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
@@ -91,6 +101,30 @@
       pkgs-master = import nixpkgs-master {
         inherit system;
         config.allowUnfree = true;
+        overlays = [
+          (final: prev: {
+            ripwire = prev.ripwire.overrideAttrs (finalAttrs: prevAttrs: {
+              version = builtins.head (
+                builtins.match ".*project\\(ripwire VERSION ([0-9]+\\.[0-9]+\\.[0-9]+).*" (
+                  builtins.readFile "${inputs.ripwire-src}/CMakeLists.txt"
+                )
+              );
+              src = inputs.ripwire-src;
+            });
+            # opencode = prev.opencode.overrideAttrs (finalAttrs: prevAttrs: {
+            #   version =
+            #     (builtins.fromJSON (
+            #       builtins.readFile "${inputs.opencode-src}/packages/opencode/package.json"
+            #     )).version;
+            #   src = inputs.opencode-src;
+            #   passthru = prevAttrs.passthru // {
+            #     node_modules = prevAttrs.passthru.node_modules.overrideAttrs (old: {
+            #       outputHash = "sha256-3BXy+zxgav8IZCBtMS3cUZc3Vq/1WPQ8msGriwxUXmw=";
+            #     });
+            #   };
+            # });
+          })
+        ];
       };
       username = "asergi";
 

@@ -43,6 +43,7 @@
     ./programs/nvim-lsp.nix
     ./programs/devenv.nix
     ./programs/nushell.nix
+    ./programs/ripwire.nix
   ];
 
   nix.settings.experimental-features = [
@@ -248,7 +249,7 @@
     # };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
     # ".config/hypr".source = "${my-dotfiles}/hypr";
-    # ".config/waybar".source = "${my-dotfiles}/waybar";
+
   };
 
   home.activation.removeStaleConfigDirs = lib.hm.dag.entryBefore [ "linkGeneration" ] ''
