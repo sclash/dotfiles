@@ -211,6 +211,14 @@
 				"nixpkgs#markitdown-mcp"
 			]
 		},
+		"ripwire": {
+			"type": "local",
+			"enabled": false,
+			"command": [
+				"ripwire",
+				"--mcp"
+			]
+		},
 		"arxiv": {
 			"type": "local",
 			"enabled": false,
@@ -326,6 +334,12 @@
 		},
 	},
 	"command": {
+		"new-project": {
+			"description": "Set up .opencode/ in the project root directory through user coverstaion",
+			"template": "{file:commands/new-project.md}\n\n$ARGUMENTS",
+			"agent": "planner",
+			"subtask": true
+		},
 		"plan": {
 			"description": "Create a detailed implementation plan for complex features",
 			"template": "{file:commands/plan.md}\n\n$ARGUMENTS",

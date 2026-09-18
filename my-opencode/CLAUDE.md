@@ -33,6 +33,13 @@ Write code like a surgeon — precise incisions, minimal collateral impact, veri
 3. **Plan Before Execute**: Use Plan Mode for complex operations
 4. **Test-Driven**: Write tests before implementation
 5. **Security-First**: Never compromise on security
+6. **Commit** — Conventional commits format, comprehensive PR summaries
+
+### Git Workflow
+
+**Commit format:** `<type>: <description>` — Types: feat, fix, refactor, docs, test, chore, perf, ci
+
+**PR workflow:** Analyze full commit history → draft comprehensive summary → include test plan → push with `-u` flag.
 
 ---
 
@@ -81,6 +88,6 @@ To be safe, a program must not only run correctly. It must apply defense-in-dept
 
 ---
 
-## Specialized Skills
+## Performance Specialized Skills
 
 For performance-critical or systems engineering work (hot paths, embedded code, databases, kernels, latency/throughput-bound systems), invoke the **`high-perf-systems`** skill. It provides static allocation, control/data plane separation, the primary colors of performance framework, systems-specific anti-patterns, and the "When to Relax These Rules" guidance for prototypes and one-off scripts.
