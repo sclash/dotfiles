@@ -248,9 +248,12 @@ in
       # ecc
     ];
 
+
+  };
+
     home.file = {
 	".claude/skills/explore-codebase" = {
-	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.claude/explore-codebase";
+	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/explore-codebase";
 	  force = true;
 	};
 	".claude/skills/high-perf-systems" = {
@@ -266,6 +269,4 @@ in
 	  force = true;
 	};
     };
-
-  };
 }
