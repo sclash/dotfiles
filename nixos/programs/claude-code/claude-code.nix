@@ -245,12 +245,27 @@ in
       # caveman
       # wshobson-agents
       # "${wshobson-agents}/plugins/data-engineering"
-      ecc
+      # ecc
     ];
 
-    # ".claude/skills/explore-codebase" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.claude/explore-codebase";
-    #   force = true;
-    # };
+    home.file = {
+	".claude/skills/explore-codebase" = {
+	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.claude/explore-codebase";
+	  force = true;
+	};
+	".claude/skills/high-perf-systems" = {
+	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/high-perf-systems/";
+	  force = true;
+	};
+	".claude/skills/download-video" = {
+	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/download-video/";
+	  force = true;
+	};
+	".claude/skills/transcribe-media" = {
+	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/transcribe-media/";
+	  force = true;
+	};
+    };
+
   };
 }
