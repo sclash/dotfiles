@@ -20,7 +20,7 @@
 				"apiKey": "{file:/run/secrets/openrouter}"
 			},
 			"models": {
-				"xiaomi/mimo-v2.6-pro":{},
+				"xiaomi/mimo-v2.6-pro": {},
 				"openai/gtp-6-astra-pro": {
 					"options": {
 						"provider": {
@@ -141,98 +141,192 @@
 					"name": "glm-5.3",
 					"reasoning": true,
 					"variants": {
-						"low": { "reasoningEffort": "low" },
-						"high": { "reasoningEffort": "high" },
-						"max": { "reasoningEffort": "max" }
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"glm-5.3-flash": {
 					"name": "glm-5.3-flash",
 					"variants": {
-						"low": { "reasoningEffort": "low" },
-						"high": { "reasoningEffort": "high" },
-						"max": { "reasoningEffort": "max" }
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"glm-5.6-sol": {
 					"name": "gpt-5.6-sol",
 					"variants": {
-						"none": { "reasoningEffort": "none" },
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"none": {
+							"reasoningEffort": "none"
+						},
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"glm-5.6-luna": {
 					"name": "gpt-5.6-luna",
 					"variants": {
-						"none": { "reasoningEffort": "none" },
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"none": {
+							"reasoningEffort": "none"
+						},
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"glm-5.6-terra": {
 					"name": "gpt-5.6-terra",
 					"variants": {
-						"none": { "reasoningEffort": "none" },
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"none": {
+							"reasoningEffort": "none"
+						},
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"gpt-6-astra": {
 					"name": "gpt-6-astra",
 					"variants": {
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"fable-5.1": {
 					"name": "fable-5.1",
 					"variants": {
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"opus-5": {
 					"name": "opus-5",
 					"variants": {
-						"low": { "reasoningEffort": "low" },
-						"medium": { "reasoningEffort": "medium" },
-						"high": { "reasoningEffort": "high" },
-						"xhigh": { "reasoningEffort": "xhigh" },
-						"max": { "reasoningEffort": "max" }
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"medium": {
+							"reasoningEffort": "medium"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"xhigh": {
+							"reasoningEffort": "xhigh"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"deepseek-v4-pro-0813": {
 					"name": "deepseek-v4-pro-0813",
 					"variants": {
-						"none": { "reasoningEffort": "none" },
-						"low": { "reasoningEffort": "low" },
-						"high": { "reasoningEffort": "high" },
-						"max": { "reasoningEffort": "max" }
+						"none": {
+							"reasoningEffort": "none"
+						},
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 				"deepseek-v4.1-flash": {
 					"name": "deepseek-v4.1-flash",
 					"variants": {
-						"none": { "reasoningEffort": "none" },
-						"low": { "reasoningEffort": "low" },
-						"high": { "reasoningEffort": "high" },
-						"max": { "reasoningEffort": "max" }
+						"none": {
+							"reasoningEffort": "none"
+						},
+						"low": {
+							"reasoningEffort": "low"
+						},
+						"high": {
+							"reasoningEffort": "high"
+						},
+						"max": {
+							"reasoningEffort": "max"
+						}
 					},
 				},
 			}
@@ -510,9 +604,9 @@
 			"agent": "go-build-resolver",
 			"subtask": true
 		},
-		"skill-create": {
+		"infer-skill": {
 			"description": "Generate skills from git history",
-			"template": "{file:commands/skill-create.md}\n\n$ARGUMENTS"
+			"template": "{file:commands/infer-skill.md}\n\n$ARGUMENTS"
 		},
 		"instinct-status": {
 			"description": "View learned instincts",
@@ -547,7 +641,7 @@
 			"**/.env.*": "deny",
 			"**/env": "deny",
 			"**/env.*": "deny",
-				"**/.secrets": "deny",
+			"**/.secrets": "deny",
 			"**/.secrets.*": "deny",
 			"**/secrets": "deny",
 			"/run/secrets": "deny",
