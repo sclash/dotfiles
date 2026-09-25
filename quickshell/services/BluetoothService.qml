@@ -16,11 +16,31 @@ QtObject {
     property string lastError: ""
     signal dataUpdated()
 
+    function reportError(txt) {
+        const t = String(txt || "").replace(/\x1b\[[0-9;]*m/g, "").trim()
+        if (!t) return
+        const line = t.split("\n").filter(Boolean)[0] || t
+        if (line) { root.lastError = line; root.dataUpdated() }
+    }
+
+    function finishPower(proc, exitCode, fallback) {
+        const raw = String((proc && proc.stdout && proc.stdout.text) || "").replace(/\x1b\[[0-9;]*m/g, "").trim()
+        const lines = raw.split("\n").map(line => line.trim()).filter(Boolean)
+        const failure = lines.find(line => /failed|error|no default|blocked|denied|not available/i.test(line))
+        if (exitCode !== 0 || failure) root.reportError(failure || raw || fallback)
+        else root.lastError = ""
+        root.pollProc.running = true
+    }
+
     function disconnect(address) { root.btDiscProc.command = ["bluetoothctl", "disconnect", address]; root.btDiscProc.running = true }
     function connect(address) { root.btConnProc.command = ["bluetoothctl", "connect", address]; root.btConnProc.running = true }
     function forget(address) { root.btRemoveProc.command = ["bluetoothctl", "remove", address]; root.btRemoveProc.running = true }
     function trust(address) { root.btTrustProc.command = ["bluetoothctl", "trust", address]; root.btTrustProc.running = true }
-    function togglePower() { if (root.powered) { root.stopScan(); root.btPowerOff.running=true } else root.btPowerOn.running=true }
+    function togglePower() {
+        root.lastError = ""
+        if (root.powered) { root.stopScan(); root.btPowerOff.running = true }
+        else root.btPowerOn.running = true
+    }
     function pairAndConnect(address) {
         root.btPairProc.command = ["sh", "-c", "bluetoothctl --agent NoInputNoOutput pair " + address + "; bluetoothctl trust " + address + "; bluetoothctl --agent NoInputNoOutput connect " + address + " 2>/dev/null"]
         root.btPairProc.running = true
@@ -143,8 +163,20 @@ QtObject {
     property Process btRemoveProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btTrustProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
     property Process btPairProc: Process { stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process btPowerOn: Process { command: ["bluetoothctl", "power", "on"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
-    property Process btPowerOff: Process { command: ["bluetoothctl", "power", "off"]; stdout: StdioCollector { onStreamFinished: root.pollProc.running = true } }
+    property Process btPowerOn: Process {
+        command: ["sh", "-c", "rfkill unblock bluetooth 2>/dev/null; bluetoothctl power on 2>&1"]
+        stdout: StdioCollector {}
+        onExited: function(exitCode) {
+            root.finishPower(root.btPowerOn, exitCode, "Bluetooth power-on failed")
+        }
+    }
+    property Process btPowerOff: Process {
+        command: ["sh", "-c", "bluetoothctl power off 2>&1"]
+        stdout: StdioCollector {}
+        onExited: function(exitCode) {
+            root.finishPower(root.btPowerOff, exitCode, "Bluetooth power-off failed")
+        }
+    }
     property Process btScanOnProc: Process {
         // One-shot (--timeout) mode: plain `bluetoothctl scan on` piped to a
         // non-tty never prints "Discovery started" nor [NEW] events, while
