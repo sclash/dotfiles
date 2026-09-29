@@ -52,7 +52,7 @@ RowLayout {
     // `ids` are the real workspace ids on that monitor, `slots` adds synthetic
     // free ids on the focused monitor (>= 3 dots, plus one create-workspace
     // affordance). Recomputes on any workspace/monitor/focus IPC change.
-    readonly property var groups: {
+    readonly property var rawGroups: {
         const monList = Hyprland.monitors ? Hyprland.monitors.values : []
         const allWs = Hyprland.workspaces ? Hyprland.workspaces.values : []
         const wsList = []
@@ -139,6 +139,41 @@ RowLayout {
             g.slots.sort((a, b) => a - b)
         }
         return order
+    }
+
+    // Published model for the row Repeater. Hyprland reports a workspace create
+    // and the previous workspace's destroy as separate events a few milliseconds
+    // apart, so `rawGroups` momentarily counts both workspaces at once and the
+    // row gains a dot. Rendering that widens the row and shoves the rest of the
+    // bar sideways for a frame. A raw value whose row geometry matches what is
+    // already published goes out immediately (id/focus updates stay instant);
+    // one that would resize the row is held until the burst has settled.
+    property var groups: []
+
+    // Row-width signature — what actually pushes the bar's right-hand side
+    // around: how many slots each monitor row has, and how many monitor rows
+    // there are (labels and dividers appear past the first).
+    function rowKey(gs) {
+        let k = gs.length + "/"
+        for (let i = 0; i < gs.length; i++) k += gs[i].slots.length + ","
+        return k
+    }
+
+    Timer {
+        id: groupsSettle
+        interval: 16
+        repeat: false
+        onTriggered: root.groups = root.rawGroups
+    }
+
+    onRawGroupsChanged: {
+        const raw = root.rawGroups
+        if (root.groups.length === 0 || root.rowKey(raw) === root.rowKey(root.groups)) {
+            groupsSettle.stop()
+            root.groups = raw
+        } else {
+            groupsSettle.restart()
+        }
     }
 
     Repeater {
