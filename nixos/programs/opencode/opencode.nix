@@ -12,12 +12,13 @@
     # opencode's bundle and every prompt fails with
     # "TypeError: undefined is not an object (evaluating 'a.name')".
     # Drop the override once NixOS/nixpkgs#564101 lands in nixpkgs-master.
-    package = ((pkgs-master.opencode.override { bun = pkgs.bun; }).overrideAttrs (old: {
-      installPhase = old.installPhase + ''
-        wrapProgram $out/bin/opencode \
-          --set OPENCODE_DISABLE_CLAUDE_CODE_SKILLS true
-      '';
-    }));
+    #
+    # Never wrap $out/bin/opencode here. nixpkgs already wraps it once, and a
+    # second wrapProgram layer makes the running process report argv0
+    # ".opencode-wrapped_", which Herdr does not match (it only knows
+    # opencode/opencode2/open-code), so panes never show up in its Agents tab.
+    # Put runtime env vars in home.sessionVariables below instead.
+    package = pkgs-master.opencode.override { bun = pkgs.bun; };
     # enableMcpIntegration = true;
     # settings = {
     #   provider = {
@@ -550,6 +551,10 @@
     #   };
     # };
   };
+
+  # zsh sources this from ~/.zshrc, so it also applies inside Herdr panes.
+  # Kept out of the package wrapper on purpose, see the note on package above.
+  home.sessionVariables.OPENCODE_DISABLE_CLAUDE_CODE_SKILLS = "true";
 
   # Symlink dotfiles opencode content dirs into ~/.config/opencode/
   # so that {file:prompts/...}, {file:commands/...}, and instructions
