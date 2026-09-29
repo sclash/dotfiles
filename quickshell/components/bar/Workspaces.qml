@@ -72,20 +72,17 @@ RowLayout {
             byName[name] = g
             order.push(g)
         }
+        // Workspaces Hyprland has not attached to a monitor yet (create/destroy
+        // race: they land in the workspace list before their monitor is
+        // reported). Keep their ids — they are parked on the focused monitor
+        // below. Dropping them instead would shrink the slot row for a frame
+        // and shove the rest of the bar sideways.
+        const orphaned = []
         for (const w of wsList) {
             const name = w.monitor ? w.monitor.name : ""
-            if (byName[name]) byName[name].ids.push(w.id)
+            if (name !== "" && byName[name]) byName[name].ids.push(w.id)
+            else orphaned.push(w.id)
         }
-        for (const g of order) g.ids.sort((a, b) => a - b)
-
-        // Displays with the lowest workspace number come first so the numerals
-        // read ascending across groups; workspace-less monitors fall back to
-        // physical position (x, then y).
-        order.sort((a, b) => {
-            const ka = a.ids.length > 0 ? a.ids[0] : Infinity
-            const kb = b.ids.length > 0 ? b.ids[0] : Infinity
-            return (ka - kb) || (a.pos - b.pos)
-        })
 
         // No monitor info at all (Hyprland IPC down): degrade to 3 dim dots.
         if (order.length === 0)
@@ -96,6 +93,21 @@ RowLayout {
         const focusedName = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : ""
         let host = order[0]
         for (const g of order) if (g.name === focusedName) host = g
+
+        // Park monitor-less workspaces on the focused monitor (the one
+        // Hyprland just created them on) so the rendered dot count is the same
+        // before and after the IPC settles.
+        for (const id of orphaned) host.ids.push(id)
+        for (const g of order) g.ids.sort((a, b) => a - b)
+
+        // Displays with the lowest workspace number come first so the numerals
+        // read ascending across groups; workspace-less monitors fall back to
+        // physical position (x, then y).
+        order.sort((a, b) => {
+            const ka = a.ids.length > 0 ? a.ids[0] : Infinity
+            const kb = b.ids.length > 0 ? b.ids[0] : Infinity
+            return (ka - kb) || (a.pos - b.pos)
+        })
 
         const used = {}
         for (const w of wsList) used[w.id] = true
