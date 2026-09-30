@@ -21,6 +21,7 @@
 			},
 			"models": {
 				"xiaomi/mimo-v2.6-pro": {},
+				"stealth/space-bunny-alpha": {},
 				"openai/gtp-6-astra-pro": {
 					"options": {
 						"provider": {
@@ -41,7 +42,7 @@
 						}
 					}
 				},
-				"openai/gtp-5.6-sol-pro": {
+				"openai/gtp-6.1-sol-pro": {
 					"options": {
 						"provider": {
 							"order": [
@@ -51,7 +52,7 @@
 						}
 					}
 				},
-				"openai/gtp-5.6-sol": {
+				"openai/gtp-6.1-sol": {
 					"options": {
 						"provider": {
 							"order": [

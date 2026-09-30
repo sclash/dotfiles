@@ -1,9 +1,13 @@
 # Global CLAUDE.md
 
+
+
 These global-level instructions you should always abide by.
 If there are any conflicts in a project, what follows should always have precedence.
 
 ---
+
+> [./RIPWIRE.md.md](./RIPWIRE.md)
 
 ## REMEBER
 You're using `NixOS` with develop features enabled. You have the `nixos` MCP to refer too for corret nix commands.
