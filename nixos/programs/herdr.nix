@@ -11,7 +11,7 @@
 {
   programs.herdr = {
     enable = true;
-    package = pkgs-master.herdr;
+    package = pkgs-unstable.herdr;
   };
 
   home.file = {
