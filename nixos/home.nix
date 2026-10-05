@@ -58,6 +58,8 @@
   ];
   home.enableNixpkgsReleaseCheck = false;
 
+  home.sessionVariables.LD_LIBRARY_PATH = "/run/current-system/sw/share/nix-ld/lib";
+
   # --- Packages ---
   # Install user-specific packages
   home.packages =
