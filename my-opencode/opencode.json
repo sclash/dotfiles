@@ -378,6 +378,15 @@
 				"opencode"
 			]
 		},
+		"shadcnVue": {
+			"type": "local",
+			"enabled": false,
+			"command": [
+				"npx",
+				"shadcn-vue@latest",
+				"mcp"
+			]
+		},
 		"nixos": {
 			"type": "local",
 			"enabled": false,
