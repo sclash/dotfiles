@@ -574,7 +574,26 @@
 			"*nix-env *": "ask",
 			"*nix profile install *": "ask",
 			"*nix-channel --add *": "ask",
-			"*sudo *": "ask"
+			"*sudo *": "ask",
+			"**/.env": "deny",
+			"**/.env.local": "deny",
+			"**/.env.production": "deny",
+			"**/.env.development": "deny",
+			"**/.secrets": "deny",
+			"**/.secrets.*": "deny",
+			"**/secrets": "deny",
+			"**/secrets.*": "deny",
+			"**/credentials": "deny",
+			"**/credentials.*": "deny",
+			"**/id_rsa": "deny",
+			"**/id_rsa.*": "deny",
+			"**/*.pem": "deny",
+			"**/*.key": "deny",
+			"**/*.p12": "deny",
+			"/run/secrets": "deny",
+			"/run/secrets.d": "deny",
+			"/run/secrets.d/**": "deny",
+			"/run/secrets/**": "deny"
 		}
 	}
 }
