@@ -69,7 +69,7 @@ Advise them not to worry about organizing it - just get it all out. Offer multip
 
 **If integrations are available** (e.g., Slack, Teams, Google Drive, SharePoint, or other MCP servers), mention that these can be used to pull in context directly.
 
-**If no integrations are detected and in Claude.ai or Claude app:** Suggest they can enable connectors in their Claude settings to allow pulling context from messaging apps and document storage directly.
+**If no integrations are detected:** the `github` MCP server is configured but currently disabled in `~/.config/opencode/opencode.json`; enable it to pull repository context directly, or ask the user to paste the relevant content.
 
 Inform them clarifying questions will be asked once they've done their initial dump.
 
@@ -131,8 +131,7 @@ Ask if this structure works, or if they want to adjust it.
 
 Create the initial document structure with placeholder text for all sections.
 
-**If access to artifacts is available:**
-Use `create_file` to create an artifact. This gives both Claude and the user a scaffold to work from.
+Write the skeleton straight to a markdown file with the `write` tool. That gives both you and the user a scaffold to work from.
 
 Inform them that the initial structure with placeholders for all sections will be created.
 
@@ -185,7 +184,7 @@ Based on what they've selected, ask if there's anything important missing for th
 
 ### Step 5: Drafting
 
-Use `str_replace` to replace the placeholder text for this section with the actual drafted content.
+Use `edit` to replace the placeholder text for this section with the actual drafted content.
 
 Announce the [SECTION NAME] section will be drafted now based on what they've selected.
 
@@ -205,7 +204,7 @@ Provide a note: Instead of editing the doc directly, ask them to indicate what t
 ### Step 6: Iterative Refinement
 
 As user provides feedback:
-- Use `str_replace` or `edit` tool to make edits (never reprint the whole doc)
+- Use the `edit` tool to make edits (never reprint the whole doc)
 - **If using artifacts:** Provide link to artifact after each edit
 - **In opencode / using files:** Just confirm edits are complete
 - If user edits doc directly and asks to read it: mentally note the changes they made and keep them in mind for future sections (this shows their preferences)
@@ -295,7 +294,7 @@ Summarize any issues found.
 ### Step 4: Report and Fix
 
 If issues found:
-Report that Reader Claude struggled with specific issues.
+Report that the reader struggled with specific issues.
 
 List the specific issues.
 
@@ -305,40 +304,40 @@ Loop back to refinement for problematic sections.
 
 ---
 
-**If no access to sub-agents (e.g., claude.ai web interface):**
+**If you have no access to sub-agents:**
 
 The user will need to do the testing manually.
 
 ### Step 1: Predict Reader Questions
 
-Ask what questions people might ask when trying to discover this document. What would they type into Claude.ai?
+Ask what questions people might ask when trying to discover this document. What would they type into a search box or an assistant?
 
 Generate 5-10 questions that readers would realistically ask.
 
 ### Step 2: Setup Testing
 
 Provide testing instructions:
-1. Open a fresh Claude conversation: https://claude.ai
+1. Open a fresh conversation in a separate assistant (a new opencode session works well)
 2. Paste or share the document content (if using a shared doc platform with connectors enabled, provide the link)
-3. Ask Reader Claude the generated questions
+3. Ask the reader the generated questions
 
-For each question, instruct Reader Claude to provide:
+For each question, instruct the reader to provide:
 - The answer
 - Whether anything was ambiguous or unclear
 - What knowledge/context the doc assumes is already known
 
-Check if Reader Claude gives correct answers or misinterprets anything.
+Check if the reader gives correct answers or misinterprets anything.
 
 ### Step 3: Additional Checks
 
-Also ask Reader Claude:
+Also ask the reader:
 - "What in this doc might be ambiguous or unclear to readers?"
 - "What knowledge or context does this doc assume readers already have?"
 - "Are there any internal contradictions or inconsistencies?"
 
 ### Step 4: Iterate Based on Results
 
-Ask what Reader Claude got wrong or struggled with. Indicate intention to fix those gaps.
+Ask what the reader got wrong or struggled with. Indicate intention to fix those gaps.
 
 Loop back to refinement for any problematic sections.
 
@@ -346,12 +345,12 @@ Loop back to refinement for any problematic sections.
 
 ### Exit Condition (Both Approaches)
 
-When Reader Claude consistently answers questions correctly and doesn't surface new gaps or ambiguities, the doc is ready.
+When the reader consistently answers questions correctly and doesn't surface new gaps or ambiguities, the doc is ready.
 
 ## Final Review
 
 When Reader Testing passes:
-Announce the doc has passed Reader Claude testing. Before completion:
+Announce the doc has passed reader testing. Before completion:
 
 1. Recommend they do a final read-through themselves - they own this document and are responsible for its quality
 2. Suggest double-checking any facts, links, or technical details
@@ -381,11 +380,11 @@ Announce document completion. Provide a few final tips:
 - Throughout, if context is missing on something mentioned, proactively ask
 - Don't let gaps accumulate - address them as they come up
 
-**Artifact Management:**
-- Use `create_file` for drafting full sections
-- Use `str_replace` for all edits
-- Provide artifact link after every change
-- Never use artifacts for brainstorming lists - that's just conversation
+**File Management:**
+- Use `write` for drafting full sections
+- Use `edit` for all subsequent edits
+- Give the user the file path after every change
+- Never write a file for brainstorming lists - that's just conversation
 
 **Quality over Speed:**
 - Don't rush through stages
@@ -400,7 +399,7 @@ In opencode, the doc-coauthoring workflow works via file-based operations:
 
 **File operations:**
 - Create document scaffold with `write` tool
-- Edit sections with `edit` tool (str_replace)
+- Edit sections with the `edit` tool
 - Read document with `read` tool
 
 **Sub-agents for Reader Testing (Stage 3):**

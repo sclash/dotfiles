@@ -7,7 +7,11 @@ url = 'http://localhost:5173'  # Replace with your URL
 console_logs = []
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    # executable_path + --no-sandbox are required on NixOS: Playwright's
+    # bundled Chromium cannot resolve its shared-library dependencies.
+    browser = p.chromium.launch(headless=True,
+                                executable_path='/run/current-system/sw/bin/chromium',
+                                args=['--no-sandbox', '--disable-dev-shm-usage'])
     page = browser.new_page(viewport={'width': 1920, 'height': 1080})
 
     # Set up console log capture
@@ -28,8 +32,8 @@ with sync_playwright() as p:
     browser.close()
 
 # Save console logs to file
-with open('/mnt/user-data/outputs/console.log', 'w') as f:
+with open('/tmp/console.log', 'w') as f:
     f.write('\n'.join(console_logs))
 
 print(f"\nCaptured {len(console_logs)} console messages")
-print(f"Logs saved to: /mnt/user-data/outputs/console.log")
+print(f"Logs saved to: /tmp/console.log")

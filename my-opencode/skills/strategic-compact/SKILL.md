@@ -1,16 +1,17 @@
 ---
 name: strategic-compact
 description: Suggests manual context compaction at logical intervals to preserve context through task phases rather than arbitrary auto-compaction.
-origin: ECC
+metadata:
+  origin: ECC
 ---
 
 # Strategic Compact Skill
 
-Suggests manual `/compact` at strategic points in your workflow rather than relying on arbitrary auto-compaction.
+Suggests a manual `/compact` at strategic points in your workflow rather than relying on arbitrary auto-compaction.
 
 ## When to Activate
 
-- Running long sessions that approach context limits (200K+ tokens)
+- Running long sessions that approach context limits
 - Working on multi-phase tasks (research → plan → implement → test)
 - Switching between unrelated tasks within the same session
 - After completing a major milestone and starting new work
@@ -30,37 +31,23 @@ Strategic compaction at logical boundaries:
 
 ## How It Works
 
-The `suggest-compact.js` script runs on PreToolUse (Edit/Write) and:
+The `strategic-compact` opencode plugin does this. It lives in `~/.config/opencode/plugins/strategic-compact.js` and is deployed from `my-opencode/plugins/` in the dotfiles repo, so it loads automatically — there is nothing to install and no hook config to edit.
 
-1. **Tracks tool calls** — Counts tool invocations in session
-2. **Threshold detection** — Suggests at configurable threshold (default: 50 calls)
-3. **Periodic reminders** — Reminds every 25 calls after threshold
+1. **Counts tool calls per session** via the `tool.execute.before` hook
+2. **Detects the threshold** and queues a suggestion once the count passes it
+3. **Reminds periodically** every `interval` calls after that, so the suggestion stays visible across a long stretch of work
+4. **Delivers the nudge** through `experimental.chat.system.transform`, so it reaches you as part of the system prompt rather than as noise in a tool result
+5. **Resets the counter** when compaction runs, since the context pressure that triggered the suggestion is gone
 
-## Hook Setup
-
-Add to your `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit",
-        "hooks": [{ "type": "command", "command": "node ~/.claude/skills/strategic-compact/suggest-compact.js" }]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [{ "type": "command", "command": "node ~/.claude/skills/strategic-compact/suggest-compact.js" }]
-      }
-    ]
-  }
-}
-```
+This replaces an earlier version of this skill that ran as a Claude Code `PreToolUse` hook configured in `~/.claude/settings.json`. opencode has no equivalent declarative hook configuration, so the logic lives in a plugin instead. If you previously followed that skill's setup instructions, you can remove them — nothing reads that file.
 
 ## Configuration
 
-Environment variables:
-- `COMPACT_THRESHOLD` — Tool calls before first suggestion (default: 50)
+Environment variables, read when the plugin loads:
+
+- `STRATEGIC_COMPACT=off` — disable the plugin entirely
+- `STRATEGIC_COMPACT_THRESHOLD=N` — tool calls before the first suggestion (default: 50)
+- `STRATEGIC_COMPACT_INTERVAL=N` — calls between reminders after the threshold (default: 25)
 
 ## Compaction Decision Guide
 
@@ -69,7 +56,7 @@ Use this table to decide when to compact:
 | Phase Transition | Compact? | Why |
 |-----------------|----------|-----|
 | Research → Planning | Yes | Research context is bulky; plan is the distilled output |
-| Planning → Implementation | Yes | Plan is in TodoWrite or a file; free up context for code |
+| Planning → Implementation | Yes | Plan is in the todo list or a file; free up context for code |
 | Implementation → Testing | Maybe | Keep if tests reference recent code; compact if switching focus |
 | Debugging → Next feature | Yes | Debug traces pollute context for unrelated work |
 | Mid-implementation | No | Losing variable names, file paths, and partial state is costly |
@@ -81,19 +68,19 @@ Understanding what persists helps you compact with confidence:
 
 | Persists | Lost |
 |----------|------|
-| CLAUDE.md instructions | Intermediate reasoning and analysis |
-| TodoWrite task list | File contents you previously read |
-| Memory files (`~/.claude/memory/`) | Multi-step conversation context |
-| Git state (commits, branches) | Tool call history and counts |
-| Files on disk | Nuanced user preferences stated verbally |
+| `AGENTS.md` / `CLAUDE.md` instructions | Intermediate reasoning and analysis |
+| Todo list (`todowrite`) | File contents you previously read |
+| Files on disk | Multi-step conversation context |
+| Git state (commits, branches) | Nuanced user preferences stated verbally |
+| Loaded skills | Tool call history and counts |
 
 ## Best Practices
 
-1. **Compact after planning** — Once plan is finalized in TodoWrite, compact to start fresh
+1. **Compact after planning** — Once the plan is finalized, compact to start fresh
 2. **Compact after debugging** — Clear error-resolution context before continuing
 3. **Don't compact mid-implementation** — Preserve context for related changes
-4. **Read the suggestion** — The hook tells you *when*, you decide *if*
-5. **Write before compacting** — Save important context to files or memory before compacting
+4. **Read the suggestion** — The plugin tells you *when*, you decide *if*
+5. **Write before compacting** — Save important context to files before compacting
 6. **Use `/compact` with a summary** — Add a custom message: `/compact Focus on implementing auth middleware next`
 
 ## Token Optimization Patterns
@@ -106,26 +93,24 @@ Instead of loading full skill content at session start, use a trigger table that
 | "test", "tdd", "coverage" | tdd-workflow | User mentions testing |
 | "security", "auth", "xss" | security-review | Security-related work |
 | "deploy", "ci/cd" | deployment-patterns | Deployment context |
-
 ### Context Composition Awareness
 Monitor what's consuming your context window:
-- **CLAUDE.md files** — Always loaded, keep lean
+- **`AGENTS.md` / `CLAUDE.md` files** — Always loaded, keep lean
 - **Loaded skills** — Each skill adds 1-5K tokens
 - **Conversation history** — Grows with each exchange
 - **Tool results** — File reads, search results add bulk
 
 ### Duplicate Instruction Detection
 Common sources of duplicate context:
-- Same rules in both `~/.claude/rules/` and project `.claude/rules/`
-- Skills that repeat CLAUDE.md instructions
+
+- Skills that repeat `AGENTS.md` instructions
 - Multiple skills covering overlapping domains
 
 ### Context Optimization Tools
-- `token-optimizer` MCP — Automated 95%+ token reduction via content deduplication
-- `context-mode` — Context virtualization (315KB to 5.4KB demonstrated)
+- `context-mode` MCP — Context virtualization, configured in `~/.config/opencode/opencode.json` (currently disabled; enable it to use)
 
 ## Related
 
 - [The Longform Guide](https://x.com/affaanmustafa/status/2014040193557471352) — Token optimization section
-- Memory persistence hooks — For state that survives compaction
-- `continuous-learning` skill — Extracts patterns before session ends
+- `nix-ld-env.js` plugin — keeps `LD_LIBRARY_PATH` pointing at nix-ld so isolated `uvx`/`uv run` tooling in other skills keeps working
+- `verification-loop` skill — run a full quality pass after compacting

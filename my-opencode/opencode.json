@@ -122,7 +122,7 @@
 		},
 		"opencode-go": {
 			"options": {
-				"apiKey": "{file:/run/secrets/opencode}",
+				"apiKey": "{file:/run/secrets/opencode}"
 			}
 		},
 		"opencode": {
@@ -151,7 +151,7 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
 				"glm-5.3-flash": {
 					"name": "glm-5.3-flash",
@@ -165,10 +165,10 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
-				"glm-5.6-sol": {
-					"name": "gpt-5.6-sol",
+				"glm-6.1-sol": {
+					"name": "gpt-6.1-sol",
 					"variants": {
 						"none": {
 							"reasoningEffort": "none"
@@ -188,53 +188,7 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
-				},
-				"glm-5.6-luna": {
-					"name": "gpt-5.6-luna",
-					"variants": {
-						"none": {
-							"reasoningEffort": "none"
-						},
-						"low": {
-							"reasoningEffort": "low"
-						},
-						"medium": {
-							"reasoningEffort": "medium"
-						},
-						"high": {
-							"reasoningEffort": "high"
-						},
-						"xhigh": {
-							"reasoningEffort": "xhigh"
-						},
-						"max": {
-							"reasoningEffort": "max"
-						}
-					},
-				},
-				"glm-5.6-terra": {
-					"name": "gpt-5.6-terra",
-					"variants": {
-						"none": {
-							"reasoningEffort": "none"
-						},
-						"low": {
-							"reasoningEffort": "low"
-						},
-						"medium": {
-							"reasoningEffort": "medium"
-						},
-						"high": {
-							"reasoningEffort": "high"
-						},
-						"xhigh": {
-							"reasoningEffort": "xhigh"
-						},
-						"max": {
-							"reasoningEffort": "max"
-						}
-					},
+					}
 				},
 				"gpt-6-astra": {
 					"name": "gpt-6-astra",
@@ -254,10 +208,10 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
 				"fable-5.1": {
-					"name": "fable-5.1",
+					"name": "claude-fable-5.1",
 					"variants": {
 						"low": {
 							"reasoningEffort": "low"
@@ -274,10 +228,10 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
-				"opus-5": {
-					"name": "opus-5",
+				"opus-5.5": {
+					"name": "claude-opus-5.5",
 					"variants": {
 						"low": {
 							"reasoningEffort": "low"
@@ -294,7 +248,7 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
 				"deepseek-v4-pro-0813": {
 					"name": "deepseek-v4-pro-0813",
@@ -311,7 +265,7 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
+					}
 				},
 				"deepseek-v4.1-flash": {
 					"name": "deepseek-v4.1-flash",
@@ -328,8 +282,8 @@
 						"max": {
 							"reasoningEffort": "max"
 						}
-					},
-				},
+					}
+				}
 			}
 		}
 	},
@@ -395,7 +349,7 @@
 			"enabled": false,
 			"command": [
 				"graphify-mcp",
-				"./graphify-out/graph.json",
+				"./graphify-out/graph.json"
 			]
 		},
 		"openrouter": {
@@ -477,10 +431,10 @@
 		}
 	},
 	"plugin": [
-		"superpowers@git+https://github.com/obra/superpowers.git",
+		"superpowers@git+https://github.com/obra/superpowers.git"
 	],
 	"instructions": [
-		"AGENTS.md",
+		"AGENTS.md"
 	],
 	"agent": {
 		"build": {
@@ -492,146 +446,6 @@
 				"edit": "allow",
 				"bash": "allow"
 			}
-		},
-	},
-	"command": {
-		"new-project": {
-			"description": "Set up .opencode/ in the project root directory through user coverstaion",
-			"template": "{file:commands/new-project.md}\n\n$ARGUMENTS",
-			"agent": "planner",
-			"subtask": true
-		},
-		"plan": {
-			"description": "Create a detailed implementation plan for complex features",
-			"template": "{file:commands/plan.md}\n\n$ARGUMENTS",
-			"agent": "planner",
-			"subtask": true
-		},
-		"tdd": {
-			"description": "Enforce TDD workflow with 80%+ test coverage",
-			"template": "{file:commands/tdd.md}\n\n$ARGUMENTS",
-			"agent": "tdd-guide",
-			"subtask": true
-		},
-		"code-review": {
-			"description": "Review code for quality, security, and maintainability",
-			"template": "{file:commands/code-review.md}\n\n$ARGUMENTS",
-			"agent": "code-reviewer",
-			"subtask": true
-		},
-		"security": {
-			"description": "Run comprehensive security review",
-			"template": "{file:commands/security.md}\n\n$ARGUMENTS",
-			"agent": "security-reviewer",
-			"subtask": true
-		},
-		"build-fix": {
-			"description": "Fix build and TypeScript errors with minimal changes",
-			"template": "{file:commands/build-fix.md}\n\n$ARGUMENTS",
-			"agent": "build-error-resolver",
-			"subtask": true
-		},
-		"e2e": {
-			"description": "Generate and run E2E tests with Playwright",
-			"template": "{file:commands/e2e.md}\n\n$ARGUMENTS",
-			"agent": "e2e-runner",
-			"subtask": true
-		},
-		"refactor-clean": {
-			"description": "Remove dead code and consolidate duplicates",
-			"template": "{file:commands/refactor-clean.md}\n\n$ARGUMENTS",
-			"agent": "refactor-cleaner",
-			"subtask": true
-		},
-		"orchestrate": {
-			"description": "Orchestrate multiple agents for complex tasks",
-			"template": "{file:commands/orchestrate.md}\n\n$ARGUMENTS",
-			"agent": "planner",
-			"subtask": true
-		},
-		"learn": {
-			"description": "Extract patterns and learnings from session",
-			"template": "{file:commands/learn.md}\n\n$ARGUMENTS"
-		},
-		"checkpoint": {
-			"description": "Save verification state and progress",
-			"template": "{file:commands/checkpoint.md}\n\n$ARGUMENTS"
-		},
-		"verify": {
-			"description": "Run verification loop",
-			"template": "{file:commands/verify.md}\n\n$ARGUMENTS"
-		},
-		"eval": {
-			"description": "Run evaluation against criteria",
-			"template": "{file:commands/eval.md}\n\n$ARGUMENTS"
-		},
-		"update-docs": {
-			"description": "Update documentation",
-			"template": "{file:commands/update-docs.md}\n\n$ARGUMENTS",
-			"agent": "doc-updater",
-			"subtask": true
-		},
-		"update-codemaps": {
-			"description": "Update codemaps",
-			"template": "{file:commands/update-codemaps.md}\n\n$ARGUMENTS",
-			"agent": "doc-updater",
-			"subtask": true
-		},
-		"test-coverage": {
-			"description": "Analyze test coverage",
-			"template": "{file:commands/test-coverage.md}\n\n$ARGUMENTS",
-			"agent": "tdd-guide",
-			"subtask": true
-		},
-		"setup-pm": {
-			"description": "Configure package manager",
-			"template": "{file:commands/setup-pm.md}\n\n$ARGUMENTS"
-		},
-		"go-review": {
-			"description": "Go code review",
-			"template": "{file:commands/go-review.md}\n\n$ARGUMENTS",
-			"agent": "go-reviewer",
-			"subtask": true
-		},
-		"go-test": {
-			"description": "Go TDD workflow",
-			"template": "{file:commands/go-test.md}\n\n$ARGUMENTS",
-			"agent": "tdd-guide",
-			"subtask": true
-		},
-		"go-build": {
-			"description": "Fix Go build errors",
-			"template": "{file:commands/go-build.md}\n\n$ARGUMENTS",
-			"agent": "go-build-resolver",
-			"subtask": true
-		},
-		"infer-skill": {
-			"description": "Generate skills from git history",
-			"template": "{file:commands/infer-skill.md}\n\n$ARGUMENTS"
-		},
-		"instinct-status": {
-			"description": "View learned instincts",
-			"template": "{file:commands/instinct-status.md}\n\n$ARGUMENTS"
-		},
-		"instinct-import": {
-			"description": "Import instincts",
-			"template": "{file:commands/instinct-import.md}\n\n$ARGUMENTS"
-		},
-		"instinct-export": {
-			"description": "Export instincts",
-			"template": "{file:commands/instinct-export.md}\n\n$ARGUMENTS"
-		},
-		"evolve": {
-			"description": "Cluster instincts into skills",
-			"template": "{file:commands/evolve.md}\n\n$ARGUMENTS"
-		},
-		"promote": {
-			"description": "Promote project instincts to global scope",
-			"template": "{file:commands/promote.md}\n\n$ARGUMENTS"
-		},
-		"projects": {
-			"description": "List known projects and instinct stats",
-			"template": "{file:commands/projects.md}\n\n$ARGUMENTS"
 		}
 	},
 	"permission": {
@@ -647,7 +461,7 @@
 			"**/secrets": "deny",
 			"/run/secrets": "deny",
 			"**/secrets.*": "deny",
-			"/run/secrets.*": "deny",
+			"/run/secrets.*": "deny"
 		},
 		"edit": {
 			"*": "ask",
@@ -660,7 +474,7 @@
 			"/run/secrets": "deny",
 			"**/secrets": "deny",
 			"**/secrets.*": "deny",
-			"/run/secrets.*": "deny",
+			"/run/secrets.*": "deny"
 		},
 		"glob": {
 			"*": "allow",
@@ -673,7 +487,7 @@
 			"**/secrets": "deny",
 			"**/secrets.*": "deny",
 			"/run/secrets": "deny",
-			"/run/secrets.*": "deny",
+			"/run/secrets.*": "deny"
 		},
 		"grep": {
 			"*": "allow",
@@ -686,7 +500,7 @@
 			"**/secrets": "deny",
 			"**/secrets.*": "deny",
 			"/run/secrets": "deny",
-			"/run/secrets.*": "deny",
+			"/run/secrets.*": "deny"
 		},
 		"bash": {
 			"/run/secrets": "deny",

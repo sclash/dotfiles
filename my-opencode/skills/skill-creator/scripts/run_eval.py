@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Run trigger evaluation for a skill description.
 
-Tests whether a skill's description causes Claude to trigger (read the skill)
+Tests whether a skill's description causes opencode to trigger (read the skill)
 for a set of queries. Outputs results as JSON.
 """
 
 import argparse
 import json
 import os
-import select
 import subprocess
 import sys
 import time
@@ -20,14 +19,14 @@ from scripts.utils import parse_skill_md
 
 
 def find_project_root() -> Path:
-    """Find the project root by walking up from cwd looking for .claude/.
+    """Find the project root by walking up from cwd looking for .opencode/.
 
-    Mimics how Claude Code discovers its project root, so the command file
-    we create ends up where claude -p will look for it.
+    Mimics how opencode discovers its project root, so the skill directory
+    we create ends up where `opencode run` will look for it.
     """
     current = Path.cwd()
     for parent in [current, *current.parents]:
-        if (parent / ".claude").is_dir():
+        if (parent / ".opencode").is_dir():
             return parent
     return current
 
@@ -42,143 +41,97 @@ def run_single_query(
 ) -> bool:
     """Run a single query and return whether the skill was triggered.
 
-    Creates a command file in .claude/commands/ so it appears in Claude's
-    available_skills list, then runs `claude -p` with the raw query.
-    Uses --include-partial-messages to detect triggering early from
-    stream events (content_block_start) rather than waiting for the
-    full assistant message, which only arrives after tool execution.
+    Creates a throwaway skill at .opencode/skills/<name>-skill-<id>/SKILL.md so it
+    appears in opencode's available-skills list, then runs `opencode run
+    --format json` with the raw query.
+
+    Trigger detection reads the raw JSON event stream. A trigger is a `tool_use`
+    event whose part.tool is "skill" and whose part.state.input.name is the
+    throwaway skill name. opencode also emits a tool_use event when the model
+    reaches for some *other* tool, which means it declined to load a skill --
+    that case returns False immediately rather than waiting for the run to end.
     """
     unique_id = uuid.uuid4().hex[:8]
     clean_name = f"{skill_name}-skill-{unique_id}"
-    project_commands_dir = Path(project_root) / ".claude" / "commands"
-    command_file = project_commands_dir / f"{clean_name}.md"
+    skill_dir = Path(project_root) / ".opencode" / "skills" / clean_name
+    skill_file = skill_dir / "SKILL.md"
 
     try:
-        project_commands_dir.mkdir(parents=True, exist_ok=True)
-        # Use YAML block scalar to avoid breaking on quotes in description
-        indented_desc = "\n  ".join(skill_description.split("\n"))
-        command_content = (
-            f"---\n"
-            f"description: |\n"
-            f"  {indented_desc}\n"
-            f"---\n\n"
-            f"# {skill_name}\n\n"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        # Quote the description so colons and quotes cannot break the YAML.
+        skill_file.write_text(
+            "---\n"
+            f"name: {clean_name}\n"
+            'description: >-\n'
+            f"  {skill_description}\n"
+            "---\n\n"
+            f"# {clean_name}\n\n"
             f"This skill handles: {skill_description}\n"
         )
-        command_file.write_text(command_content)
 
-        cmd = [
-            "claude",
-            "-p", query,
-            "--output-format", "stream-json",
-            "--verbose",
-            "--include-partial-messages",
-        ]
+        cmd = ["opencode", "run", "--format", "json"]
         if model:
             cmd.extend(["--model", model])
+        cmd.append(query)
 
-        # Remove CLAUDECODE env var to allow nesting claude -p inside a
-        # Claude Code session. The guard is for interactive terminal conflicts;
-        # programmatic subprocess usage is safe.
-        env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+        # --pure keeps an unrelated user plugin from mutating the run, and the
+        # agent is pinned to build so the skill decision is the agent's alone.
+        cmd.insert(2, "--pure")
 
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             cwd=project_root,
-            env=env,
+            env=os.environ.copy(),
         )
 
-        triggered = False
+        if process.stdout is None:  # stdout=PIPE guarantees this
+            process.kill()
+            process.wait()
+            return False
+
         start_time = time.time()
-        buffer = ""
-        # Track state for stream event detection
-        pending_tool_name = None
-        accumulated_json = ""
 
         try:
-            while time.time() - start_time < timeout:
-                if process.poll() is not None:
-                    remaining = process.stdout.read()
-                    if remaining:
-                        buffer += remaining.decode("utf-8", errors="replace")
+            for raw_line in process.stdout:
+                if time.time() - start_time > timeout:
                     break
-
-                ready, _, _ = select.select([process.stdout], [], [], 1.0)
-                if not ready:
+                line = raw_line.decode("utf-8", errors="replace").strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
                     continue
 
-                chunk = os.read(process.stdout.fileno(), 8192)
-                if not chunk:
-                    break
-                buffer += chunk.decode("utf-8", errors="replace")
+                if event.get("type") != "tool_use":
+                    continue
 
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    line = line.strip()
-                    if not line:
-                        continue
+                part = event.get("part") or {}
+                tool_name = part.get("tool", "")
+                state = part.get("state") or {}
 
-                    try:
-                        event = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
+                if tool_name == "skill":
+                    invoked = (state.get("input") or {}).get("name", "")
+                    return invoked == clean_name
 
-                    # Early detection via stream events
-                    if event.get("type") == "stream_event":
-                        se = event.get("event", {})
-                        se_type = se.get("type", "")
-
-                        if se_type == "content_block_start":
-                            cb = se.get("content_block", {})
-                            if cb.get("type") == "tool_use":
-                                tool_name = cb.get("name", "")
-                                if tool_name in ("Skill", "Read"):
-                                    pending_tool_name = tool_name
-                                    accumulated_json = ""
-                                else:
-                                    return False
-
-                        elif se_type == "content_block_delta" and pending_tool_name:
-                            delta = se.get("delta", {})
-                            if delta.get("type") == "input_json_delta":
-                                accumulated_json += delta.get("partial_json", "")
-                                if clean_name in accumulated_json:
-                                    return True
-
-                        elif se_type in ("content_block_stop", "message_stop"):
-                            if pending_tool_name:
-                                return clean_name in accumulated_json
-                            if se_type == "message_stop":
-                                return False
-
-                    # Fallback: full assistant message
-                    elif event.get("type") == "assistant":
-                        message = event.get("message", {})
-                        for content_item in message.get("content", []):
-                            if content_item.get("type") != "tool_use":
-                                continue
-                            tool_name = content_item.get("name", "")
-                            tool_input = content_item.get("input", {})
-                            if tool_name == "Skill" and clean_name in tool_input.get("skill", ""):
-                                triggered = True
-                            elif tool_name == "Read" and clean_name in tool_input.get("file_path", ""):
-                                triggered = True
-                            return triggered
-
-                    elif event.get("type") == "result":
-                        return triggered
+                # The model picked a different tool. Treat the whole run as a
+                # non-trigger instead of waiting for it to finish.
+                return False
         finally:
-            # Clean up process on any exit path (return, exception, timeout)
             if process.poll() is None:
                 process.kill()
                 process.wait()
 
-        return triggered
+        return False
     finally:
-        if command_file.exists():
-            command_file.unlink()
+        if skill_file.exists():
+            skill_file.unlink()
+        try:
+            skill_dir.rmdir()
+        except OSError:
+            pass
 
 
 def run_eval(
@@ -265,7 +218,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=30, help="Timeout per query in seconds")
     parser.add_argument("--runs-per-query", type=int, default=3, help="Number of runs per query")
     parser.add_argument("--trigger-threshold", type=float, default=0.5, help="Trigger rate threshold")
-    parser.add_argument("--model", default=None, help="Model to use for claude -p (default: user's configured model)")
+    parser.add_argument("--model", default=None, help="Model for opencode run, as provider/model (default: user's configured model)")
     parser.add_argument("--verbose", action="store_true", help="Print progress to stderr")
     args = parser.parse_args()
 

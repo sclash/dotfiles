@@ -1,12 +1,13 @@
 ---
 name: verification-loop
-description: "A comprehensive verification system for Claude Code sessions."
-origin: ECC
+description: Comprehensive quality gate for coding-agent sessions - build, typecheck, lint, test with coverage, secret scan, and diff review. Use after completing a feature or significant change, before opening a PR, after refactoring, or when you want to confirm quality gates pass.
+metadata:
+  origin: ECC
 ---
 
 # Verification Loop Skill
 
-A comprehensive verification system for Claude Code sessions.
+A comprehensive verification system for coding-agent sessions.
 
 ## When to Use
 

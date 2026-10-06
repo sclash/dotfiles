@@ -1,7 +1,8 @@
 ---
 name: download-video
 description: Download a video (or audio) from a URL using yt-dlp via uvx and ffmpeg. Use this whenever the user provides a link to a video or audio file and wants to download it, in full or only a specific time range. Also use it to fetch media locally before transcribing it with the transcribe-media skill.
-origin: Andrea Sergi
+metadata:
+  origin: Andrea Sergi
 compatibility: uv (uvx), node (for JS runtimes), ffmpeg
 ---
 

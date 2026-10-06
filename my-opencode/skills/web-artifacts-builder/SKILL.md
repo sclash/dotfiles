@@ -67,7 +67,14 @@ Finally, share the bundled HTML file in conversation with the user so they can v
 
 Note: This is a completely optional step. Only perform if necessary or requested.
 
-To test/visualize the artifact, use available tools (including other Skills or built-in tools like Playwright or Puppeteer). In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.
+To test/visualize the artifact, use whatever browser tooling is live in this session:
+
+- **Playwright MCP server** — if it is enabled (`~/.config/opencode/opencode.json`), its tools are already in your tool list; use them directly.
+- **`webapp-testing` skill** — otherwise. It carries the NixOS-correct invocation: `LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uv run --with playwright python …`, launching the system Chromium at `/run/current-system/sw/bin/chromium`.
+
+Note there is no ambient `playwright` module, so a bare `python` script that imports it will fail. Load that skill rather than re-deriving the launch incantation.
+
+In general, avoid testing the artifact upfront as it adds latency between the request and when the finished artifact can be seen. Test later, after presenting the artifact, if requested or if issues arise.
 
 ## Reference
 

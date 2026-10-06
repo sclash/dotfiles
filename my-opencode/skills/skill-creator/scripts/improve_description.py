@@ -2,8 +2,8 @@
 """Improve a skill description based on eval results.
 
 Takes eval results (from run_eval.py) and generates an improved description
-by calling `claude -p` as a subprocess (same auth pattern as run_eval.py —
-uses the session's Claude Code auth, no separate ANTHROPIC_API_KEY needed).
+by calling `opencode run` as a subprocess (same auth pattern as run_eval.py --
+uses the configured opencode providers, no separate API key needed).
 """
 
 import argparse
@@ -16,35 +16,61 @@ from pathlib import Path
 
 from scripts.utils import parse_skill_md
 
+# opencode takes the prompt as an argv positional and does not read stdin.
+# Linux ARG_MAX is ~2MB, so a full SKILL.md body is comfortably safe here.
+_MAX_PROMPT_BYTES = 400_000
 
-def _call_claude(prompt: str, model: str | None, timeout: int = 300) -> str:
-    """Run `claude -p` with the prompt on stdin and return the text response.
 
-    Prompt goes over stdin (not argv) because it embeds the full SKILL.md
-    body and can easily exceed comfortable argv length.
+def _call_model(prompt: str, model: str | None, timeout: int = 300) -> str:
+    """Run `opencode run --format json` and return the assistant's text.
+
+    The prompt goes over argv rather than stdin because opencode run does not
+    read stdin -- an empty message argument yields an empty response.
+
+    --format json emits one JSON event per line; the assistant's prose arrives
+    as `text` events with the body under part.text. Those are concatenated,
+    which is what the old `claude -p --output-format text` call returned.
     """
-    cmd = ["claude", "-p", "--output-format", "text"]
+    if len(prompt.encode("utf-8")) > _MAX_PROMPT_BYTES:
+        raise RuntimeError(
+            f"prompt is {len(prompt.encode('utf-8'))} bytes, over the "
+            f"{_MAX_PROMPT_BYTES}-byte argv budget; trim the skill content"
+        )
+
+    cmd = ["opencode", "run", "--pure", "--format", "json"]
     if model:
         cmd.extend(["--model", model])
-
-    # Remove CLAUDECODE env var to allow nesting claude -p inside a
-    # Claude Code session. The guard is for interactive terminal conflicts;
-    # programmatic subprocess usage is safe. Same pattern as run_eval.py.
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    cmd.append(prompt)
 
     result = subprocess.run(
         cmd,
-        input=prompt,
         capture_output=True,
         text=True,
-        env=env,
+        env=os.environ.copy(),
         timeout=timeout,
     )
     if result.returncode != 0:
         raise RuntimeError(
-            f"claude -p exited {result.returncode}\nstderr: {result.stderr}"
+            f"opencode run exited {result.returncode}\nstderr: {result.stderr}"
         )
-    return result.stdout
+
+    chunks: list[str] = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") != "text":
+            continue
+        part = event.get("part") or {}
+        text = part.get("text")
+        if text:
+            chunks.append(text)
+
+    return "".join(chunks)
 
 
 def improve_description(
@@ -58,7 +84,7 @@ def improve_description(
     log_dir: Path | None = None,
     iteration: int | None = None,
 ) -> str:
-    """Call Claude to improve the description based on eval results."""
+    """Call the model to improve the description based on eval results."""
     failed_triggers = [
         r for r in eval_results["results"]
         if r["should_trigger"] and not r["pass"]
@@ -76,9 +102,9 @@ def improve_description(
     else:
         scores_summary = f"Train: {train_score}"
 
-    prompt = f"""You are optimizing a skill description for a Claude Code skill called "{skill_name}". A "skill" is sort of like a prompt, but with progressive disclosure -- there's a title and description that Claude sees when deciding whether to use the skill, and then if it does use the skill, it reads the .md file which has lots more details and potentially links to other resources in the skill folder like helper files and scripts and additional documentation or examples.
+    prompt = f"""You are optimizing a skill description for an opencode skill called "{skill_name}". A "skill" is sort of like a prompt, but with progressive disclosure -- there's a title and description that the agent sees when deciding whether to use the skill, and then if it does use the skill, it reads the .md file which has lots more details and potentially links to other resources in the skill folder like helper files and scripts and additional documentation or examples.
 
-The description appears in Claude's "available_skills" list. When a user sends a query, Claude decides whether to invoke the skill based solely on the title and on this description. Your goal is to write a description that triggers for relevant queries, and doesn't trigger for irrelevant ones.
+The description appears in the agent's "available_skills" list. When a user sends a query, the agent decides whether to invoke the skill based solely on the title and on this description. Your goal is to write a description that triggers for relevant queries, and doesn't trigger for irrelevant ones.
 
 Here's the current description:
 <current_description>
@@ -129,19 +155,19 @@ Based on the failures, write a new and improved description that is more likely 
 1. Avoid overfitting
 2. The list might get loooong and it's injected into ALL queries and there might be a lot of skills, so we don't want to blow too much space on any given description.
 
-Concretely, your description should not be more than about 100-200 words, even if that comes at the cost of accuracy. There is a hard limit of 1024 characters — descriptions over that will be truncated, so stay comfortably under it.
+Concretely, your description should not be more than about 100-200 words, even if that comes at the cost of accuracy. Descriptions are always resident in context and compete for attention with every other skill, so stay comfortably concise -- aim well under 1024 characters. (opencode does not hard-truncate skill descriptions, so this is a budget decision, not a safety limit.)
 
 Here are some tips that we've found to work well in writing these descriptions:
 - The skill should be phrased in the imperative -- "Use this skill for" rather than "this skill does"
 - The skill description should focus on the user's intent, what they are trying to achieve, vs. the implementation details of how the skill works.
-- The description competes with other skills for Claude's attention — make it distinctive and immediately recognizable.
+- The description competes with other skills for the agent's attention — make it distinctive and immediately recognizable.
 - If you're getting lots of failures after repeated attempts, change things up. Try different sentence structures or wordings.
 
 I'd encourage you to be creative and mix up the style in different iterations since you'll have multiple opportunities to try different approaches and we'll just grab the highest-scoring one at the end. 
 
 Please respond with only the new description text in <new_description> tags, nothing else."""
 
-    text = _call_claude(prompt, model)
+    text = _call_model(prompt, model)
 
     match = re.search(r"<new_description>(.*?)</new_description>", text, re.DOTALL)
     description = match.group(1).strip().strip('"') if match else text.strip().strip('"')
@@ -155,23 +181,24 @@ Please respond with only the new description text in <new_description> tags, not
         "over_limit": len(description) > 1024,
     }
 
-    # Safety net: the prompt already states the 1024-char hard limit, but if
-    # the model blew past it anyway, make one fresh single-turn call that
+    # Safety net: the prompt already asks for concision, but if the model
+    # blew past the soft budget anyway, make one fresh single-turn call that
     # quotes the too-long version and asks for a shorter rewrite. (The old
-    # SDK path did this as a true multi-turn; `claude -p` is one-shot, so we
+    # SDK path did this as a true multi-turn; `opencode run` is one-shot, so we
     # inline the prior output into the new prompt instead.)
     if len(description) > 1024:
         shorten_prompt = (
             f"{prompt}\n\n"
             f"---\n\n"
             f"A previous attempt produced this description, which at "
-            f"{len(description)} characters is over the 1024-character hard limit:\n\n"
+            f"{len(description)} characters is well over the 1024-character "
+            f"budget and would be resident in context on every query:\n\n"
             f'"{description}"\n\n'
-            f"Rewrite it to be under 1024 characters while keeping the most "
+            f"Rewrite it to under 1024 characters while keeping the most "
             f"important trigger words and intent coverage. Respond with only "
             f"the new description in <new_description> tags."
         )
-        shorten_text = _call_claude(shorten_prompt, model)
+        shorten_text = _call_model(shorten_prompt, model)
         match = re.search(r"<new_description>(.*?)</new_description>", shorten_text, re.DOTALL)
         shortened = match.group(1).strip().strip('"') if match else shorten_text.strip().strip('"')
 

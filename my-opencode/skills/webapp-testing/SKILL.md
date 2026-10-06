@@ -13,6 +13,37 @@ To test local web applications, write native Python Playwright scripts.
 
 **Always run scripts with `--help` first** to see usage. DO NOT read the source until you try running the script first and find that a customized solution is abslutely necessary. These scripts can be very large and thus pollute your context window. They exist to be called directly as black-box scripts rather than ingested into your context window.
 
+## Backend availability
+
+Playwright needs a Python environment and a Chromium binary. Neither is in the ambient
+environment on this machine, so **do not** write bare `python script.py` — it fails with
+`ModuleNotFoundError: No module named 'playwright'`.
+
+**Preferred when available:** the `playwright` MCP server, configured in
+`~/.config/opencode/opencode.json`. If it is enabled in this session its tools are in your
+tool list and you can drive the browser with them directly, skipping script writing for
+simple inspect/screenshot/navigate tasks.
+
+**Fallback: isolated Playwright via `uv`, driving the system Chromium.**
+
+```bash
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uv run --with playwright python your_script.py
+```
+
+Both parts are required on this NixOS box:
+
+- `LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib` — Playwright pulls numpy, which
+  needs a `libstdc++` that is not on the loader path by default.
+- `executable_path` pointing at the **system** Chromium (`/run/current-system/sw/bin/chromium`)
+  in the launch call, plus `--no-sandbox`. Playwright's own downloaded Chromium build is a
+  non-Nix binary and cannot resolve `libglib-2.0.so.0`, `libnspr4.so`, and friends from the
+  nix-ld library directory. The Nix-built system Chromium has all of its dependencies
+  satisfied already. Do not run `playwright install` — the browsers are already cached, they
+  just cannot be launched.
+
+`scripts/with_server.py` itself only uses the standard library, so it can be launched with a
+bare `python`. It is the *automation script* it spawns that needs the `uv` runner.
+
 ## Decision Tree: Choosing Your Approach
 
 ```
@@ -38,7 +69,9 @@ To start a server, run `--help` first, then use the helper:
 
 **Single server:**
 ```bash
-python scripts/with_server.py --server "npm run dev" --port 5173 -- python your_automation.py
+python scripts/with_server.py --server "npm run dev" --port 5173 -- \
+  env LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib \
+  uv run --with playwright python your_automation.py
 ```
 
 **Multiple servers (e.g., backend + frontend):**
@@ -46,15 +79,22 @@ python scripts/with_server.py --server "npm run dev" --port 5173 -- python your_
 python scripts/with_server.py \
   --server "cd backend && python server.py" --port 3000 \
   --server "cd frontend && npm run dev" --port 5173 \
-  -- python your_automation.py
+  -- env LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib \
+     uv run --with playwright python your_automation.py
 ```
 
-To create an automation script, include only Playwright logic (servers are managed automatically):
+To create an automation script, include only Playwright logic (servers are managed automatically).
+Always launch Chromium through the system binary:
 ```python
 from playwright.sync_api import sync_playwright
 
+CHROMIUM = "/run/current-system/sw/bin/chromium"
+
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True) # Always launch chromium in headless mode
+    # executable_path + --no-sandbox are required: Playwright's bundled
+    # Chromium cannot resolve its shared-library deps on NixOS.
+    browser = p.chromium.launch(headless=True, executable_path=CHROMIUM,
+                                args=["--no-sandbox", "--disable-dev-shm-usage"])
     page = browser.new_page()
     page.goto('http://localhost:5173') # Server already running and ready
     page.wait_for_load_state('networkidle') # CRITICAL: Wait for JS to execute

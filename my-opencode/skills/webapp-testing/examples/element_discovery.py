@@ -3,7 +3,11 @@ from playwright.sync_api import sync_playwright
 # Example: Discovering buttons and other elements on a page
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    # executable_path + --no-sandbox are required on NixOS: Playwright's
+    # bundled Chromium cannot resolve its shared-library dependencies.
+    browser = p.chromium.launch(headless=True,
+                                executable_path='/run/current-system/sw/bin/chromium',
+                                args=['--no-sandbox', '--disable-dev-shm-usage'])
     page = browser.new_page()
 
     # Navigate to page and wait for it to fully load

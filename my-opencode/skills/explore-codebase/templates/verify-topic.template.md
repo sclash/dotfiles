@@ -14,7 +14,7 @@ infer the section currently being worked on from the conversation and confirm).
      `study/examples/` and `study/counter/`.
 
 2. **Dispatch the verifier.** Spawn the `verifier` subagent (defined in
-   `.opencode/agent/verifier.md`) with the Task tool (`subagent_type: verifier`),
+   `.opencode/agent/verifier.md`) with the `task` tool (`subagent_type: verifier`),
    passing:
    - the section text (or its exact location),
    - the list of referenced example/counter-example files,

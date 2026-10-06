@@ -7,7 +7,7 @@ When using an existing presentation as a template:
 1. **Analyze existing slides**:
    ```bash
    python scripts/thumbnail.py template.pptx
-   python -m markitdown template.pptx
+   LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown template.pptx
    ```
    Review `thumbnails.jpg` to see layouts, and markitdown output to see placeholder text.
 

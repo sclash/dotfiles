@@ -100,7 +100,7 @@ never as fact.
 
 Before a topic/section is considered done and logged, run **`/verify-topic <section>`**.
 It dispatches the adversarial verifier subagent (`.opencode/agent/verifier.md`) via the
-Task tool against the section and its example files. `[CRITICAL]` and `[HIGH]` findings
+`task` tool against the section and its example files. `[CRITICAL]` and `[HIGH]` findings
 must be fixed and re-verified before the session-log entry is written. Welcome verifier
 findings as corrections, not attacks.
 

@@ -10,7 +10,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 | Task | Guide |
 |------|-------|
-| Read/analyze content | `python -m markitdown presentation.pptx` |
+| Read/analyze content | `LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown presentation.pptx` |
 | Edit or create from template | Read [editing.md](editing.md) |
 | Create from scratch | Read [pptxgenjs.md](pptxgenjs.md) |
 
@@ -20,7 +20,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ```bash
 # Text extraction
-python -m markitdown presentation.pptx
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown presentation.pptx
 
 # Visual overview
 python scripts/thumbnail.py presentation.pptx
@@ -147,7 +147,7 @@ Your first render is almost never correct. Approach QA as a bug hunt, not a conf
 ### Content QA
 
 ```bash
-python -m markitdown output.pptx
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown output.pptx
 ```
 
 Check for missing content, typos, wrong order.
@@ -155,7 +155,7 @@ Check for missing content, typos, wrong order.
 **When using templates, check for leftover placeholder text:**
 
 ```bash
-python -m markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
 ```
 
 If grep returns results, fix them before declaring success.
@@ -208,8 +208,29 @@ pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
 
 ## Dependencies
 
-- `pip install "markitdown[pptx]"` - text extraction
-- `pip install Pillow` - thumbnail grids
-- `npm install -g pptxgenjs` - creating from scratch
+Do not install any of these system-wide — every command below is written as an isolated runner.
+
+- Text extraction — `LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib uvx --from markitdown markitdown <file>` (the `LD_LIBRARY_PATH` prefix is required on NixOS: markitdown pulls numpy, which needs a `libstdc++` that is not on the loader path by default)
+- Thumbnail grids — `uv run --with Pillow python scripts/thumbnail.py <file>`
+- Creating from scratch — `npx -y pptxgenjs` (or the `pptxgenjs` script referenced in `pptxgenjs.md`)
 - LibreOffice (`soffice`) - PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - Poppler (`pdftoppm`) - PDF to images
+
+### Runtime prerequisites for the bundled scripts
+
+The `scripts/` helpers import `defusedxml` (all of them) and `Pillow` (`thumbnail.py`). Neither is in the ambient Python, so a bare `python scripts/...` fails with `ModuleNotFoundError`. Run them through an isolated environment instead:
+
+```bash
+# unpack.py, pack.py, clean.py, add_slide.py
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib \
+  uv run --with defusedxml python scripts/office/unpack.py input.pptx unpacked/
+
+# thumbnail.py needs Pillow too
+LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib \
+  uv run --with defusedxml --with Pillow python scripts/thumbnail.py input.pptx
+```
+
+Check the external binaries before relying on them:
+
+- `pdftoppm` — present in the Nix store (`poppler-utils`) but may not be on `PATH`. If missing, run the render step via `nix run nixpkgs#poppler-utils -- pdftoppm ...`.
+- `soffice` — LibreOffice is **not** currently in the Nix store on this machine, so `scripts/office/soffice.py` (PDF export / thumbnail rendering) cannot run. Use `nix run nixpkgs#libreoffice -- ...` to pull it in on demand, or tell the user PDF export is unavailable rather than silently failing.
