@@ -80,7 +80,6 @@
       hygg
       flameshot
       flamegraph
-      gemini-cli
       ffmpeg
 
       # Image and video rendering inside ghostty
@@ -119,6 +118,7 @@
       # rtk init -g opencode
       # rtk
       zennotes-desktop
+      agent-browser
     ]);
 
   programs.git = {
