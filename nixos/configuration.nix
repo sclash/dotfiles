@@ -453,7 +453,7 @@
         # rustup
         rustc
         cargo
-        zig
+        zig_0_17
         # inputs.nixd.packages.${pkgs.system}.default
       ]);
 
