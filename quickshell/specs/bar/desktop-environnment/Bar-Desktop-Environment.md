@@ -74,8 +74,20 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
   (`Hyprland.toplevels` filtered by `workspace.id`, via `components/bar/Workspaces.qml`).
 * **Data source:** `Quickshell.Hyprland.toplevels` (`ObjectModel<HyprlandToplevel>`) — event-driven
   via `openwindow` / `closewindow` / `movewindowv2` / `windowtitlev2` IPC events. **No polling.**
-* **Icon resolution:** `Quickshell.iconPath(toplevel.wayland.appId)`; fallback glyph `Icons.window`
-  when the appId is empty (XWayland) or the theme has no icon.
+* **Icon resolution:** `Icons.appIconFor(appId, wmClass)` (see `theme/Icons.qml`). A window's
+  appId and its icon-theme name are different namespaces and frequently disagree, so a bare
+  `Quickshell.iconPath(appId)` is not sufficient — that call always returns a non-empty
+  `image://icon/<name>` url and its provider paints a placeholder tile rather than failing,
+  so no `Image` ever errors and no fallback can trigger. Resolution order:
+  1. `Icons.appIconOverride(appId)` — bundled SVG overrides.
+  2. Desktop-entry `StartupWMClass` match → its `Icon=` (`"Tor Browser"`→`tor-browser`,
+     `"ZenNotes"`→`zennotes-desktop`). Built once from `Quickshell.DesktopEntries.applications`.
+  3. `Quickshell.hasThemeIcon(appId)`, then a lowercased/punctuation-dashed variant
+     (`"Tor Browser"`→`tor-browser`).
+  4. `""` → fallback glyph `Icons.window`.
+  Every theme lookup goes through `Quickshell.iconPath(name, true)` so a miss yields `""`.
+  `wmClass` (`toplevel.lastIpcObject["class"]`) is supplied for XWayland windows, which expose
+  no wayland handle and therefore no appId.
 * **States:** activated window icon at full opacity (`toplevel.activated`), others at 0.55;
   hover shows `Theme.bgHover` wash + tooltip with the window title.
 * **Overflow:** max `Theme.wsAppIconMax` (3) icons per workspace; extra windows collapse into a `+n` count.
@@ -109,5 +121,7 @@ Leftmost bar pill: indicates Hyprland workspaces as **dots**. Provides click-to-
 * [ ] With a single monitor: no labels/dividers — unchanged flat dot row.
 * [x] Per-workspace app icons appear inline next to each dot, update live on open/close/move.
 * [x] Icon click focuses the window (`focuswindow address:`); dot click switches workspace.
-* [x] Fallback `Icons.window` glyph when no themed icon resolves.
+* [x] Fallback `Icons.window` glyph when no themed icon resolves — no placeholder tile.
+* [ ] An app whose appId differs from its icon name (Tor Browser, ZenNotes) still renders its
+      real icon, via the `StartupWMClass` desktop-entry lookup.
 * [ ] No hard-coded colours — all via `Theme.*`.

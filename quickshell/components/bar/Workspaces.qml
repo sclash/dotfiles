@@ -286,13 +286,16 @@ RowLayout {
                             id: iconSlot
                             required property int index
                             property var toplevel: slot.apps[index]
+                            // Wayland app_id. XWayland windows expose no wayland
+                            // handle, so for those fall back to the WM_CLASS from
+                            // the raw Hyprland IPC object (static per window).
                             property string appId: toplevel && toplevel.wayland ? (toplevel.wayland.appId || "") : ""
-                            // Custom SVG override first (Icons.appIconOverride), else freedesktop theme
-                            property string iconSource: {
-                                var o = Icons.appIconOverride(appId);
-                                if (o !== "") return o;
-                                return appId !== "" ? Quickshell.iconPath(appId) : "";
-                            }
+                            property string wmClass: toplevel && !toplevel.wayland && toplevel.lastIpcObject
+                                ? (toplevel.lastIpcObject["class"] || "")
+                                : ""
+                            // "" when nothing resolves, which reveals the Icons.window
+                            // glyph below instead of Quickshell's placeholder tile.
+                            property string iconSource: Icons.appIconFor(appId, wmClass)
                             implicitWidth: Theme.wsAppIcon; implicitHeight: Theme.wsAppIcon
                             Layout.alignment: Qt.AlignVCenter
 

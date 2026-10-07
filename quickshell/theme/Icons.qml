@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import Quickshell
 
 QtObject {
     // Wifi / Network — waybar/config.jsonc parity
@@ -44,6 +45,97 @@ QtObject {
         var id = (appId || "").toLowerCase();
         if (id.indexOf("ghostty") !== -1 || id.indexOf("mitchellh") !== -1) return appGhostty;
         if (id.indexOf("chrome") !== -1 || id.indexOf("chromium") !== -1) return appChrome;
+        return "";
+    }
+
+    // --- App icon resolution (see specs/bar/desktop-environnment/Bar-Desktop-Environment.md) ---
+    //
+    // A window's appId (xdg_toplevel.app_id / WM_CLASS) and its icon theme
+    // name are *different namespaces* and often disagree — Tor Browser reports
+    // "Tor Browser" but ships "tor-browser", ZenNotes reports "ZenNotes" but
+    // ships "zennotes-desktop". Handing the raw appId to Quickshell.iconPath()
+    // is therefore not enough: that function always returns a non-empty
+    // "image://icon/<name>" url, and its provider paints a purple/black
+    // placeholder rather than failing, so no Image ever errors out and no
+    // fallback can trigger. Everything here returns "" instead of letting that
+    // happen.
+
+    // Desktop entries keyed by their declared StartupWMClass, which is the
+    // spec-sanctioned bridge from a reported class to an Icon= name. Rebuilt by
+    // QML binding whenever DesktopEntries rescans.
+    readonly property var entryIcons: {
+        const map = {};
+        const apps = DesktopEntries.applications.values;
+        for (let i = 0; i < apps.length; i++) {
+            const e = apps[i];
+            if (!e || !e.startupClass || !e.icon) continue;
+            map[String(e.startupClass).toLowerCase()] = e.icon;
+        }
+        return map;
+    }
+
+    // appId -> resolved url (or "" for known-unresolvable). Mutated in place;
+    // never bound to, so no invalidation needed.
+    property var appIconCache: ({})
+
+    // DesktopEntries scans asynchronously, so entryIcons is empty on the first
+    // frame and filled in later. Drop the memo when that happens, otherwise the
+    // negatives cached before the scan landed would stick for the session.
+    onEntryIconsChanged: appIconCache = ({})
+
+    // Theme names often differ from the appId by case/punctuation only
+    // ("Tor Browser" -> "tor-browser"). Tried after the desktop-entry map.
+    function appIconCandidates(id) {
+        const low = String(id).toLowerCase();
+        const dashed = low.replace(/[\s._]+/g, "-");
+        return dashed === low ? [low] : [low, dashed];
+    }
+
+    // "" when the theme has no such icon, so callers can fall back. Passes
+    // ready-made urls (the SVG overrides above) through untouched — note those
+    // are `url` properties, so coerce to string before probing.
+    function appIconUrl(icon) {
+        if (icon === undefined || icon === null) return "";
+        const s = String(icon);
+        if (s === "") return "";
+        if (s.indexOf("://") !== -1) return s;
+        if (s.indexOf("/") === 0) return "file://" + s;
+        return Quickshell.iconPath(s, true);
+    }
+
+    // Resolve a window's icon url, or "" to let the caller render its glyph.
+    // `appId` is the Wayland app_id; `wmClass` the raw Hyprland WM_CLASS,
+    // used for XWayland windows that expose no wayland handle.
+    function appIconFor(appId, wmClass) {
+        const ids = [appId, wmClass];
+        for (let i = 0; i < ids.length; i++) {
+            const raw = String(ids[i] || "");
+            if (raw === "") continue;
+            const key = raw.toLowerCase();
+
+            const hit = Icons.appIconCache[key];
+            if (hit !== undefined) {
+                if (hit !== "") return hit;
+                continue;
+            }
+
+            let icon = appIconOverride(raw);
+            if (icon === "" && entryIcons[key] !== undefined)
+                icon = entryIcons[key];
+            if (icon === "") {
+                const candidates = appIconCandidates(raw);
+                for (let c = 0; c < candidates.length; c++) {
+                    if (Quickshell.hasThemeIcon(candidates[c])) {
+                        icon = candidates[c];
+                        break;
+                    }
+                }
+            }
+
+            const url = appIconUrl(icon);
+            Icons.appIconCache[key] = url;
+            if (url !== "") return url;
+        }
         return "";
     }
     // Menus (tray context menu) — MDI chevrons, see USB note above

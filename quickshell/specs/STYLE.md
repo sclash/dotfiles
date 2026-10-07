@@ -229,6 +229,11 @@ property string calendar:         ""
 
 * Per-app SVG overrides (`appGhostty`, `appChrome` + `appIconOverride(appId)`) exist
   for workspace-tray icons only — launchers stay Nerd-glyph-only.
+* `Icons.appIconFor(appId, wmClass)` resolves a window's icon through those overrides, then a
+  desktop-entry `StartupWMClass` → `Icon=` lookup, then a probed theme name; `""` when nothing
+  matches so callers render `Icons.window`. Never call bare `Quickshell.iconPath(name)` for
+  this — it returns a placeholder tile instead of failing. See
+  [`Bar-Desktop-Environment.md`](./bar/desktop-environnment/Bar-Desktop-Environment.md).
 
 ---
 
