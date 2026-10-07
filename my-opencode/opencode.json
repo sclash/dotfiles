@@ -427,15 +427,6 @@
 				"/home/asergi/hacking/",
 				"/home/asergi/Downloads/"
 			]
-		},
-		"context-mode": {
-			"enabled": false,
-			"type": "local",
-			"command": [
-				"npx",
-				"-y",
-				"context-mode"
-			]
 		}
 	},
 	"plugin": [
