@@ -5,6 +5,11 @@
 //
 //   ImportError: libstdc++.so.6: cannot open shared object file
 //
+// The deeper reason is that nixpkgs links with DT_RUNPATH, which glibc applies
+// only to the object's own DT_NEEDED entries -- never to dlopen'd children. A
+// PyPI wheel's .so files carry no RPATH of their own, so the interpreter's
+// RUNPATH cannot satisfy them. LD_LIBRARY_PATH is the only per-process lever.
+//
 // Two distinct cases, and this hook only needs to cover one of them:
 //
 //  1. Nix-built programs (python, uv, node) loading PyPI wheels. Their own RPATH
@@ -16,9 +21,10 @@
 //     configured by programs.nix-ld.libraries in configuration.nix -- this hook
 //     cannot help those. Extend that list instead.
 //
-// Appended, never prepended: LD_LIBRARY_PATH is searched before DT_RUNPATH, so
-// putting the nix-ld directory first would shadow the runtime a Nix binary was
-// deliberately linked against.
+// Ordering caveat: any entry in LD_LIBRARY_PATH outranks DT_RUNPATH, not just a
+// leading one. So a libstdc++ sitting here shadows the runtime a Nix binary was
+// deliberately linked against. The nix-ld dir is appended last so it acts as a
+// fallback for libraries nothing else provides (libz, libzstd, libuuid, ...).
 
 const NIX_LD_LIB = "/run/current-system/sw/share/nix-ld/lib";
 

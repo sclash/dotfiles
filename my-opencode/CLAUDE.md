@@ -16,7 +16,7 @@ You're using `NixOS` with develop features enabled. You have the `nixos` MCP to 
 - If the system does not currently meet requirements you should NEVER make changes to the system. 
 - When absolutely necessary always prefer temporary solutions (pick the more convenient according to the use case):
     But before doing this ALWAYS ask for my permission first.     
-    - use `npx`,`uvx`, `nixpkgs#<NIX_PACKAGE_NAME>`
+    - use `bunx`, `npx`,`uvx`, `nixpkgs#<NIX_PACKAGE_NAME>`
     - create a new isolated shell with a `flake.nix` to enter in with `nix develop --command bash`. 
 
 ## DO NOT EVER 
