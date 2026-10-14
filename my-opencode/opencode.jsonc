@@ -364,20 +364,20 @@
 				"@playwright/mcp@latest"
 			]
 		},
+		// "shadcn-vue": {
+		// 	"type": "local",
+		// 	"enabled": false,
+		// 	"command": [
+		// 		"bunx",
+		// 		"--bun",
+		// 		"shadcn-vue@latest",
+		// 		"mcp",
+		// 		"init",
+		// 		"--client",
+		// 		"opencode"
+		// 	]
+		// },
 		"shadcn-vue": {
-			"type": "local",
-			"enabled": false,
-			"command": [
-				"bunx",
-				"--bun",
-				"shadcn-vue@latest",
-				"mcp",
-				"init",
-				"--client",
-				"opencode"
-			]
-		},
-		"shadcnVue": {
 			"type": "local",
 			"enabled": false,
 			"command": [
