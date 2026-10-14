@@ -3,6 +3,7 @@
   lib,
   pkgs,
   pkgs-unstable,
+  pkgs-master,
   # neovimrc,
   my-dotfiles,
   ...
@@ -58,7 +59,17 @@
   ];
   home.enableNixpkgsReleaseCheck = false;
 
-  home.sessionVariables.LD_LIBRARY_PATH = "/run/current-system/sw/share/nix-ld/lib";
+  # PyPI wheels ship RPATH-less .so files, and nixpkgs links with DT_RUNPATH,
+  # which glibc does not apply to dlopen'd objects. LD_LIBRARY_PATH is therefore
+  # required -- but it outranks DT_RUNPATH, so a stale libstdc++ here shadows the
+  # one that pkgs-master binaries are linked against (ripwire needs GLIBCXX_3.4.36).
+  # Prepending the master gcc lib makes the shadow newest-wins, so it can never be
+  # older than the newest binary on PATH. The nix-ld dir stays second as the broad
+  # fallback for libz, libzstd, libuuid, libgomp, etc.
+  home.sessionVariables.LD_LIBRARY_PATH = lib.concatStringsSep ":" [
+    "${pkgs-master.stdenv.cc.cc.lib}/lib"
+    "/run/current-system/sw/share/nix-ld/lib"
+  ];
 
   # --- Packages ---
   # Install user-specific packages

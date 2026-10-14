@@ -560,13 +560,14 @@
   # so that {file:prompts/...}, {file:commands/...}, and instructions
   # resolve correctly relative to the config directory.
   home.file = {
-    ".config/opencode/opencode.json" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/opencode.json";
+    ".config/opencode/opencode.jsonc" = {
+      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/opencode.jsonc";
       force = true;
     };
     ".agents/" = {
       source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.agents";
       force = true;
+      recursive = true;
     };
     # ".local/share/opencode/auth.json" = {
     #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/openrouter-auth.json";
