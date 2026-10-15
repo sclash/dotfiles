@@ -287,6 +287,10 @@
 		}
 	},
 	"lsp": {
+		"texlab": {
+			"command": ["texlab"],
+			"extensions": [".tex", ".bib"]
+		},
 		"tailwind": {
 			"command": [
 				"npx",
