@@ -1,0 +1,1241 @@
+{
+	"$schema": "https://opencode.ai/config.json",
+	"model": "opencode-go/mimo-v2.6-pro",
+	"providers": {
+		"llama.cpp": {
+			"package": "aisdk:@ai-sdk/openai-compatible",
+			"name": "llama-server (vast.ai)",
+			"settings": {
+				"baseURL": "https://notebooks-jane-themes-pros.trycloudflare.com/"
+			},
+			"models": {
+				"unsloth/Qwen3.6-27B-GGUF": {
+					"name": "Qwen3.6-27B"
+				}
+			}
+		},
+		"openrouter": {
+			"settings": {
+				"apiKey": "{file:/run/secrets/openrouter}"
+			},
+			"models": {
+				"xiaomi/mimo-v2.6-pro": {},
+				"openai/gtp-6-astra-pro": {
+					"settings": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"openai/gtp-6-astra": {
+					"settings": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"openai/gtp-6.1-sol-pro": {
+					"settings": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"openai/gtp-6.1-sol": {
+					"settings": {
+						"provider": {
+							"order": [
+								"openai/flex"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"deepseek/deepseek-v4.1-flash": {
+					"settings": {
+						"provider": {
+							"order": [
+								"deepseek"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"deepseek/deepseek-v4-pro-0813": {
+					"settings": {
+						"provider": {
+							"order": [
+								"streamlake"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"deepseek/deepseek-v4-flash-0731": {
+					"settings": {
+						"provider": {
+							"order": [
+								"open-inference/fp8",
+								"akashml/fp8"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"z-ai/glm-5.3": {
+					"settings": {
+						"provider": {
+							"order": [
+								"friendli",
+								"cloudflare",
+								"akashml/fp8"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
+				"z-ai/glm-5.3-flash": {
+					"settings": {
+						"provider": {
+							"order": [
+								"z-ai/fp8",
+								"novita/fp8",
+								"deepinfra/fp8",
+								"gmicloud/fp8"
+							],
+							"allow_fallbacks": false
+						}
+					}
+				}
+			}
+		},
+		"opencode-go": {
+			"settings": {
+				"apiKey": "{file:/run/secrets/opencode}"
+			}
+		},
+		"opencode": {
+			"settings": {
+				"apiKey": "{file:/run/secrets/opencode}"
+			}
+		},
+		"cheaper-inference": {
+			"package": "aisdk:@ai-sdk/openai-compatible",
+			"name": "Cheaper Inference",
+			"settings": {
+				"baseURL": "https://api.cheaperinference.com/v1",
+				"apiKey": "{file:/run/secrets/cheaper_inference}"
+			},
+			"models": {
+				"glm-5.3": {
+					"name": "glm-5.3",
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"glm-5.3-flash": {
+					"name": "glm-5.3-flash",
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"glm-6.1-sol": {
+					"name": "gpt-6.1-sol",
+					"variants": [
+						{
+							"id": "none",
+							"settings": {
+								"reasoningEffort": "none"
+							}
+						},
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"settings": {
+								"reasoningEffort": "medium"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "xhigh"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"gpt-6-astra": {
+					"name": "gpt-6-astra",
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"settings": {
+								"reasoningEffort": "medium"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "xhigh"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"fable-5.1": {
+					"name": "claude-fable-5.1",
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"settings": {
+								"reasoningEffort": "medium"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "xhigh"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"opus-5.5": {
+					"name": "claude-opus-5.5",
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"settings": {
+								"reasoningEffort": "medium"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "xhigh"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"deepseek-v4-pro-0813": {
+					"name": "deepseek-v4-pro-0813",
+					"variants": [
+						{
+							"id": "none",
+							"settings": {
+								"reasoningEffort": "none"
+							}
+						},
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
+				"deepseek-v4.1-flash": {
+					"name": "deepseek-v4.1-flash",
+					"variants": [
+						{
+							"id": "none",
+							"settings": {
+								"reasoningEffort": "none"
+							}
+						},
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"lsp": {
+		"texlab": {
+			"command": [
+				"texlab"
+			],
+			"extensions": [
+				".tex",
+				".bib"
+			]
+		},
+		"tailwind": {
+			"command": [
+				"npx",
+				"-p",
+				"@tailwindcss/language-server",
+				"-y",
+				"tailwindcss-language-server",
+				"--stdio"
+			],
+			"extensions": [
+				".css",
+				".htmx",
+				".vue",
+				".jsx",
+				".tsx"
+			]
+		},
+		"quickshell": {
+			"command": [
+				"qmlls",
+				"-E"
+			],
+			"extensions": [
+				".qml",
+				".qmljs"
+			]
+		}
+	},
+	"mcp": {
+		"servers": {
+			"markitdown": {
+				"type": "local",
+				"command": [
+					"nix",
+					"run",
+					"nixpkgs#markitdown-mcp"
+				],
+				"disabled": true
+			},
+			"ripwire": {
+				"type": "local",
+				"command": [
+					"ripwire",
+					"--mcp"
+				],
+				"disabled": true
+			},
+			"arxiv": {
+				"type": "local",
+				"command": [
+					"uvx",
+					"--from",
+					"arxiv-mcp-server[pdf]",
+					"arxiv-mcp-server"
+				],
+				"disabled": true
+			},
+			"graphify": {
+				"type": "local",
+				"command": [
+					"graphify-mcp",
+					"./graphify-out/graph.json"
+				],
+				"disabled": true
+			},
+			"openrouter": {
+				"type": "remote",
+				"url": "https://mcp.openrouter.ai/mcp",
+				"disabled": true
+			},
+			"playwright": {
+				"type": "local",
+				"command": [
+					"npx",
+					"@playwright/mcp@latest"
+				],
+				"disabled": true
+			},
+			// The bunx variant is kept as a comment, as in the V1 file:
+			// "shadcn-vue": {
+			// 	"type": "local",
+			// 	"enabled": false,
+			// 	"command": [
+			// 		"bunx",
+			// 		"--bun",
+			// 		"shadcn-vue@latest",
+			// 		"mcp",
+			// 		"init",
+			// 		"--client",
+			// 		"opencode"
+			// 	]
+			// },
+			"shadcn-vue": {
+				"type": "local",
+				"command": [
+					"npx",
+					"shadcn-vue@latest",
+					"mcp"
+				],
+				"disabled": true
+			},
+			"nixos": {
+				"type": "local",
+				"command": [
+					"nix",
+					"run",
+					"github:utensils/mcp-nixos",
+					"--"
+				],
+				"disabled": true
+			},
+			"chrome-devtools": {
+				"type": "local",
+				"command": [
+					"npx",
+					"-y",
+					"chrome-devtools-mcp@latest"
+				],
+				"disabled": true
+			},
+			"github": {
+				"type": "local",
+				"command": [
+					"nix",
+					"run",
+					"nixpkgs#github-mcp-server",
+					"--",
+					"stdio"
+				],
+				"disabled": true
+			},
+			"filesystem": {
+				"type": "local",
+				"command": [
+					"npx",
+					"-y",
+					"@modelcontextprotocol/server-filesystem",
+					"/home/asergi/",
+					"/home/asergi/hacking/",
+					"/home/asergi/Downloads/"
+				],
+				"disabled": true
+			}
+		}
+	},
+	"plugins": [
+		"superpowers@git+https://github.com/obra/superpowers.git"
+	],
+	"instructions": [
+		"AGENTS.md",
+		"CLAUDE.md",
+		"RIPWIRE.md"
+	],
+	"agents": {
+		"title": {
+			"model": "opencode-go/deepseek-v4.1-flash"
+		},
+		"build": {
+			"description": "Primary coding agent for development work",
+			"mode": "primary"
+		}
+	},
+	"permissions": [
+		{
+			"action": "mcp_*",
+			"resource": "*",
+			"effect": "ask"
+		},
+		{
+			"action": "external_directory",
+			"resource": "*",
+			"effect": "ask"
+		},
+		{
+			"action": "read",
+			"resource": "**/.env",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/.env.local",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/.env.production",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/.env.development",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/.secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/.secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/credentials",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/credentials.*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/id_rsa",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/id_rsa.*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/*.pem",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/*.key",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "**/*.p12",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "/run/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "/run/secrets.d",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "/run/secrets.d/**",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "/run/secrets/**",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.env",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.env.local",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.env.production",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.env.development",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/.secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/credentials",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/credentials.*",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/id_rsa",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/id_rsa.*",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/*.pem",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/*.key",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "**/*.p12",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "/run/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "/run/secrets.d",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "/run/secrets.d/**",
+			"effect": "deny"
+		},
+		{
+			"action": "edit",
+			"resource": "/run/secrets/**",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.env",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.env.local",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.env.production",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.env.development",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/.secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/credentials",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/credentials.*",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/id_rsa",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/id_rsa.*",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/*.pem",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/*.key",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "**/*.p12",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "/run/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "/run/secrets.d",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "/run/secrets.d/**",
+			"effect": "deny"
+		},
+		{
+			"action": "glob",
+			"resource": "/run/secrets/**",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.env",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.env.local",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.env.production",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.env.development",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/.secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/credentials",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/credentials.*",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/id_rsa",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/id_rsa.*",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/*.pem",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/*.key",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "**/*.p12",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "/run/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "/run/secrets.d",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "/run/secrets.d/**",
+			"effect": "deny"
+		},
+		{
+			"action": "grep",
+			"resource": "/run/secrets/**",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*/run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*cat /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*cat /run/secrets.d*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*head /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*tail /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*base64 /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*xxd /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*strings /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*cp /run/secrets*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*pip install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*pip3 install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*python -m pip install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*python3 -m pip install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*uv tool *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*uv pip install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*npm install -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*npm i -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*npm add -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*npm uninstall -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*npm update -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*pnpm add -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*pnpm install -g *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*yarn global *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*cargo install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*go install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*gem install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*apt install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*apt-get install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*dnf install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*brew install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*pacman -S *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*yay -S *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*paru -S *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*nix-env *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*nix profile install *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*nix-channel --add *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "*sudo *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.env",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.env.local",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.env.production",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.env.development",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/.secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/secrets.*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/credentials",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/credentials.*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/id_rsa",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/id_rsa.*",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/*.pem",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/*.key",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "**/*.p12",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "/run/secrets",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "/run/secrets.d",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "/run/secrets.d/**",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "/run/secrets/**",
+			"effect": "deny"
+		}
+	]
+}
