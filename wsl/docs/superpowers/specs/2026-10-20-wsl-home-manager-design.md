@@ -1,6 +1,6 @@
 # WSL home-manager flake: design
 
-Date: 2026-10-20 · Status: approved design, awaiting spec review
+Date: 2026-10-20 · Status: approved; amended 2026-10-20 (wsl-only changes, overlay, managed Python, chromium)
 
 ## Goal
 Port the user-level configuration in `~/dotfiles/nixos` (home-manager running inside NixOS) to a
@@ -13,19 +13,26 @@ then gets the same CLI/TUI tools and their configs declaratively.
   home-manager links its configuration from `~/dotfiles/my-opencode/v2`.
 - The entrypoint is a `flake.nix`.
 - It must work on any fresh WSL instance, not only the current one.
+- **Nothing outside `wsl/` is modified.** That covers `nixos/`, `my-opencode/` and every other directory in
+  `~/dotfiles`. When a shared file conflicts with WSL, a corrected copy lives in `wsl/`, and home-manager
+  links the copy instead of the original (amendment 2026-10-20).
 
 ### Decisions
 | Topic | Decision |
 |---|---|
 | Claude Code | Keep the native, auto-updating binary in `~/.local/bin`. home-manager only links static config (4 skills). No package, `settings.json`, plugins or MCP through home-manager, so `/model`, `/plugin` and the herdr hook keep working. |
-| Secrets | sops-nix **home-manager module**, with the same `nixos/secrets/secrets.yaml` and age key. Secrets appear at `~/.config/sops-nix/secrets/<name>` (backed by `/run/user/1000/secrets.d`). The v2 opencode config and the zsh exports move to these paths. |
+| Secrets | sops-nix **home-manager module**, with the same `nixos/secrets/secrets.yaml` and age key. Secrets appear at `~/.config/sops-nix/secrets/<name>` (backed by `/run/user/1000/secrets.d`). The zsh exports and the **WSL copy** of the opencode config use these paths. |
+| v2 conflicts | An overlay at `wsl/opencode/` mirrors v2's layout but holds only the files that conflict with WSL. Everything else is linked live from v2. A checksum manifest flags drift when a v2 original changes. |
+| Python wheels | A WSL copy of `uv.toml` sets `python-preference = "managed"`. uv's standalone Pythons use Ubuntu's normal loader, so wheels find `libstdc++` without any `LD_LIBRARY_PATH`. The WSL skill copies drop the nix-ld prefix, and `nix-ld-env.js` is not linked. |
+| Browser | nixpkgs `chromium`, used headless by agent-browser and Playwright, plus `fonts.fontconfig` with noto-fonts and noto-fonts-color-emoji so pages render text. |
 | Layout | The WSL flake imports the portable modules from `../nixos/programs` unchanged. WSL-specific modules live in `wsl/modules/`. **No file under `nixos/` is modified.** |
 | Pre-existing installs | Nix replaces rustup, nvm, the snaps (nvim, go, zig, node, pyright, ctags), `~/.local/bin/herdr`, oh-my-zsh and p10k. Starship replaces p10k. |
 | Bootstrap | `wsl/bootstrap.sh` is idempotent. Removing old installs only happens with an opt-in `--cleanup` flag, which lists what it will delete and asks first. Plus `wsl/README.md`. |
 
 ### Out of scope
 - GUI applications, and everything that is system-level on NixOS: boot, networking/VPN, display manager,
-  compositor, audio, bluetooth, printing/scanning, fonts, openssh, firewall.
+  compositor, audio, bluetooth, printing/scanning, openssh, firewall. Terminal fonts belong on the Windows side;
+  Linux-side fonts are installed only so headless chromium can render text.
 - A docker daemon. Docker Desktop's WSL integration provides the `docker` CLI.
 - Declarative Claude Code plugins/MCP servers (they stay stateful and are managed by claude itself).
 - Any change to the NixOS configuration.
@@ -37,20 +44,27 @@ Measured on the current instance:
 - Determinate Nix 3.23.3 (nix 2.35.3), daemon active, `nix-command flakes` enabled, empty user profile.
 - `/etc/zsh/zshrc` sources `nix-daemon.sh`. zsh reads `~/.zshenv` (home-manager session vars) before
   `/etc/zsh/zshrc`, so `~/.nix-profile/bin` ends up ahead of `/usr/bin` in `PATH`.
-- `my-opencode/v2` is **not tracked** in git (`?? my-opencode/v2/`).
+- `my-opencode/v2` is committed (`4fceb51`), so the flake can read it at eval time.
 
 ## File layout
 ```
 wsl/
-  flake.nix            inputs + homeConfigurations."asergi"
+  flake.nix            inputs, homeConfigurations."asergi", checks
   flake.lock           initial lock pinned to the revisions in nixos/flake.lock
-  home.nix             entrypoint: imports, packages, links, session vars, git/man, genericLinux
+  home.nix             entrypoint: imports, links, session vars, git/man, genericLinux
+  packages.nix         home.packages + fonts
+  lib/overlay-links.nix  base+overlay → home.file entries (shared by opencode and claude-code)
   modules/
     zsh.nix            WSL zsh (adapted from nixos/programs/zsh.nix)
     herdr.nix          programs.herdr (pkgs-master) + config.toml link
-    opencode.nix       out-of-store links into my-opencode/v2 (no package)
-    claude-code.nix    4 skill links into my-opencode/v2/skills (no package, no settings)
+    opencode.nix       ~/.config/opencode from v2 + overlay (no package)
+    claude-code.nix    4 skills from v2 + overlay (no package, no settings)
     secrets.nix        sops-nix: age key + 4 secrets
+  opencode/            overlay: WSL copies of conflicting v2 files only
+    BASE.sha256        checksums of the v2 originals each copy derives from
+    sync_opencode_jsonc.py  regenerates opencode/opencode.jsonc from v2
+  uv/uv.toml           WSL copy of nixos/programs/uv/uv.toml
+  tests/               generation, overlay and sync tests
   bootstrap.sh
   README.md
 ```
@@ -119,6 +133,7 @@ wsl/
 | `~/.config/nvim` | `~/dotfiles/neovimrc` (git submodule) |
 | `~/.config/starship` | `~/dotfiles/starship` |
 | `~/.config/atuin` | `~/dotfiles/atuin` |
+| `~/.config/uv/uv.toml` | `~/dotfiles/wsl/uv/uv.toml`. This overrides the imported `uv.nix` entry with `lib.mkForce`. The copy differs from the nixos one only in `python-preference = "managed"`. |
 
 neovim is installed as a **package**, not `programs.neovim`. That way home-manager never generates an `init.lua`
 inside the linked directory.
@@ -135,13 +150,15 @@ CLI subset of `nixos/home.nix` and of `environment.systemPackages` in `nixos/con
   gnumake, pkg-config. `hiPrio` resolves the `bin/cc` collision between the gcc and clang wrappers in the
   home-manager `buildEnv`.
 - Runtimes and libs: lua, nodejs, typescript, icu, playwright
+- Browser and fonts: chromium (headless, for agent-browser and Playwright), noto-fonts, noto-fonts-color-emoji;
+  `fonts.fontconfig.enable = true`
 - `(import ../nixos/programs/open-research.nix { inherit pkgs; })` (`orx`)
 
 `pkgs-unstable`, same channel as `configuration.nix:442-458` and `home.nix:131-132`: ripgrep, fzf,
 universal-ctags, python3, bun, go, rustc, cargo, zig_0_17, agent-browser.
 
 Dropped:
-- GUI: firefox, chromium, google-chrome, chromedriver, tor-browser, vlc, mpv, flameshot, telegram-desktop,
+- GUI: firefox, google-chrome, chromedriver, tor-browser, vlc, mpv, flameshot, telegram-desktop,
   zennotes-desktop, ghostty, hypr*, walker/elephant, nautilus, evince, qt6.qtdeclarative
 - Printing and scanning: cups, epsonscan2
 - Docker: docker, docker-compose (Docker Desktop)
@@ -186,10 +203,24 @@ Adapted copy of `nixos/programs/zsh.nix`:
   linked, because herdr keeps sockets, logs and `session.json` in `~/.config/herdr`. Linking the whole
   directory would put them in the repo.
 
+### lib/overlay-links.nix
+A pure function that turns a base tree (v2) plus an overlay tree (`wsl/opencode`) into `home.file` entries.
+All links are out-of-store, so edits to either tree take effect without a rebuild.
+- For each path, from the top-level item downwards:
+  - **Excluded** path → no entry.
+  - Missing from both base and overlay → no entry.
+  - No overlay entry, and no exclude below it → **one link to the base path**. A whole directory becomes one link.
+  - Overlay entry is a file → link to the overlay file.
+  - Overlay entry is a directory, or an exclude lies below the path → expand it. Children are the union of the base and
+    overlay listings, and each child is handled by the same rules.
+- Directory listings use `builtins.readDir` on the flake source (`../my-opencode/v2`, `./opencode`), so the
+  layout is fixed at eval time. A new file inside an expanded directory needs `update`; untouched subtrees stay live.
+
 ### modules/opencode.nix
-- Out-of-store links from `~/dotfiles/my-opencode/v2/` to `~/.config/opencode/<item>`. The items are:
-  `opencode.jsonc`, `AGENTS.md`, `CLAUDE.md`, `RIPWIRE.md`, `agents`, `commands`, `instructions`, `plugins`,
-  `prompts`, `scripts`, `skills`, `tools`. `RIPWIRE.md` is new compared to v1; v2's `instructions` lists it.
+- `~/.config/opencode/<item>` = overlay-links over base `~/dotfiles/my-opencode/v2` and overlay
+  `~/dotfiles/wsl/opencode`. The items are: `opencode.jsonc`, `AGENTS.md`, `CLAUDE.md`, `RIPWIRE.md`, `agents`,
+  `commands`, `instructions`, `plugins`, `prompts`, `scripts`, `skills`, `tools`. `RIPWIRE.md` is new compared to v1;
+  v2's `instructions` lists it. `plugins/nix-ld-env.js` is excluded.
 - `~/.agents` → `~/dotfiles/.agents`.
 - `home.sessionVariables.OPENCODE_DISABLE_CLAUDE_CODE_SKILLS = "true"`.
 - Not touched:
@@ -199,8 +230,9 @@ Adapted copy of `nixos/programs/zsh.nix`:
 - No package. The binary stays at `~/.opencode/bin/opencode`, on `PATH` via `home.sessionPath`.
 
 ### modules/claude-code.nix
-- `~/.claude/skills/{explore-codebase,high-perf-systems,download-video,transcribe-media}` → out-of-store links to
-  `~/dotfiles/my-opencode/v2/skills/<name>`. On NixOS these point at the removed `my-opencode/skills/*`.
+- `~/.claude/skills/{explore-codebase,high-perf-systems,download-video,transcribe-media}` = overlay-links for
+  `skills/<name>`, with the same base and overlay as opencode. `transcribe-media` therefore picks up its WSL copy.
+  On NixOS these point at the removed `my-opencode/skills/*`.
 - Nothing else under `~/.claude` is managed.
 
 ### modules/secrets.nix
@@ -210,16 +242,48 @@ Adapted copy of `nixos/programs/zsh.nix`:
 - The `sops-nix` systemd user service decrypts into `/run/user/1000/secrets.d/` and links each secret at
   `~/.config/sops-nix/secrets/<name>` (sops-nix `defaultSymlinkPath`).
 
-## Edits in my-opencode/v2
-v2 is only used by WSL today; NixOS uses v1.
-- `opencode.jsonc` lines 19, 123, 128 and 136: change `{file:/run/secrets/<name>}` to
-  `{file:/home/asergi/.config/sops-nix/secrets/<name>}`.
-- `opencode.jsonc` permission rules: every rule denying `/run/secrets` and `/run/secrets.d` gets equivalents
-  for `/home/asergi/.config/sops-nix/secrets` and `/run/user/1000/secrets.d`. The existing rules stay, so agents
-  still cannot read the keys. Affected: the path rules around lines 652-667, 747-762, 842-857, 937-952 and
-  1222-1237, and the bash-pattern rules at lines 962-1002.
-- `CLAUDE.md:14` and `skills/agent-browser/SKILL.md:16-19`: point to `~/dotfiles/wsl` (`home.nix`) instead of
-  `~/dotfiles/nixos`.
+## WSL overlay (wsl/opencode/)
+Copies of the v2 files that conflict with WSL. `my-opencode/` itself is never edited.
+
+### opencode.jsonc (generated)
+`wsl/opencode/sync_opencode_jsonc.py BASE OUT` regenerates it from v2; `--check` fails if OUT is stale. The
+transform touches only the text it must, so comments and formatting are preserved:
+- `{file:/run/secrets/<name>}` → `{file:/home/asergi/.config/sops-nix/secrets/<name>}` (4 provider `apiKey`s).
+- Each `permissions` rule whose `resource` contains `/run/secrets` or `/run/secrets.d` is kept, and is
+  **immediately followed** by mirrors that have the same `action` and `effect`. In each mirror, that token
+  is replaced by:
+  - `/run/user/1000/secrets.d`
+  - `/home/asergi/.config/sops-nix/secrets`
+  - `~/.config/sops-nix/secrets`, for `shell` rules only
+
+  A mirror identical to a rule already in the list is skipped. Source today: 29 rules.
+
+### Prose copies (hand-edited)
+Files: `CLAUDE.md`; `skills/agent-browser/SKILL.md`; `skills/webapp-testing/SKILL.md` and
+`skills/webapp-testing/examples/{console_logging,element_discovery,static_html_automation}.py`;
+`skills/web-artifacts-builder/SKILL.md`; `skills/pptx/SKILL.md` and `skills/pptx/editing.md`;
+`skills/transcribe-media/SKILL.md`; `skills/strategic-compact/SKILL.md`.
+
+Each copy starts from the v2 original and changes only what is wrong on WSL:
+- Remove the `LD_LIBRARY_PATH=/run/current-system/sw/share/nix-ld/lib` prefix, including the `env …` and
+  line-continuation forms. Remove prose saying the prefix is required. The replacement fact, where the text
+  explains why: uv uses uv-managed Python on this host, so wheels load Ubuntu's `libstdc++` directly.
+- Replace `/run/current-system/sw/bin/chromium` and `/run/current-system/sw/bin/google-chrome` with
+  `/home/asergi/.nix-profile/bin/chromium`. Where the text explains why: Playwright's downloaded Chromium
+  needs apt system libraries that this host doesn't have.
+- "NixOS" host wording becomes "Ubuntu on WSL with a declarative Nix home-manager setup", and the config
+  location becomes `/home/asergi/dotfiles/wsl` (packages in `packages.nix`). The "declarative, never
+  imperative" rules stay.
+- `strategic-compact`: drop the `nix-ld-env.js` bullet, because that plugin is not linked on WSL.
+
+### Drift detection
+`wsl/opencode/BASE.sha256` holds the `sha256sum` lines (relative to v2) of the original behind every copied
+file. A flake check fails when a v2 original changes, or when `opencode.jsonc` is stale. Then the copy is
+re-derived and the checksum refreshed.
+
+### Constraints checked on the overlay
+- No overlay file other than `opencode.jsonc` contains `/run/current-system`, `nix-ld`, `dotfiles/nixos`, `NixOS` or `NixOs`.
+- `opencode.jsonc` keeps the disabled `nixos` MCP entry. `nix run github:utensils/mcp-nixos` works on any host.
 
 ## Collision handling
 The first switch runs with `-b hm-backup`. For any target that exists and is not a home-manager link, the pinned
@@ -229,10 +293,11 @@ That covers directories too, so no custom activation step is needed. Expected on
 - `~/.config/tmux/tmux.conf`
 - `~/.config/nvim` (a real copy of neovimrc)
 - `~/.config/herdr/config.toml`
-- `~/.config/opencode/plugins`
+- `~/.config/opencode/plugins/herdr-agent-state.js`. `plugins/` becomes a real directory of per-file links,
+  because `nix-ld-env.js` is excluded, so the existing directory is kept.
 
-Known behaviour, the same as on NixOS today: herdr's integration installer writes its opencode plugin through the
-`plugins` link into the repo.
+Known behaviour: herdr's integration installer rewrites `plugins/herdr-agent-state.js`. If it writes through
+the link, the change lands in `my-opencode/v2`, the same as on NixOS today.
 
 ## bootstrap.sh
 Bash, `set -euo pipefail`. Every step checks before acting, so re-running it is safe.
@@ -267,8 +332,7 @@ Covers:
 - troubleshooting: backups named `*.hm-backup`, and `systemctl --user status sops-nix`
 
 ## Prerequisites (repo state)
-- `my-opencode/v2` must be committed, otherwise a fresh clone has no opencode config. Review `v2/vastai`
-  (144 bytes) for credentials before committing.
+- `my-opencode/v2` is committed (done, `4fceb51`).
 - The new `wsl/` files must be `git add`ed before `nix` can evaluate the flake.
 
 ## Verification
@@ -287,6 +351,9 @@ Covers:
    - `nvim`: `:checkhealth vim.lsp` passes, and servers resolve from `PATH`.
    - tmux plugins load.
    - `uv tool list` shows graphifyy; `ripwire --version` and `orx --help` run.
+   - `uvx --from markitdown markitdown --help` runs (numpy loads) with no `LD_LIBRARY_PATH`.
+   - `agent-browser doctor` resolves the Nix chromium and passes its live launch test.
+   - A headless chromium screenshot of a page shows rendered text.
 5. Fresh-instance acceptance test, together with the user:
    - `wsl.exe --install Ubuntu-24.04 --name hm-test`
    - clone dotfiles, copy the age key, run `bootstrap.sh`
