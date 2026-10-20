@@ -1,6 +1,6 @@
 # WSL home-manager flake: design
 
-Date: 2026-10-20 · Status: approved; amended 2026-10-20 (wsl-only changes, overlay, managed Python, chromium)
+Date: 2026-10-20 · Status: approved; amended 2026-10-20 (wsl-only changes, overlay, managed Python, chromium, per-instance age keys)
 
 ## Goal
 Port the user-level configuration in `~/dotfiles/nixos` (home-manager running inside NixOS) to a
@@ -21,7 +21,7 @@ then gets the same CLI/TUI tools and their configs declaratively.
 | Topic | Decision |
 |---|---|
 | Claude Code | Keep the native, auto-updating binary in `~/.local/bin`. home-manager only links static config (4 skills). No package, `settings.json`, plugins or MCP through home-manager, so `/model`, `/plugin` and the herdr hook keep working. |
-| Secrets | sops-nix **home-manager module**, with the same `nixos/secrets/secrets.yaml` and age key. Secrets appear at `~/.config/sops-nix/secrets/<name>` (backed by `/run/user/1000/secrets.d`). The zsh exports and the **WSL copy** of the opencode config use these paths. |
+| Secrets | sops-nix **home-manager module** with WSL's own committed file, `wsl/secrets/secrets.yaml`. Every instance **generates** its own age key; nothing is copied. Each instance's public key is listed in `wsl/.sops.yaml`. You fill in the values with `sops edit`. Secrets appear at `~/.config/sops-nix/secrets/<name>` (backed by `/run/user/1000/secrets.d`). The zsh exports and the **WSL copy** of the opencode config use these paths. (amendment 2026-10-20) |
 | v2 conflicts | An overlay at `wsl/opencode/` mirrors v2's layout but holds only the files that conflict with WSL. Everything else is linked live from v2. A checksum manifest flags drift when a v2 original changes. |
 | Python wheels | A WSL copy of `uv.toml` sets `python-preference = "managed"`. uv's standalone Pythons use Ubuntu's normal loader, so wheels find `libstdc++` without any `LD_LIBRARY_PATH`. The WSL skill copies drop the nix-ld prefix, and `nix-ld-env.js` is not linked. |
 | Browser | nixpkgs `chromium`, used headless by agent-browser and Playwright, plus `fonts.fontconfig` with noto-fonts and noto-fonts-color-emoji so pages render text. |
@@ -60,6 +60,8 @@ wsl/
     opencode.nix       ~/.config/opencode from v2 + overlay (no package)
     claude-code.nix    4 skills from v2 + overlay (no package, no settings)
     secrets.nix        sops-nix: age key + 4 secrets
+  .sops.yaml           creation rule for secrets/secrets.yaml; one age recipient per instance
+  secrets/secrets.yaml sops-encrypted: github_pat, openrouter, opencode, cheaper_inference
   opencode/            overlay: WSL copies of conflicting v2 files only
     BASE.sha256        checksums of the v2 originals each copy derives from
     sync_opencode_jsonc.py  regenerates opencode/opencode.jsonc from v2
@@ -142,7 +144,7 @@ inside the linked directory.
 CLI subset of `nixos/home.nix` and of `environment.systemPackages` in `nixos/configuration.nix`.
 
 `pkgs`:
-- Editors and Nix tools: neovim, vim, tree-sitter, nixd, nix-prefetch-git, sops
+- Editors and Nix tools: neovim, vim, tree-sitter, nixd, nix-prefetch-git, sops, age
 - CLI utilities: tree, bat, eza, fd, jq, zoxide, zip, unzip, wget, wl-clipboard (WSLg clipboard), man-pages, man-pages-posix
 - TUIs: gh, lazygit, lazydocker, lazysql, lazyssh, lazycli, btop, htop, ncdu, fastfetch, glow, hygg
 - Media and profiling: ffmpeg, timg, chafa, flamegraph, hyperfine
@@ -237,8 +239,20 @@ All links are out-of-store, so edits to either tree take effect without a rebuil
 
 ### modules/secrets.nix
 - `sops.age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt"`.
-- `sops.defaultSopsFile = ../../nixos/secrets/secrets.yaml` (the path is relative to `wsl/modules/`).
-- `sops.secrets = { github_pat = {}; openrouter = {}; opencode = {}; cheaper_inference = {}; }`.
+- `sops.defaultSopsFile = ../secrets/secrets.yaml` (the path is relative to `wsl/modules/`).
+- `sops.secrets = { github_pat = {}; openrouter = {}; opencode = {}; cheaper_inference = {}; }`. All four keys must
+  be present in the file: sops-nix fails the whole service if a declared secret is missing.
+- `wsl/.sops.yaml` holds a single creation rule. Its `age:` value is **one line** of comma-separated recipients,
+  so bootstrap can append a recipient safely:
+  ```yaml
+  creation_rules:
+    - path_regex: secrets/secrets\.yaml$
+      age: age1…,age1…
+  ```
+  sops looks for its config starting in the current directory, and the repo-root `.sops.yaml` (NixOS rules)
+  would shadow this one. So every documented sops command passes `--config ~/dotfiles/wsl/.sops.yaml`.
+- First instance: during implementation, the age key is generated here, the file is created with
+  `CHANGEME` values, and you then `sops edit` it to put in the real API keys.
 - The `sops-nix` systemd user service decrypts into `/run/user/1000/secrets.d/` and links each secret at
   `~/.config/sops-nix/secrets/<name>` (sops-nix `defaultSymlinkPath`).
 
@@ -301,18 +315,31 @@ the link, the change lands in `my-opencode/v2`, the same as on NixOS today.
 
 ## bootstrap.sh
 Bash, `set -euo pipefail`. Every step checks before acting, so re-running it is safe.
+Exit codes: 0 = done; 1 = precondition failed (wrong `$HOME` or repo location); 2 = action needed from the user
+(restart WSL, or fix secrets access), with the exact next command printed.
 1. **systemd:** if `/etc/wsl.conf` lacks `systemd=true`, write `[boot]\nsystemd=true` with sudo. Then tell the
-   user to run `wsl.exe --shutdown` and re-run, and exit 0.
+   user to run `wsl.exe --shutdown` and re-run, and exit 2.
 2. **Shell and locale:** `sudo apt-get install -y zsh git curl` if any is missing. Run `chsh -s /usr/bin/zsh`
    if the login shell differs. Run `sudo locale-gen en_US.UTF-8` if `locale -a` lacks it.
 3. **Nix:** if `nix` is missing, install Determinate Nix
    (`curl -fsSL https://install.determinate.systems/nix | sh -s -- install --no-confirm`) and source
    `/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh`.
 4. **Submodules:** `git -C ~/dotfiles submodule update --init neovimrc`.
-5. **Age key:** if `~/.config/sops/age/keys.txt` is missing, print how to copy it (e.g. `cp /mnt/c/... ~/.config/sops/age/keys.txt; chmod 600 …`) and exit 1.
-6. **Switch:** if `home-manager` is on `PATH`, use it; otherwise use `nix run home-manager/master --`. Either way,
-   run `switch --flake ~/dotfiles/wsl#asergi -b hm-backup`.
-7. **`--cleanup`** (only with the flag): print what is present among the items below, ask `[y/N]`, then remove them:
+5. **Age key:** if `~/.config/sops/age/keys.txt` is missing, **generate** it with `age-keygen` from the flake's
+   pinned `age` package (mode 600). Then register its public key in `wsl/.sops.yaml` (appended to the `age:` line,
+   only if it isn't there yet), and print the public key.
+6. **Secrets access:** a read-only check with the pinned `sops`. It covers whether `wsl/secrets/secrets.yaml` exists,
+   whether this key decrypts it, and whether all four keys are present. On a problem, exit 2 with instructions:
+   - file missing → create it with `sops --config … wsl/secrets/secrets.yaml` (template with the 4 keys).
+   - can't decrypt (a new instance) → on an instance that can decrypt, run `bootstrap.sh --add-recipient <pubkey>`
+     (it appends the key and runs `sops updatekeys`), commit, pull here, re-run. Alternatively, re-create the
+     file, which drops the other instances' access.
+   - keys missing → `sops edit` and add them.
+7. **Switch:** if `home-manager` is on `PATH`, use it; otherwise use `nix run ~/dotfiles/wsl#home-manager --` (the
+   locked revision). Either way, run `switch --flake ~/dotfiles/wsl#asergi -b hm-backup`.
+8. **`--add-recipient AGE_PUBKEY`** (separate mode, run on an instance that can decrypt): register the key, run
+   `sops --config wsl/.sops.yaml updatekeys -y wsl/secrets/secrets.yaml`, and remind the user to commit.
+9. **`--cleanup`** (only with the flag): print what is present among the items below, ask `[y/N]`, then remove them:
    - snaps nvim, go, zig, node, pyright, universal-ctags
    - `rustup self uninstall -y`, plus the `. "$HOME/.cargo/env"` lines in `~/.profile` and `~/.bashrc`
    - `~/.nvm`, `~/.oh-my-zsh`, `~/.p10k.zsh`
@@ -324,10 +351,12 @@ Bash, `set -euo pipefail`. Every step checks before acting, so re-running it is 
 ## README.md
 Covers:
 - prerequisites (Windows: WSL, Docker Desktop integration, Nerd Font in the terminal)
-- fresh-instance steps: clone with `--recurse-submodules`, copy the age key, `./bootstrap.sh`, then `./bootstrap.sh --cleanup`
+- fresh-instance steps: clone with `--recurse-submodules`, then `./bootstrap.sh` (it generates the age key). Then
+  `--add-recipient` on an existing instance, or create the secrets file. Re-run `./bootstrap.sh`, then
+  `./bootstrap.sh --cleanup`.
 - daily use: `update`
 - adding packages
-- editing secrets: `sops ~/dotfiles/nixos/secrets/secrets.yaml`
+- editing secrets: `sops --config ~/dotfiles/wsl/.sops.yaml ~/dotfiles/wsl/secrets/secrets.yaml`; the 4 required keys
 - the `max-jobs` note
 - troubleshooting: backups named `*.hm-backup`, and `systemctl --user status sops-nix`
 
@@ -356,5 +385,7 @@ Covers:
    - A headless chromium screenshot of a page shows rendered text.
 5. Fresh-instance acceptance test, together with the user:
    - `wsl.exe --install Ubuntu-24.04 --name hm-test`
-   - clone dotfiles, copy the age key, run `bootstrap.sh`
-   - repeat steps 3-4, then `wsl.exe --unregister hm-test`
+   - clone dotfiles and run `bootstrap.sh`. It generates a key and stops with exit 2.
+   - run `--add-recipient` on this instance (on a throwaway branch), bring that change over, and re-run.
+   - repeat steps 3-4, then `wsl.exe --unregister hm-test`. Delete the throwaway branch so the test key never
+     reaches the real branch.

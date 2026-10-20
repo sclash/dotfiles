@@ -45,8 +45,11 @@ script runs after the switch.
    errors, and the token variables just stay unset. → Task 4 asserts the `[ -f … ]` guards.
 2. **Second `update` after the first switch**: earlier `*.hm-backup` files must not make later switches fail.
    → Task 10 runs `update` twice.
-3. **Repo cloned elsewhere, or a different `$HOME`**: the links would dangle. `bootstrap.sh` must refuse with a
-   clear message. → Task 9 test.
+3. **Bootstrap on a new or misconfigured instance.** These are tested in Task 9:
+   - Repo cloned elsewhere, or a different `$HOME`: bootstrap must refuse with exit 1.
+   - Secrets file missing, not decryptable by this instance's freshly generated key, or missing one of the 4 keys:
+     bootstrap must stop **before** switching, with exit 2 and the exact next command. Otherwise sops-nix would
+     fail at activation.
 4. **A v2 original of a copied file changes**: the drift check must fail and name the file. → Task 7 negative test.
 5. **An agent reaching secrets through `~/.config/sops-nix/secrets` or `/run/user/1000/secrets.d`** instead of
    `/run/secrets`: deny rules must exist for both, and for the tilde form in shell rules. → Task 6 unit tests.
@@ -187,7 +190,7 @@ script runs after the switch.
 - [ ] **Step 1: Append the Task 3 assertions.**
   ```bash
   # --- Task 3: packages
-  has_bin nvim vim tree-sitter nixd nix-prefetch-git sops tree bat eza fd jq zoxide zip unzip wget wl-copy \
+  has_bin nvim vim tree-sitter nixd nix-prefetch-git sops age age-keygen tree bat eza fd jq zoxide zip unzip wget wl-copy \
           gh lazygit lazydocker lazysql lazyssh lazycli btop htop ncdu fastfetch glow hygg \
           ffmpeg timg chafa flamegraph.pl hyperfine gcc clang lldb gdb valgrind bear make pkg-config lua \
           node npm tsc playwright chromium orx rg fzf ctags python3 bun go rustc cargo zig agent-browser
@@ -213,14 +216,32 @@ script runs after the switch.
 ### Task 4: Secrets and zsh
 
 **Files:**
-- Create: `wsl/modules/secrets.nix`, `wsl/modules/zsh.nix`
-- Modify: `wsl/home.nix` (imports), `wsl/tests/check-generation.sh`
+- Create: `wsl/modules/secrets.nix`, `wsl/modules/zsh.nix`, `wsl/.sops.yaml`, `wsl/secrets/secrets.yaml`
+- Modify: `wsl/home.nix` (imports), `wsl/flake.nix` (`packages`), `wsl/tests/check-generation.sh`
 
 **Interfaces:**
-- Produces: `config.sops.secrets.<name>.path` = `/home/asergi/.config/sops-nix/secrets/<name>` for `github_pat`,
-  `openrouter`, `opencode` and `cheaper_inference`.
+- Produces:
+  - `config.sops.secrets.<name>.path` = `/home/asergi/.config/sops-nix/secrets/<name>` for `github_pat`,
+    `openrouter`, `opencode` and `cheaper_inference`.
+  - Flake outputs `packages.x86_64-linux.{home-manager,sops,age}`, taken from the locked inputs
+    (`home-manager.packages.…home-manager`, `pkgs.sops`, `pkgs.age`). bootstrap uses them before the first switch.
+  - `wsl/.sops.yaml` has exactly one creation rule, with `path_regex: secrets/secrets\.yaml$` and a **single-line**
+    `age:` value (spec "modules/secrets.nix").
 
-- [ ] **Step 1: Append the Task 4 assertions.**
+- [ ] **Step 1: Generate this instance's key and the WSL sops files.**
+  - Add the `packages` outputs, then `git add wsl/flake.nix`.
+  - Create the key: `nix shell ./wsl#age -c age-keygen -o ~/.config/sops/age/keys.txt`. Create the directory first with
+    `mkdir -p -m 700`. Refuse if the file already exists, and never print its contents.
+  - Write `wsl/.sops.yaml` with this instance's public key (`age-keygen -y ~/.config/sops/age/keys.txt`).
+  - Create `wsl/secrets/secrets.yaml`:
+    `printf 'github_pat: CHANGEME\nopenrouter: CHANGEME\nopencode: CHANGEME\ncheaper_inference: CHANGEME\n' > wsl/secrets/secrets.yaml`,
+    then `nix run ./wsl#sops -- --config wsl/.sops.yaml -e -i wsl/secrets/secrets.yaml`.
+  - Verify: `nix run ./wsl#sops -- --config wsl/.sops.yaml -d wsl/secrets/secrets.yaml` prints the 4 `CHANGEME` keys,
+    and `grep -c CHANGEME wsl/secrets/secrets.yaml` prints `0` (the file is encrypted).
+  - `git add wsl/.sops.yaml wsl/secrets/secrets.yaml`.
+  - The user replaces the values with `sops edit` whenever they want. Nothing here depends on the real values.
+
+- [ ] **Step 2: Append the Task 4 assertions.**
   ```bash
   # --- Task 4: secrets + zsh
   U=home-files/.config/systemd/user/sops-nix.service; has_path $U
@@ -238,19 +259,20 @@ script runs after the switch.
   lacks $Z '/run/secrets'; lacks $Z 'nixos-rebuild'
   ```
 
-- [ ] **Step 2: Run the check.** Expected: FAIL (`has_path …sops-nix.service`).
+- [ ] **Step 3: Run the check.** Expected: FAIL (`has_path …sops-nix.service`).
 
-- [ ] **Step 3: Implement both modules** as in the spec ("modules/secrets.nix", "modules/zsh.nix"). Write the
+- [ ] **Step 4: Implement both modules** as in the spec ("modules/secrets.nix", "modules/zsh.nix"), with
+  `sops.defaultSopsFile = ../secrets/secrets.yaml`. Write the
   `initContent` secret exports exactly like this, with the paths interpolated from `config.sops.secrets.<name>.path`:
   ```sh
   if [ -f ${gh} ]; then export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat ${gh})"; fi
   if [ -f ${or} ]; then export OPENROUTER_API="$(cat ${or})"; fi
   ```
 
-- [ ] **Step 4: Run the check.** Expected: `OK`. If the manifest's lookup expression doesn't match the pinned
+- [ ] **Step 5: Run the check.** Expected: `OK`. If the manifest's lookup expression doesn't match the pinned
   sops-nix layout, fix the lookup in the test (not the module), and keep both name and path assertions.
 
-- [ ] **Step 5: Commit.** `git commit -m "wsl: sops-nix secrets and WSL zsh"`
+- [ ] **Step 6: Commit.** `git commit -m "wsl: sops-nix secrets (per-instance age keys) and WSL zsh"`
 
 ### Task 5: overlay-links helper
 
@@ -481,50 +503,67 @@ script runs after the switch.
 
 **Files:**
 - Create: `wsl/bootstrap.sh` (mode 755), `wsl/README.md`, `wsl/tests/test-bootstrap.sh`
-- Modify: `wsl/flake.nix`: add `packages.x86_64-linux.home-manager = home-manager.packages.x86_64-linux.home-manager`
 
 **Interfaces:**
-- Produces the CLI `bootstrap.sh [--dry-run] [--cleanup] [--help]`.
-  - `AGE_KEY_FILE` defaults to `$HOME/.config/sops/age/keys.txt` and only affects the precondition check.
+- Consumes: `packages.x86_64-linux.{home-manager,sops,age}` (Task 4), and `wsl/.sops.yaml`'s single-line `age:` (Task 4).
+- Produces:
+  - The CLI `bootstrap.sh [--dry-run] [--cleanup] [--add-recipient AGE_PUBKEY] [--help]`. Exit codes follow the
+    spec: 0 done, 1 precondition failed, 2 action needed.
+  - Env overrides, for tests only: `AGE_KEY_FILE` (default `$HOME/.config/sops/age/keys.txt`),
+    `SOPS_CONFIG` (default `<repo>/wsl/.sops.yaml`), `SECRETS_FILE` (default `<repo>/wsl/secrets/secrets.yaml`).
+  - Sourceable functions. The script runs `main "$@"` only when `"${BASH_SOURCE[0]}" == "$0"`.
+    - `register_recipient PUBKEY SOPS_YAML` appends `,PUBKEY` to the `age:` line when it's missing. It's idempotent.
+    - `secrets_status SOPS_YAML SECRETS_FILE` prints exactly one of `ok`, `missing`, `undecryptable` or
+      `missing-keys:<comma-separated names>`. It's read-only and uses `SOPS_AGE_KEY_FILE=$AGE_KEY_FILE`.
   - `--dry-run` prints each mutating command as `DRY-RUN: <cmd>` instead of running it, and skips the cleanup prompt.
+    Read-only probes, including `secrets_status`, still run.
   - Exit 1 when `$HOME` isn't `/home/asergi` or the script's repo root isn't `$HOME/dotfiles`. The message contains
     `expects the repo at /home/asergi/dotfiles`.
-  - Exit 1 when the age key is missing. The message contains `age key` and how to copy it.
-  - Switch command, in both modes:
-    `nix run /home/asergi/dotfiles/wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup`.
+  - Switch command: `nix run /home/asergi/dotfiles/wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup`.
     Use `home-manager switch …` when `home-manager` is on PATH.
 
-- [ ] **Step 1: Write `tests/test-bootstrap.sh`.**
+- [ ] **Step 1: Write `tests/test-bootstrap.sh`.** It creates a temp dir `$T` with two keys, A and B (made with
+  `nix shell ./wsl#age -c age-keygen`). It writes `$T/.sops.yaml` with recipient A, and encrypts `$T/full.yaml`
+  (all 4 keys) and `$T/partial.yaml` (no `cheaper_inference`) with `nix run ./wsl#sops -- --config $T/.sops.yaml`.
   - `nix run github:NixOS/nixpkgs/b1b875982b17dabde9b4a37f3e229e74913e6db3#shellcheck -- wsl/bootstrap.sh` exits 0.
-  - `bootstrap.sh --help` exits 0 and mentions `--cleanup` and `--dry-run`.
-  - `AGE_KEY_FILE=/nonexistent bootstrap.sh --dry-run` exits 1, and the output contains `age key`.
-  - `HOME=/tmp/elsewhere bootstrap.sh --dry-run` exits 1, and the output contains `expects the repo` (Review Focus 3).
-  - With `AGE_KEY_FILE=$(mktemp)`, `--dry-run` exits 0, and the output:
+  - `bootstrap.sh --help` exits 0 and mentions `--cleanup`, `--dry-run` and `--add-recipient`.
+  - Source the script, then check `secrets_status`:
+    - with key A: `full` gives `ok`; `partial` gives `missing-keys:cheaper_inference`; `$T/none.yaml` gives `missing`.
+    - with key B: `full` gives `undecryptable`.
+  - `register_recipient B $T/.sops.yaml` twice: the `age:` line contains B exactly once and A unchanged.
+  - `--add-recipient` (run with `SOPS_CONFIG`/`SECRETS_FILE` pointing at `$T`, key A): afterwards key B gets `ok` on `full`.
+  - `HOME=/tmp/elsewhere bootstrap.sh --dry-run` exits 1 and prints `expects the repo` (Review Focus 3).
+  - `AGE_KEY_FILE=$T/B.txt SECRETS_FILE=$T/full.yaml SOPS_CONFIG=$T/.sops.yaml bootstrap.sh --dry-run`:
+    exits 2, prints `--add-recipient age1…` (B's public key), and has no `switch --flake` line (Review Focus 3).
+  - `AGE_KEY_FILE=$T/new.txt … --dry-run` (no key yet) prints `DRY-RUN: … age-keygen -o $T/new.txt`.
+  - On this instance's real files (key from Task 4), `--dry-run`:
+    - exits 0
     - contains `DRY-RUN:` and `switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup`
-    - contains `locale-gen en_US.UTF-8` (missing on this instance)
-    - lacks `install.determinate.systems`, `wsl.conf` and `chsh` (already satisfied here)
-  - A second identical run produces identical output.
-  - `--cleanup --dry-run` (with the temp key) lists `~/.oh-my-zsh` and `snap nvim` with `DRY-RUN:` removal commands.
-    Afterwards `~/.oh-my-zsh` still exists.
+    - contains `locale-gen en_US.UTF-8` (missing here)
+    - lacks `install.determinate.systems`, `wsl.conf` and `chsh` (already satisfied)
+    - a second run gives identical output
+  - `--cleanup --dry-run` lists `~/.oh-my-zsh` and `snap nvim` with `DRY-RUN:` removal commands, and `~/.oh-my-zsh`
+    still exists afterwards.
+  - `rm -rf "$T"` on exit (trap).
 
 - [ ] **Step 2: Run the test.** `bash wsl/tests/test-bootstrap.sh`. Expected: FAIL (no script).
 
-- [ ] **Step 3: Implement `bootstrap.sh`** following the spec's steps 1-7. Use `set -euo pipefail`, one function per
-  step, and a `run()` wrapper that honours `--dry-run`. Write `README.md` with the spec's "README.md" contents.
-  For fresh instances, document the age-key copy as a PowerShell pipe:
-  `wsl -d Ubuntu-22.04 -- cat ~/.config/sops/age/keys.txt | wsl -d <new> -- sh -c 'mkdir -p ~/.config/sops/age && cat > ~/.config/sops/age/keys.txt && chmod 600 ~/.config/sops/age/keys.txt'`.
+- [ ] **Step 3: Implement `bootstrap.sh`** following the spec's "bootstrap.sh" steps 1-9. Use `set -euo pipefail`, one
+  function per step, and a `run()` wrapper that honours `--dry-run`. Pass `--config "$SOPS_CONFIG"` to every sops
+  call. Write `README.md` with the spec's "README.md" contents, including the new-instance key flow.
 
 - [ ] **Step 4: Run the test.** Expected: all pass. Then `nix flake check ./wsl -L` still passes.
 
-- [ ] **Step 5: Commit.** `git commit -m "wsl: idempotent bootstrap.sh with --dry-run/--cleanup, README"`
+- [ ] **Step 5: Commit.** `git commit -m "wsl: idempotent bootstrap.sh (key gen, secrets check, --add-recipient, --cleanup), README"`
 
 ### Task 10: Live switch on this instance (with the user)
 
 **Files:** Create `wsl/tests/check-live.sh`. It runs as the user, outside the sandbox. It prints `OK`/`FAIL`/`SKIP`
 per line and exits 1 on any FAIL.
 
-- [ ] **Step 1: Precondition.** `~/.config/sops/age/keys.txt` must exist. It doesn't today: **stop and ask the user
-  to copy it in.** Don't proceed without it.
+- [ ] **Step 1: Precondition.** The key from Task 4 exists, and `secrets_status` reports `ok`. Before Step 7's
+  provider check, ask the user whether they have replaced the `CHANGEME` values with `sops edit`. The switch itself
+  works with placeholders.
 
 - [ ] **Step 2: Write `check-live.sh`.** Every probe runs inside `zsh -lic '…'`, so the login environment is used.
   - For `nvim tmux herdr rg go zig node cargo uv starship atuin chromium`, the first `which -a` hit is under
@@ -570,10 +609,19 @@ per line and exits 1 on any FAIL.
   `git -C /home/asergi/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle wsl-home-manager`.
 - [ ] **Step 2: User, in PowerShell:** `wsl --install Ubuntu-24.04 --name hm-test`. Create user `asergi` at first launch.
 - [ ] **Step 3: In hm-test.**
-  - `git clone -b wsl-home-manager /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles && git -C ~/dotfiles submodule update --init`
-  - Copy the age key with the README's PowerShell pipe.
-- [ ] **Step 4: Bootstrap.** Run `bash ~/dotfiles/wsl/bootstrap.sh`. On the first run it enables systemd and exits;
-  then `wsl --terminate hm-test` and run it again. Expected: exit 0.
-- [ ] **Step 5: Verify.** `bash ~/dotfiles/wsl/tests/check-live.sh`. Expected: no FAIL lines. claude and opencode
+  `git clone -b wsl-home-manager /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles && git -C ~/dotfiles submodule update --init`.
+- [ ] **Step 4: First bootstrap.** Run `bash ~/dotfiles/wsl/bootstrap.sh`.
+  - The first run enables systemd and exits 2. Run `wsl --terminate hm-test` and re-run.
+  - The re-run generates a key and exits 2 with `--add-recipient age1…`.
+- [ ] **Step 5: Grant access from this instance (Ubuntu-22.04)** on a throwaway branch:
+  - `git switch -c hm-test-acceptance`
+  - `bash wsl/bootstrap.sh --add-recipient <hm-test pubkey>`, then commit.
+  - `git bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance`.
+  - In hm-test: `git fetch /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance && git checkout FETCH_HEAD -- wsl/.sops.yaml wsl/secrets/secrets.yaml`.
+- [ ] **Step 6: Second bootstrap.** Re-run `bash ~/dotfiles/wsl/bootstrap.sh`. Expected: exit 0.
+- [ ] **Step 7: Verify.** `bash ~/dotfiles/wsl/tests/check-live.sh`. Expected: no FAIL lines. claude and opencode
   print SKIP, because they're installed natively, outside this flake.
-- [ ] **Step 6: Tear down.** The user removes the test distro (`wsl --unregister hm-test`) and deletes the bundle.
+- [ ] **Step 8: Tear down.**
+  - The user runs `wsl --unregister hm-test` and deletes the bundle.
+  - Here: `git switch wsl-home-manager && git branch -D hm-test-acceptance`. Confirm with the user first: this
+    discards the test recipient, so the real branch never contains hm-test's key.
