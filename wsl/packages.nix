@@ -60,7 +60,6 @@
       # Build and debug. gcc and clang both ship bin/cc; gcc wins.
       (lib.hiPrio gcc)
       llvmPackages_latest.clang
-      llvmPackages_latest.lldb
       gdb
       valgrind
       bear
@@ -92,5 +91,8 @@
       cargo
       zig
       agent-browser
+      # lldb 23.1.0 from 26.05 is not in the binary cache (a local LLVM build
+      # would exhaust the WSL VM); unstable's latest lldb is.
+      llvmPackages_latest.lldb
     ]);
 }
