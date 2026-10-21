@@ -22,7 +22,7 @@ environment as `../nixos` on any Ubuntu WSL instance. GUI apps and NixOS system 
 
 ```bash
 git clone --recurse-submodules https://github.com/sclash/dotfiles ~/dotfiles
-cd ~/dotfiles && git switch wsl-home-manager   # until merged
+cd ~/dotfiles && git switch quickshell
 bash ~/dotfiles/wsl/bootstrap.sh
 ```
 

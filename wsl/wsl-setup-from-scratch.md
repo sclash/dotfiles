@@ -11,7 +11,7 @@ Run it as a throwaway test (`hm-test`), or follow it for real on a new machine.
 No push is needed. A git bundle on the Windows drive is enough:
 
 ```bash
-git -C ~/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle wsl-home-manager
+git -C ~/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle quickshell
 ```
 
 (Once the branch is pushed or merged, clone from GitHub instead.)
@@ -28,7 +28,7 @@ When it first starts, create the user **`asergi`**. The flake expects `/home/ase
 
 ```bash
 sudo apt-get update && sudo apt-get install -y git
-git clone -b wsl-home-manager /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles
+git clone -b quickshell /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles
 git -C ~/dotfiles submodule update --init        # neovimrc (from GitHub)
 ```
 
@@ -102,7 +102,7 @@ del C:\Users\andre\dotfiles-wsl.bundle
 On the existing instance, drop the test recipient so it never reaches the real branch:
 
 ```bash
-cd ~/dotfiles && git switch wsl-home-manager && git branch -D hm-test-acceptance
+cd ~/dotfiles && git switch quickshell && git branch -D hm-test-acceptance
 ```
 
 ## Troubleshooting
