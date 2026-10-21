@@ -11,11 +11,6 @@
 
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
-
-    ripwire-src = {
-      url = "github:redhat-et/ripwire/v0.6.1";
-      flake = false;
-    };
   };
 
   outputs =
@@ -38,22 +33,12 @@
         inherit system;
         config.allowUnfree = true;
       };
-      # Same ripwire override as nixos/flake.nix: build the pinned v0.6.1 source.
+      # No ripwire source override (unlike nixos/flake.nix): pkgs-master's
+      # ripwire is prebuilt on cache.nixos.org, while building the pinned
+      # source compiles one huge LTO translation unit that exhausts the WSL VM.
       pkgs-master = import nixpkgs-master {
         inherit system;
         config.allowUnfree = true;
-        overlays = [
-          (final: prev: {
-            ripwire = prev.ripwire.overrideAttrs (finalAttrs: prevAttrs: {
-              version = builtins.head (
-                builtins.match ".*project\\(ripwire VERSION ([0-9]+\\.[0-9]+\\.[0-9]+).*" (
-                  builtins.readFile "${inputs.ripwire-src}/CMakeLists.txt"
-                )
-              );
-              src = inputs.ripwire-src;
-            });
-          })
-        ];
       };
     in
     {

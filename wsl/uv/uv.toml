@@ -1,0 +1,5 @@
+python-preference = "managed"
+
+[pip]
+python = "3.14.7"
+python-version = "3.12"

@@ -79,11 +79,12 @@ wsl/
   - `home-manager` = `github:nix-community/home-manager` (master), `inputs.nixpkgs.follows = "nixpkgs"`.
     Master is required for `programs.herdr`, `programs.uv.tool.*` and `programs.devenv`.
   - `sops-nix` = `github:Mic92/sops-nix`, `inputs.nixpkgs.follows = "nixpkgs"`
-  - `ripwire-src` = `github:redhat-et/ripwire/v0.6.1`, `flake = false`
 - Not carried over: flake-parts, nix-snapd, the nixd flake (use `pkgs.nixd`), walker/elephant, my-dotfiles,
   neovimrc, opencode-src.
 - `pkgs`, `pkgs-unstable` and `pkgs-master` are each imported with `config.allowUnfree = true` for
-  `x86_64-linux`. `pkgs-master` carries the ripwire overlay, copied verbatim from `nixos/flake.nix:104-127`.
+  `x86_64-linux`. **No ripwire overlay** (amendment 2026-10-21): WSL uses `pkgs-master.ripwire` **0.6.5**, which
+  is prebuilt on cache.nixos.org. The NixOS v0.6.1 source pin compiles one LTO translation unit of about 35k lines
+  (`src/main.cpp` plus 103 headers), and that exhausts the 3.6 GiB WSL VM.
   This duplication is accepted, so that `nixos/` stays untouched.
 - Output:
   ```nix
@@ -100,7 +101,6 @@ wsl/
   - nixpkgs-unstable `7fd4004d`
   - nixpkgs-master `d47861e2`
   - sops-nix `ee48786c`
-  - ripwire-src `30f14a27`
 - Usage: `home-manager switch --flake ~/dotfiles/wsl#asergi`.
 
 ## home.nix
@@ -176,7 +176,7 @@ Dropped:
 | `programs.zsh.promptInit` with starship/atuin init (236-242) | home-manager starship/atuin zsh integration |
 | `users.defaultUserShell = zsh` (297) | `bootstrap.sh`: `chsh -s /usr/bin/zsh` |
 | `i18n.defaultLocale` (115) | `home.language.base`; `bootstrap.sh` runs `locale-gen en_US.UTF-8` |
-| `nix.settings.max-jobs = 2; cores = 4` (89-90) | Not ported (laptop OOM cap; WSL RAM is set by `.wslconfig`). README explains how to add it back. |
+| `nix.settings.max-jobs = 2; cores = 4` (89-90) | **Ported, tighter** (amendment 2026-10-21): local builds did exhaust memory on the 3.6 GiB VM, so `nix.settings = { max-jobs = 1; cores = 2; }` goes into `~/.config/nix/nix.conf`. `nix.package = pkgs.nix` is used only to validate that file and is not installed. `eval-cores` is left alone: measured, parallel evaluation costs about 1.17 GB versus 1.13 GB. |
 | `nix.settings.experimental-features` (83) | Already enabled by Determinate Nix |
 | `nixpkgs.config.allowUnfree` (52) | `allowUnfree` on all three package sets |
 | `programs.nix-ld` (306-314) | Not needed: Ubuntu runs foreign binaries natively |
@@ -336,7 +336,8 @@ Exit codes: 0 = done; 1 = precondition failed (wrong `$HOME` or repo location); 
      file, which drops the other instances' access.
    - keys missing → `sops edit` and add them.
 7. **Switch:** if `home-manager` is on `PATH`, use it; otherwise use `nix run ~/dotfiles/wsl#home-manager --` (the
-   locked revision). Either way, run `switch --flake ~/dotfiles/wsl#asergi -b hm-backup`.
+   locked revision). Either way, run `switch --flake ~/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2`.
+   The flags apply the build limits on the first switch, before `~/.config/nix/nix.conf` exists.
 8. **`--add-recipient AGE_PUBKEY`** (separate mode, run on an instance that can decrypt): register the key, run
    `sops --config wsl/.sops.yaml updatekeys -y wsl/secrets/secrets.yaml`, and remind the user to commit.
 9. **`--cleanup`** (only with the flag): print what is present among the items below, ask `[y/N]`, then remove them:
@@ -357,7 +358,7 @@ Covers:
 - daily use: `update`
 - adding packages
 - editing secrets: `sops --config ~/dotfiles/wsl/.sops.yaml ~/dotfiles/wsl/secrets/secrets.yaml`; the 4 required keys
-- the `max-jobs` note
+- the build limits (`max-jobs = 1`, `cores = 2`) and how to raise them on a VM with more memory
 - troubleshooting: backups named `*.hm-backup`, and `systemctl --user status sops-nix`
 
 ## Prerequisites (repo state)
@@ -379,7 +380,7 @@ Covers:
    - `claude` is still the native binary, and a `/model` change persists.
    - `nvim`: `:checkhealth vim.lsp` passes, and servers resolve from `PATH`.
    - tmux plugins load.
-   - `uv tool list` shows graphifyy; `ripwire --version` and `orx --help` run.
+   - `uv tool list` shows graphifyy; `ripwire --version` (0.6.5) and `orx --help` run.
    - `uvx --from markitdown markitdown --help` runs (numpy loads) with no `LD_LIBRARY_PATH`.
    - `agent-browser doctor` resolves the Nix chromium and passes its live launch test.
    - A headless chromium screenshot of a page shows rendered text.

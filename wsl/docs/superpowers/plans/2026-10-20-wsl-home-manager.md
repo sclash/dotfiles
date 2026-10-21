@@ -30,7 +30,9 @@ script runs after the switch.
   - nixpkgs-master `d47861e2b824b32538f87e93ce5fe44f1931533b`
   - home-manager `92a0ed1be12f1e20093faf8af63bae2c74ad521e`
   - sops-nix `ee48786c6f9160d2c1a084aac841f68195b8420c`
-  - ripwire-src `30f14a274d24ce56a1984e04306b972e1a565d6f`
+  - ripwire-src `30f14a274d24ce56a1984e04306b972e1a565d6f`. Dropped in Task 2 (amendment 2026-10-21): WSL uses the
+    cached `pkgs-master.ripwire` 0.6.5, because compiling the v0.6.1 pin runs the 3.6 GiB VM out of memory.
+- Build limits: `nix.settings = { max-jobs = 1; cores = 2; }` (Task 2). The first switch passes `--max-jobs 1 --cores 2`.
 - `config.allowUnfree = true` on `pkgs`, `pkgs-unstable` and `pkgs-master`. `home.enableNixpkgsReleaseCheck = false`.
 - No `LD_LIBRARY_PATH` anywhere in the generation.
 - Every link to a dotfiles path is `config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/…"`.
@@ -150,7 +152,9 @@ script runs after the switch.
   has_bin tmux starship atuin nu uv devenv pandoc xelatex ripwire herdr \
           vtsls pyright clangd gopls zls lua-language-server texlab rust-analyzer \
           codelldb debugpy-adapter prettier black dlv
-  run_contains 0.6.1 ripwire --version
+  run_contains 0.6.5 ripwire --version
+  contains home-files/.config/nix/nix.conf 'max-jobs = 1'; contains home-files/.config/nix/nix.conf 'cores = 2'
+  lacks_bin nix
   contains home-files/.config/tmux/tmux.conf sessionx
   contains home-files/.config/tmux/tmux.conf continuum-restore
   links_to .config/nvim      /home/asergi/dotfiles/neovimrc
@@ -519,7 +523,7 @@ script runs after the switch.
     Read-only probes, including `secrets_status`, still run.
   - Exit 1 when `$HOME` isn't `/home/asergi` or the script's repo root isn't `$HOME/dotfiles`. The message contains
     `expects the repo at /home/asergi/dotfiles`.
-  - Switch command: `nix run /home/asergi/dotfiles/wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup`.
+  - Switch command: `nix run /home/asergi/dotfiles/wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2`.
     Use `home-manager switch …` when `home-manager` is on PATH.
 
 - [ ] **Step 1: Write `tests/test-bootstrap.sh`.** It creates a temp dir `$T` with two keys, A and B (made with
@@ -575,7 +579,7 @@ per line and exits 1 on any FAIL.
   - `systemctl --user show -p Result sops-nix` = `Result=success`; there are 4 entries in `~/.config/sops-nix/secrets/`;
     `$GITHUB_PERSONAL_ACCESS_TOKEN` is non-empty; `$LD_LIBRARY_PATH` is empty.
   - `uvx --from markitdown markitdown --help` exits 0.
-  - `uv tool list` contains `graphifyy`; `ripwire --version` contains `0.6.1`; `orx --help` exits 0;
+  - `uv tool list` contains `graphifyy`; `ripwire --version` contains `0.6.5`; `orx --help` exits 0;
     `nvim --headless +qa` exits 0 with empty stderr.
   - The `tmux -L hmcheck` server shows `@continuum-restore` in `show-options -g`.
   - `chromium --headless --no-sandbox --disable-gpu --window-size=800,600 --screenshot=$T/s.png 'data:text/html,<h1>Hello WSL</h1>'`

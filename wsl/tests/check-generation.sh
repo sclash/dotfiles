@@ -85,6 +85,25 @@ contains $V 'XDG_DATA_DIRS'
 lacks $V 'LD_LIBRARY_PATH'
 contains home-files/.config/git/config 'name = "sclash"'
 
+# --- Task 2: program modules + links
+has_bin tmux starship atuin nu uv devenv pandoc xelatex ripwire herdr \
+  vtsls pyright clangd gopls zls lua-language-server texlab rust-analyzer \
+  codelldb debugpy-adapter prettier black dlv
+run_contains 0.6.5 ripwire --version
+contains home-files/.config/tmux/tmux.conf sessionx
+contains home-files/.config/tmux/tmux.conf continuum-restore
+links_to .config/nvim /home/asergi/dotfiles/neovimrc
+links_to .config/starship /home/asergi/dotfiles/starship
+links_to .config/atuin /home/asergi/dotfiles/atuin
+links_to .config/uv/uv.toml /home/asergi/dotfiles/wsl/uv/uv.toml
+is_dir .config/herdr
+links_to .config/herdr/config.toml /home/asergi/dotfiles/herdr/config.toml
+# Build limits for the 3.6 GiB WSL VM: one derivation at a time, two compile
+# threads. nix.package only validates nix.conf; it must not shadow Determinate's nix.
+contains home-files/.config/nix/nix.conf 'max-jobs = 1'
+contains home-files/.config/nix/nix.conf 'cores = 2'
+lacks_bin nix
+
 if [[ $failures -gt 0 ]]; then
   echo "$failures of $count assertions failed"
   exit 1
