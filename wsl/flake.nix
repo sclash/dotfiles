@@ -28,6 +28,11 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
+        # One LLVM for clang, clangd and lldb: nvim-lsp.nix's clang-tools would
+        # otherwise pull a second LLVM (21.x) next to unstable's lldb (~1.4 GB).
+        overlays = [
+          (final: prev: { clang-tools = pkgs-unstable.llvmPackages_latest.clang-tools; })
+        ];
       };
       pkgs-unstable = import nixpkgs-unstable {
         inherit system;
