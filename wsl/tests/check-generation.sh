@@ -104,6 +104,20 @@ contains home-files/.config/nix/nix.conf 'max-jobs = 1'
 contains home-files/.config/nix/nix.conf 'cores = 2'
 lacks_bin nix
 
+# --- Task 3: packages
+has_bin nvim vim tree-sitter nixd nix-prefetch-git sops age age-keygen tree bat eza fd jq zoxide zip unzip wget wl-copy \
+  gh lazygit lazydocker lazysql lazyssh lazycli btop htop ncdu fastfetch glow hygg \
+  ffmpeg timg chafa flamegraph.pl hyperfine gcc clang lldb gdb valgrind bear make pkg-config lua \
+  node npm tsc playwright chromium orx rg fzf ctags python3 bun go rustc cargo zig agent-browser
+count=$((count + 1))
+[[ "$(readlink -f "$GEN/home-path/bin/cc")" == *gcc-wrapper* ]] || fail "cc resolves to gcc ($(readlink -f "$GEN/home-path/bin/cc"))"
+lacks_bin firefox google-chrome ghostty docker perf rr ldd
+has_path home-files/.config/fontconfig/conf.d/10-hm-fonts.conf
+count=$((count + 1))
+[[ -n "$(find -L "$GEN/home-path/share/fonts" -iname 'NotoSans-Regular*' -print -quit 2>/dev/null)" ]] || fail "noto sans font"
+count=$((count + 1))
+[[ -n "$(find -L "$GEN/home-path/share/fonts" -iname 'NotoColorEmoji*' -print -quit 2>/dev/null)" ]] || fail "noto emoji font"
+
 if [[ $failures -gt 0 ]]; then
   echo "$failures of $count assertions failed"
   exit 1

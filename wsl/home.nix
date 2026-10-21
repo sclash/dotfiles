@@ -21,6 +21,7 @@ in
     ../nixos/programs/nvim-lsp.nix
     ../nixos/programs/ripwire.nix
     ./modules/herdr.nix
+    ./packages.nix
   ];
 
   home.username = "asergi";
