@@ -23,6 +23,8 @@ in
     ./modules/herdr.nix
     ./modules/secrets.nix
     ./modules/zsh.nix
+    ./modules/opencode.nix
+    ./modules/claude-code.nix
     ./packages.nix
   ];
 

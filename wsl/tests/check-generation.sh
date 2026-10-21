@@ -141,6 +141,33 @@ contains $Z 'atuin init zsh'
 lacks $Z '/run/secrets'
 lacks $Z 'nixos-rebuild'
 
+# --- Task 8: opencode + claude-code (v2 base + wsl/opencode overlay)
+B=/home/asergi/dotfiles/my-opencode/v2
+O=/home/asergi/dotfiles/wsl/opencode
+C=.config/opencode
+links_to $C/opencode.jsonc $O/opencode.jsonc
+links_to $C/CLAUDE.md $O/CLAUDE.md
+for i in AGENTS.md RIPWIRE.md agents commands instructions prompts scripts tools; do links_to $C/$i $B/$i; done
+is_dir $C/plugins
+links_to $C/plugins/herdr-agent-state.js $B/plugins/herdr-agent-state.js
+links_to $C/plugins/strategic-compact.js $B/plugins/strategic-compact.js
+lacks_path home-files/$C/plugins/nix-ld-env.js
+is_dir $C/skills
+links_to $C/skills/explore-codebase $B/skills/explore-codebase
+links_to $C/skills/pptx/SKILL.md $O/skills/pptx/SKILL.md
+links_to $C/skills/pptx/editing.md $O/skills/pptx/editing.md
+links_to $C/skills/agent-browser/SKILL.md $O/skills/agent-browser/SKILL.md
+links_to $C/skills/webapp-testing/examples/console_logging.py $O/skills/webapp-testing/examples/console_logging.py
+links_to $C/skills/webapp-testing/scripts $B/skills/webapp-testing/scripts
+for i in evals package-lock.json vastai; do lacks_path home-files/$C/$i; done
+links_to .agents /home/asergi/dotfiles/.agents
+contains home-path/etc/profile.d/hm-session-vars.sh 'OPENCODE_DISABLE_CLAUDE_CODE_SKILLS="true"'
+for s in explore-codebase high-perf-systems download-video; do links_to .claude/skills/$s $B/skills/$s; done
+links_to .claude/skills/transcribe-media/SKILL.md $O/skills/transcribe-media/SKILL.md
+lacks_path home-files/.claude/settings.json
+lacks_bin claude opencode
+lacks_path home-files/.config/mcp/mcp.json # mcpservers.nix is not imported
+
 if [[ $failures -gt 0 ]]; then
   echo "$failures of $count assertions failed"
   exit 1
