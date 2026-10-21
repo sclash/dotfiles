@@ -1,0 +1,115 @@
+# WSL setup from scratch (acceptance test procedure)
+
+This procedure brings a brand-new Ubuntu WSL distro up to the `wsl/` home-manager flake, and proves that it works.
+Run it as a throwaway test (`hm-test`), or follow it for real on a new machine.
+
+- **Existing instance:** an instance that can already decrypt `wsl/secrets/secrets.yaml` (today: `Ubuntu-22.04`).
+- **New instance:** the fresh distro.
+
+## 0. On the existing instance: package the branch
+
+No push is needed. A git bundle on the Windows drive is enough:
+
+```bash
+git -C ~/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle wsl-home-manager
+```
+
+(Once the branch is pushed or merged, clone from GitHub instead.)
+
+## 1. Windows (PowerShell): create the distro
+
+```powershell
+wsl --install Ubuntu-24.04 --name hm-test
+```
+
+When it first starts, create the user **`asergi`**. The flake expects `/home/asergi` and the repo at `/home/asergi/dotfiles`.
+
+## 2. New instance: clone
+
+```bash
+sudo apt-get update && sudo apt-get install -y git
+git clone -b wsl-home-manager /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles
+git -C ~/dotfiles submodule update --init        # neovimrc (from GitHub)
+```
+
+## 3. New instance: first bootstrap runs
+
+```bash
+bash ~/dotfiles/wsl/bootstrap.sh
+```
+
+Re-run after every `ACTION NEEDED` message, which exits with code 2. Expect, in order:
+
+1. **systemd:** it writes `/etc/wsl.conf` (asking for sudo), then exits 2. From PowerShell, run `wsl --terminate hm-test`,
+   reopen the distro, and re-run bootstrap.
+2. Next it installs zsh, git and curl from apt, runs `chsh` and `locale-gen en_US.UTF-8` (sudo), then installs Determinate Nix.
+   If it says Nix isn't on PATH yet, open a new shell and re-run.
+3. It **generates this instance's age key** (`~/.config/sops/age/keys.txt`), adds its public key to `wsl/.sops.yaml`,
+   then exits 2: *"this instance's key cannot decrypt …"*. It prints the exact command to run next:
+   `bash ~/dotfiles/wsl/bootstrap.sh --add-recipient age1…`. Copy that public key.
+
+## 4. Existing instance: grant access (throwaway branch for a test)
+
+```bash
+cd ~/dotfiles
+git switch -c hm-test-acceptance                 # test only; for a real instance stay on the branch
+bash wsl/bootstrap.sh --add-recipient age1...    # adds the key, runs sops updatekeys
+git add wsl/.sops.yaml wsl/secrets/secrets.yaml
+git commit -m "wsl: add hm-test recipient"
+git bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance
+```
+
+## 5. New instance: take the re-encrypted secrets and finish
+
+```bash
+cd ~/dotfiles
+git fetch /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance
+git checkout FETCH_HEAD -- wsl/.sops.yaml wsl/secrets/secrets.yaml
+bash wsl/bootstrap.sh                            # expected: exit 0, home-manager switch done
+```
+
+Note: the new instance's own `wsl/.sops.yaml` edit from step 3 is overwritten here by the version that holds both keys.
+
+## 6. New instance: verify
+
+Open a **new terminal**, then:
+
+```bash
+bash ~/dotfiles/wsl/tests/check-live.sh          # expected: no FAIL lines, then "OK (live)"
+```
+
+- `claude` and `opencode` print **SKIP**: they come from their native installers, outside the flake.
+  Install them if you want, then re-run.
+- Optional manual checks:
+  - `nvim`, then `:checkhealth vim.lsp`
+  - `opencode`: a provider answers a prompt
+  - `nix flake check ~/dotfiles/wsl`
+  - `bash ~/dotfiles/wsl/tests/test-bootstrap.sh` (it expects this host's state: locale present, nix installed, …)
+
+A fresh distro has no snaps, nvm or oh-my-zsh, so `--cleanup` should report nothing to remove:
+
+```bash
+bash ~/dotfiles/wsl/bootstrap.sh --cleanup
+```
+
+## 7. Tear down (test only)
+
+```powershell
+wsl --unregister hm-test                         # PowerShell; deletes the test distro
+del C:\Users\andre\dotfiles-wsl.bundle
+```
+
+On the existing instance, drop the test recipient so it never reaches the real branch:
+
+```bash
+cd ~/dotfiles && git switch wsl-home-manager && git branch -D hm-test-acceptance
+```
+
+## Troubleshooting
+
+- **Out of memory during the switch:** check `nix build ~/dotfiles/wsl#checks.x86_64-linux.generation --dry-run` for
+  derivations that would compile locally. Everything should come from the binary cache, except small glue
+  derivations. Or raise the VM's memory in `%UserProfile%\.wslconfig` (`[wsl2]` / `memory=8GB`).
+- **`Existing file … would be clobbered`:** an old `*.hm-backup` is in the way. Inspect it, delete it, and re-run.
+- **Secrets missing after the switch:** `systemctl --user status sops-nix`. Then check that the key can decrypt:
+  `nix run ~/dotfiles/wsl#sops -- --config ~/dotfiles/wsl/.sops.yaml -d ~/dotfiles/wsl/secrets/secrets.yaml >/dev/null`
