@@ -47,7 +47,7 @@ bash ~/dotfiles/wsl/bootstrap.sh --cleanup
 ## Daily use
 
 ```bash
-update          # alias: home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup
+update          # alias: home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2
 ```
 
 To add a package, edit `packages.nix`, `git add`, then `update`. Flakes only see files in the git index, so stage new

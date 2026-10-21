@@ -163,7 +163,10 @@ then git add it and re-run."
       action_needed "this instance's key cannot decrypt $SECRETS_FILE.
 On an instance that can, run:
   bash ~/dotfiles/wsl/bootstrap.sh --add-recipient $pub
-commit wsl/.sops.yaml and wsl/secrets/secrets.yaml, bring that commit here, and re-run.
+commit wsl/.sops.yaml and wsl/secrets/secrets.yaml there. Here, discard the local key
+registration first so the pull can't conflict:
+  cd $REPO && git checkout -- wsl/.sops.yaml
+then pull that commit and re-run.
 (Or re-create the file with this key only, which drops the other instances' access.)"
       ;;
     missing-keys:*)

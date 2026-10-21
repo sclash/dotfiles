@@ -103,18 +103,28 @@ rc=$?
 expect "dry run exits 0" [ "$rc" -eq 0 ]
 expect "dry run prints DRY-RUN" has "$out" "DRY-RUN:"
 expect "dry run switches" has "$out" "switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup"
-expect "dry run generates locale" has "$out" "locale-gen en_US.UTF-8"
+if locale -a 2>/dev/null | grep -qix 'en_US.utf8'; then
+  expect "locale present: not regenerated" lacks "$out" "locale-gen"
+else
+  expect "dry run generates locale" has "$out" "locale-gen en_US.UTF-8"
+fi
 expect "nix already installed" lacks "$out" "install.determinate.systems"
 expect "systemd already enabled" lacks "$out" "wsl.conf"
 expect "shell already zsh" lacks "$out" "chsh"
 out2=$(bash "$BOOT" --dry-run 2>&1)
 expect "dry run is idempotent" [ "$out" = "$out2" ]
 
-out=$(bash "$BOOT" --cleanup --dry-run 2>&1)
-expect "cleanup lists oh-my-zsh" has "$out" "~/.oh-my-zsh"
-expect "cleanup lists snap nvim" has "$out" "snap nvim"
-expect "cleanup prints removals" has "$out" "DRY-RUN: rm -rf $HOME/.oh-my-zsh"
-expect "cleanup dry run removes nothing" [ -d "$HOME/.oh-my-zsh" ]
+# Cleanup against a fake legacy $HOME (stub snap on PATH), never the real one.
+H="$T/home"; mkdir -p "$H/.oh-my-zsh" "$H/.nvm" "$T/bin"
+printf '#!/bin/sh\n[ "$1" = list ] && [ "$2" = nvim ]\n' > "$T/bin/snap"; chmod +x "$T/bin/snap"
+cleanup_out=$(HOME="$H" PATH="$T/bin:$PATH" bash -c 'source "$1"; DRY_RUN=1; cleanup' _ "$BOOT" 2>&1)
+expect "cleanup lists oh-my-zsh" has "$cleanup_out" "~/.oh-my-zsh"
+expect "cleanup lists snap nvim" has "$cleanup_out" "snap nvim"
+expect "cleanup prints removals" has "$cleanup_out" "DRY-RUN: rm -rf $H/.oh-my-zsh"
+expect "cleanup dry run removes nothing" [ -d "$H/.oh-my-zsh" ]
+# The .sops.yaml registered locally must not block pulling the re-encrypted secrets.
+out=$(AGE_KEY_FILE="$T/B.txt" SOPS_CONFIG="$T/.sops.yaml" SECRETS_FILE="$T/partial.yaml" bash "$BOOT" --dry-run 2>&1)
+expect "undecryptable says to discard local .sops.yaml" has "$out" "git checkout -- wsl/.sops.yaml"
 
 if [[ $failures -gt 0 ]]; then
   echo "$failures of $count bootstrap tests failed"

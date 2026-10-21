@@ -128,7 +128,7 @@ count=$((count + 1))
 count=$((count + 1))
 [[ -n "$M" && -z "$(jq -r '.secrets[].path' "$M" | grep -v '^/home/asergi/.config/sops-nix/secrets/')" ]] || fail "sops secret paths"
 Z=home-files/.zshrc
-contains $Z 'home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup'
+contains $Z 'home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2'
 contains $Z '/home/asergi/dotfiles/scripts/tmux-sessionizer.sh'
 contains $Z 'show_eza_tree'
 # Secrets may not be decrypted yet (first login, missing key): guard every read.
