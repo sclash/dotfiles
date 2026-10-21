@@ -51,6 +51,13 @@
         extraSpecialArgs = { inherit pkgs-unstable pkgs-master; };
       };
 
+      # Pinned tools for bootstrap.sh, usable before the first switch.
+      packages.${system} = {
+        home-manager = home-manager.packages.${system}.home-manager;
+        sops = pkgs.sops;
+        age = pkgs.age;
+      };
+
       checks.${system} = {
         generation = pkgs.runCommand "hm-generation-check" { nativeBuildInputs = [ pkgs.jq ]; } ''
           bash ${./tests/check-generation.sh} ${self.homeConfigurations.asergi.activationPackage}

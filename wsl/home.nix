@@ -21,6 +21,8 @@ in
     ../nixos/programs/nvim-lsp.nix
     ../nixos/programs/ripwire.nix
     ./modules/herdr.nix
+    ./modules/secrets.nix
+    ./modules/zsh.nix
     ./packages.nix
   ];
 

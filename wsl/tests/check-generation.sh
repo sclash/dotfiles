@@ -118,6 +118,29 @@ count=$((count + 1))
 count=$((count + 1))
 [[ -n "$(find -L "$GEN/home-path/share/fonts" -iname 'NotoColorEmoji*' -print -quit 2>/dev/null)" ]] || fail "noto emoji font"
 
+# --- Task 4: secrets + zsh
+U=home-files/.config/systemd/user/sops-nix.service
+has_path $U
+# The unit runs a script that passes the manifest JSON to sops-install-secrets.
+M=$(grep -hoE '/nix/store/[^ "]*manifest[^ "]*\.json' "$GEN/$U" $(grep -oE '/nix/store/[^ "]+' "$GEN/$U" 2>/dev/null) 2>/dev/null | head -1)
+count=$((count + 1))
+[[ "$(jq -r '.secrets[].name' "$M" 2>/dev/null | sort | xargs)" == "cheaper_inference github_pat opencode openrouter" ]] || fail "sops secret names (manifest: ${M:-not found})"
+count=$((count + 1))
+[[ -n "$M" && -z "$(jq -r '.secrets[].path' "$M" | grep -v '^/home/asergi/.config/sops-nix/secrets/')" ]] || fail "sops secret paths"
+Z=home-files/.zshrc
+contains $Z 'home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup'
+contains $Z '/home/asergi/dotfiles/scripts/tmux-sessionizer.sh'
+contains $Z 'show_eza_tree'
+# Secrets may not be decrypted yet (first login, missing key): guard every read.
+contains $Z 'if [ -f /home/asergi/.config/sops-nix/secrets/github_pat ]'
+contains $Z 'if [ -f /home/asergi/.config/sops-nix/secrets/openrouter ]'
+contains $Z 'GITHUB_PERSONAL_ACCESS_TOKEN'
+contains $Z 'OPENROUTER_API'
+contains $Z 'starship init zsh'
+contains $Z 'atuin init zsh'
+lacks $Z '/run/secrets'
+lacks $Z 'nixos-rebuild'
+
 if [[ $failures -gt 0 ]]; then
   echo "$failures of $count assertions failed"
   exit 1

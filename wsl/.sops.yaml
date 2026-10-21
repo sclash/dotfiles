@@ -1,0 +1,6 @@
+# One creation rule. The age: value is ONE line of comma-separated recipients,
+# one per WSL instance; bootstrap.sh --add-recipient appends to it.
+# Use with: sops --config ~/dotfiles/wsl/.sops.yaml ... (the repo-root .sops.yaml holds the NixOS rules).
+creation_rules:
+  - path_regex: secrets/secrets\.yaml$
+    age: age14cllppjep29w35w04r6h7exh2al3n3d7063pndn20cdkuzuaqpdqrm75n4
