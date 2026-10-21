@@ -63,6 +63,7 @@
           bash ${./tests/check-generation.sh} ${self.homeConfigurations.asergi.activationPackage}
           touch $out
         '';
+        overlay-links = import ./tests/overlay-links.nix { inherit pkgs; };
       };
     };
 }
