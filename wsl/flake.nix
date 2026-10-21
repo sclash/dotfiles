@@ -64,6 +64,10 @@
           touch $out
         '';
         overlay-links = import ./tests/overlay-links.nix { inherit pkgs; };
+        overlay = pkgs.runCommand "overlay-check" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+          bash ${./tests/check-overlay.sh} ${../my-opencode/v2} ${./opencode} ${./tests}
+          touch $out
+        '';
       };
     };
 }
