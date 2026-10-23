@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  unstable-pkgs,
+  pkgs-unstable,
   # my-dotfiles,
   ...
 }:
@@ -11,6 +11,7 @@
 
   programs.atuin = {
     enable = true;
+    package = pkgs-unstable.atuin;
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableNushellIntegration = true;
