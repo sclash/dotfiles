@@ -1,6 +1,6 @@
-# Claude Code keeps its native, auto-updating install (~/.local/bin/claude)
-# and owns ~/.claude/settings.json. Only these skills are linked, from v2 with
-# the WSL copies applied.
+# Claude Code comes from pkgs-unstable via wsl/packages.nix and owns
+# ~/.claude/settings.json. Only these skills are linked, from v2 with the WSL
+# copies applied.
 { config, lib, ... }:
 let
   v2 = import ../lib/v2-overlay.nix { inherit config lib; };

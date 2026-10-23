@@ -1,5 +1,5 @@
 {
-  description = "asergi WSL home-manager configuration";
+  description = "WSL home-manager configuration";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -45,9 +45,7 @@
         inherit system;
         config.allowUnfree = true;
       };
-    in
-    {
-      homeConfigurations."asergi" = home-manager.lib.homeManagerConfiguration {
+      homeConfiguration = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [
           ./home.nix
@@ -55,6 +53,11 @@
         ];
         extraSpecialArgs = { inherit pkgs-unstable pkgs-master; };
       };
+    in
+    {
+      # The account is read from $USER/$HOME by home.nix, so the attribute name
+      # is not tied to a username. Switch with --impure to feed it the real one.
+      homeConfigurations.default = homeConfiguration;
 
       # Pinned tools for bootstrap.sh, usable before the first switch.
       packages.${system} = {
@@ -65,7 +68,8 @@
 
       checks.${system} = {
         generation = pkgs.runCommand "hm-generation-check" { nativeBuildInputs = [ pkgs.jq ]; } ''
-          bash ${./tests/check-generation.sh} ${self.homeConfigurations.asergi.activationPackage}
+          bash ${./tests/check-generation.sh} ${self.homeConfigurations.default.activationPackage} \
+            ${pkgs.lib.escapeShellArg self.homeConfigurations.default.config.home.homeDirectory}
           touch $out
         '';
         overlay-links = import ./tests/overlay-links.nix { inherit pkgs; };

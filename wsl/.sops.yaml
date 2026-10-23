@@ -3,4 +3,4 @@
 # Use with: sops --config ~/dotfiles/wsl/.sops.yaml ... (the repo-root .sops.yaml holds the NixOS rules).
 creation_rules:
   - path_regex: secrets/secrets\.yaml$
-    age: age14cllppjep29w35w04r6h7exh2al3n3d7063pndn20cdkuzuaqpdqrm75n4
+    age: age14cllppjep29w35w04r6h7exh2al3n3d7063pndn20cdkuzuaqpdqrm75n4,age1yanqrlywsgtm76dq6fczm6y5rel3u742scv65gr8kvp5ku6m6e5q2s93je

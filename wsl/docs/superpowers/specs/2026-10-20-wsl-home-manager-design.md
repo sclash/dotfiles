@@ -1,3 +1,6 @@
+> **Historical:** this design predates the machine-agnostic migration. See
+> `docs/superpowers/specs/2026-10-22-agnostic-dotfiles-design.md` for the current behavior.
+
 # WSL home-manager flake: design
 
 Date: 2026-10-20 · Status: approved; amended 2026-10-20 (wsl-only changes, overlay, managed Python, chromium, per-instance age keys)

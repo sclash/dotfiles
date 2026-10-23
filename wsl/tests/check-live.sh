@@ -30,25 +30,24 @@ lz() {
     zsh -lic "$1" 2>/dev/null
 }
 
-PROFILE=/home/asergi/.nix-profile/bin/
+PROFILE=$HOME/.nix-profile/bin/
 
-# --- PATH: the Nix profile wins over apt, snap, rustup and nvm
-for b in nvim tmux herdr rg go zig node cargo uv starship atuin chromium; do
+if [[ -e "$HOME/.local/bin/claude" || -e "$HOME/.opencode/bin/opencode" ]]; then
+  echo "NOTE native claude/opencode still installed; run ~/dotfiles/wsl/bootstrap.sh --cleanup so the Nix profile wins"
+fi
+
+# --- PATH: the Nix profile wins over distro packages, snap, rustup and nvm
+for b in nvim tmux herdr rg go zig node cargo uv starship atuin chromium claude opencode; do
   first=$(lz "whence -p $b")
   check "$b from the nix profile (${first:-not found})" starts_with "$first" "$PROFILE"
 done
-for pair in claude:/home/asergi/.local/bin/claude opencode:/home/asergi/.opencode/bin/opencode; do
-  b=${pair%%:*} want=${pair#*:}
-  first=$(lz "whence -p $b")
-  if [[ -z "$first" ]]; then skip "$b not installed (native installer, outside the flake)"; else
-    check "$b is the native install ($first)" [ "$first" = "$want" ]
-  fi
-done
+check "claude runs" lz 'claude --version'
+check "opencode runs" lz 'opencode --version'
 
 # --- links resolve into ~/dotfiles, none dangle
 for p in .config/nvim .config/starship .config/atuin .config/uv/uv.toml .config/herdr/config.toml; do
   rp=$(realpath -e "$HOME/$p" 2>/dev/null)
-  check "~/$p -> ${rp:-missing}" starts_with "$rp" /home/asergi/dotfiles/
+  check "~/$p -> ${rp:-missing}" starts_with "$rp" "$HOME/dotfiles/"
 done
 dangling=$(find "$HOME/.config/opencode" "$HOME/.claude/skills" -xtype l 2>/dev/null)
 check "no dangling links in ~/.config/opencode, ~/.claude/skills" [ -z "$dangling" ]

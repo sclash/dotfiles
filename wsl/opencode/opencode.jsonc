@@ -16,7 +16,7 @@
 		},
 		"openrouter": {
 			"settings": {
-				"apiKey": "{file:/home/asergi/.config/sops-nix/secrets/openrouter}"
+				"apiKey": "{file:~/.config/sops-nix/secrets/openrouter}"
 			},
 			"models": {
 				"xiaomi/mimo-v2.6-pro": {},
@@ -120,12 +120,12 @@
 		},
 		"opencode-go": {
 			"settings": {
-				"apiKey": "{file:/home/asergi/.config/sops-nix/secrets/opencode}"
+				"apiKey": "{file:~/.config/sops-nix/secrets/opencode}"
 			}
 		},
 		"opencode": {
 			"settings": {
-				"apiKey": "{file:/home/asergi/.config/sops-nix/secrets/opencode}"
+				"apiKey": "{file:~/.config/sops-nix/secrets/opencode}"
 			}
 		},
 		"cheaper-inference": {
@@ -133,7 +133,7 @@
 			"name": "Cheaper Inference",
 			"settings": {
 				"baseURL": "https://api.cheaperinference.com/v1",
-				"apiKey": "{file:/home/asergi/.config/sops-nix/secrets/cheaper_inference}"
+				"apiKey": "{file:~/.config/sops-nix/secrets/cheaper_inference}"
 			},
 			"models": {
 				"glm-5.3": {
@@ -536,9 +536,9 @@
 					"npx",
 					"-y",
 					"@modelcontextprotocol/server-filesystem",
-					"/home/asergi/",
-					"/home/asergi/hacking/",
-					"/home/asergi/Downloads/"
+					"{env:HOME}/",
+					"{env:HOME}/hacking/",
+					"{env:HOME}/Downloads/"
 				],
 				"disabled": true
 			}
@@ -654,12 +654,12 @@
 		},
 		{
 			"action": "read",
-			"resource": "/run/user/1000/secrets.d",
+			"resource": "/run/user/*/secrets.d",
 			"effect": "deny"
 		},
 		{
 			"action": "read",
-			"resource": "/home/asergi/.config/sops-nix/secrets",
+			"resource": "~/.config/sops-nix/secrets",
 			"effect": "deny"
 		},
 		{
@@ -674,12 +674,12 @@
 		},
 		{
 			"action": "read",
-			"resource": "/run/user/1000/secrets.d/**",
+			"resource": "/run/user/*/secrets.d/**",
 			"effect": "deny"
 		},
 		{
 			"action": "read",
-			"resource": "/home/asergi/.config/sops-nix/secrets/**",
+			"resource": "~/.config/sops-nix/secrets/**",
 			"effect": "deny"
 		},
 		{
@@ -769,12 +769,12 @@
 		},
 		{
 			"action": "edit",
-			"resource": "/run/user/1000/secrets.d",
+			"resource": "/run/user/*/secrets.d",
 			"effect": "deny"
 		},
 		{
 			"action": "edit",
-			"resource": "/home/asergi/.config/sops-nix/secrets",
+			"resource": "~/.config/sops-nix/secrets",
 			"effect": "deny"
 		},
 		{
@@ -789,12 +789,12 @@
 		},
 		{
 			"action": "edit",
-			"resource": "/run/user/1000/secrets.d/**",
+			"resource": "/run/user/*/secrets.d/**",
 			"effect": "deny"
 		},
 		{
 			"action": "edit",
-			"resource": "/home/asergi/.config/sops-nix/secrets/**",
+			"resource": "~/.config/sops-nix/secrets/**",
 			"effect": "deny"
 		},
 		{
@@ -884,12 +884,12 @@
 		},
 		{
 			"action": "glob",
-			"resource": "/run/user/1000/secrets.d",
+			"resource": "/run/user/*/secrets.d",
 			"effect": "deny"
 		},
 		{
 			"action": "glob",
-			"resource": "/home/asergi/.config/sops-nix/secrets",
+			"resource": "*/.config/sops-nix/secrets",
 			"effect": "deny"
 		},
 		{
@@ -904,12 +904,12 @@
 		},
 		{
 			"action": "glob",
-			"resource": "/run/user/1000/secrets.d/**",
+			"resource": "/run/user/*/secrets.d/**",
 			"effect": "deny"
 		},
 		{
 			"action": "glob",
-			"resource": "/home/asergi/.config/sops-nix/secrets/**",
+			"resource": "*/.config/sops-nix/secrets/**",
 			"effect": "deny"
 		},
 		{
@@ -999,12 +999,12 @@
 		},
 		{
 			"action": "grep",
-			"resource": "/run/user/1000/secrets.d",
+			"resource": "/run/user/*/secrets.d",
 			"effect": "deny"
 		},
 		{
 			"action": "grep",
-			"resource": "/home/asergi/.config/sops-nix/secrets",
+			"resource": "*/.config/sops-nix/secrets",
 			"effect": "deny"
 		},
 		{
@@ -1019,12 +1019,12 @@
 		},
 		{
 			"action": "grep",
-			"resource": "/run/user/1000/secrets.d/**",
+			"resource": "/run/user/*/secrets.d/**",
 			"effect": "deny"
 		},
 		{
 			"action": "grep",
-			"resource": "/home/asergi/.config/sops-nix/secrets/**",
+			"resource": "*/.config/sops-nix/secrets/**",
 			"effect": "deny"
 		},
 		{
@@ -1044,12 +1044,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*/run/user/1000/secrets.d*",
+			"resource": "*/run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*/home/asergi/.config/sops-nix/secrets*",
+			"resource": "**/.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1064,12 +1064,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*cat /run/user/1000/secrets.d*",
+			"resource": "*cat /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*cat /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*cat */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1089,12 +1089,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*head /run/user/1000/secrets.d*",
+			"resource": "*head /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*head /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*head */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1109,12 +1109,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*tail /run/user/1000/secrets.d*",
+			"resource": "*tail /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*tail /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*tail */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1129,12 +1129,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*base64 /run/user/1000/secrets.d*",
+			"resource": "*base64 /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*base64 /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*base64 */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1149,12 +1149,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*xxd /run/user/1000/secrets.d*",
+			"resource": "*xxd /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*xxd /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*xxd */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1169,12 +1169,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*strings /run/user/1000/secrets.d*",
+			"resource": "*strings /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*strings /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*strings */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1189,12 +1189,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "*cp /run/user/1000/secrets.d*",
+			"resource": "*cp /run/user/*/secrets.d*",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "*cp /home/asergi/.config/sops-nix/secrets*",
+			"resource": "*cp */.config/sops-nix/secrets*",
 			"effect": "deny"
 		},
 		{
@@ -1424,12 +1424,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "/run/user/1000/secrets.d",
+			"resource": "/run/user/*/secrets.d",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "/home/asergi/.config/sops-nix/secrets",
+			"resource": "*/.config/sops-nix/secrets",
 			"effect": "deny"
 		},
 		{
@@ -1449,12 +1449,12 @@
 		},
 		{
 			"action": "shell",
-			"resource": "/run/user/1000/secrets.d/**",
+			"resource": "/run/user/*/secrets.d/**",
 			"effect": "deny"
 		},
 		{
 			"action": "shell",
-			"resource": "/home/asergi/.config/sops-nix/secrets/**",
+			"resource": "*/.config/sops-nix/secrets/**",
 			"effect": "deny"
 		},
 		{

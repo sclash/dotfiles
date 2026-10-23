@@ -15,8 +15,9 @@ sys.path.insert(0, OPENCODE_DIR)
 
 from sync_opencode_jsonc import transform  # noqa: E402
 
-MOUNT = "/run/user/1000/secrets.d"
-SOPS = "/home/asergi/.config/sops-nix/secrets"
+MOUNT = "/run/user/*/secrets.d"
+SOPS = "~/.config/sops-nix/secrets"
+SHELL_SOPS = "*/.config/sops-nix/secrets"
 TILDE = "~/.config/sops-nix/secrets"
 
 
@@ -51,7 +52,7 @@ class TransformTest(unittest.TestCase):
     def test_file_refs_rewritten(self):
         out = transform(doc(rule("read", "**/*.key")))
         key = json.loads(out)["providers"]["openrouter"]["settings"]["apiKey"]
-        self.assertEqual(key, "{file:/home/asergi/.config/sops-nix/secrets/openrouter}")
+        self.assertEqual(key, "{file:~/.config/sops-nix/secrets/openrouter}")
         self.assertNotIn("{file:/run/secrets", out)
 
     def test_read_rule_mirrors_follow_source(self):
@@ -70,17 +71,25 @@ class TransformTest(unittest.TestCase):
             ["/run/secrets.d/**", f"{MOUNT}/**", f"{SOPS}/**"],
         )
 
-    def test_shell_rule_gets_tilde_variant(self):
+    def test_shell_rule_gets_portable_variants(self):
         out = transform(doc(rule("shell", "*cat /run/secrets*")))
         self.assertEqual(
             resources(out),
             [
                 "*cat /run/secrets*",
                 f"*cat {MOUNT}*",
-                f"*cat {SOPS}*",
+                f"*cat {SHELL_SOPS}*",
                 f"*cat {TILDE}*",
             ],
         )
+
+    def test_glob_and_grep_get_wildcard_variant(self):
+        for action in ("glob", "grep"):
+            out = transform(doc(rule(action, "/run/secrets/**")))
+            self.assertEqual(
+                resources(out),
+                ["/run/secrets/**", f"{MOUNT}/**", f"{SHELL_SOPS}/**"],
+            )
 
     def test_duplicate_mirrors_skipped(self):
         out = transform(doc(rule("read", "/run/secrets/**"), rule("read", "/run/secrets.d/**")))
@@ -102,7 +111,7 @@ class TransformTest(unittest.TestCase):
         out = transform(doc(rule("read", "**/*.p12"), rule("shell", "/run/secrets/**")))
         self.assertEqual(
             resources(out),
-            ["**/*.p12", "/run/secrets/**", f"{MOUNT}/**", f"{SOPS}/**", f"{TILDE}/**"],
+            ["**/*.p12", "/run/secrets/**", f"{MOUNT}/**", f"{SHELL_SOPS}/**", f"{TILDE}/**"],
         )
 
     def test_unrelated_text_untouched(self):

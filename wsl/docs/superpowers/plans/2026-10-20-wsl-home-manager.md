@@ -6,7 +6,9 @@
 user environment's CLI/TUI tools and configs. It links opencode/Claude config from `my-opencode/v2`, with
 WSL-corrected copies kept in `wsl/opencode/`.
 
-**Architecture:** `flake.nix` builds `homeConfigurations."asergi"` from `home.nix`. That file imports portable modules
+**Architecture:** `flake.nix` builds `homeConfigurations.default` from `home.nix`. Identity (username, home directory,
+dotfiles path) comes from `lib/user.nix`, which reads `$USER`/`$HOME` and falls back to the historical layout in pure
+evaluation. `home.nix` imports portable modules
 unchanged from `../nixos/programs`, plus WSL modules in `wsl/modules`. A pure helper (`lib/overlay-links.nix`) maps
 a base tree (v2) plus an overlay tree (`wsl/opencode`) to out-of-store `home.file` links. Correctness is checked
 by flake `checks`: assertions on the built generation, overlay tests and the sync script's tests. A live check
@@ -19,11 +21,12 @@ script runs after the switch.
 
 ## Global Constraints
 
-- Create or modify files **only under `/home/asergi/dotfiles/wsl/`**. Never edit `nixos/`, `my-opencode/` or any
+- Create or modify files **only under `~/dotfiles/wsl/`**. Never edit `nixos/`, `my-opencode/` or any
   other directory in `~/dotfiles`.
 - Work on branch `wsl-home-manager`, created from `quickshell` in the main checkout. Don't use a worktree: the
-  out-of-store links target `/home/asergi/dotfiles`.
-- System `x86_64-linux`, user `asergi`, home `/home/asergi`, flake output `homeConfigurations."asergi"`.
+  out-of-store links target `$HOME/dotfiles`.
+- System `x86_64-linux`; the username and home directory come from `$USER`/`$HOME` via `lib/user.nix`, with flake
+  output `homeConfigurations.default`.
 - Input locks equal the revisions in `nixos/flake.lock`:
   - nixpkgs `b1b875982b17dabde9b4a37f3e229e74913e6db3`
   - nixpkgs-unstable `7fd4004d0511991fff3a0524856a9be09e28c5f0`
@@ -38,8 +41,8 @@ script runs after the switch.
 - Every link to a dotfiles path is `config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/…"`.
 - Flakes only see files in the git index, so `git add` new files before any `nix` command.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- All checks: `nix flake check /home/asergi/dotfiles/wsl -L`. One check:
-  `nix build /home/asergi/dotfiles/wsl#checks.x86_64-linux.<name> -L --no-link`.
+- All checks: `nix flake check ~/dotfiles/wsl -L`. One check:
+  `nix build ~/dotfiles/wsl#checks.x86_64-linux.<name> -L --no-link`.
 
 ## Review Focus
 
@@ -48,12 +51,12 @@ script runs after the switch.
 2. **Second `update` after the first switch**: earlier `*.hm-backup` files must not make later switches fail.
    → Task 10 runs `update` twice.
 3. **Bootstrap on a new or misconfigured instance.** These are tested in Task 9:
-   - Repo cloned elsewhere, or a different `$HOME`: bootstrap must refuse with exit 1.
+   - Repo not at `$HOME/dotfiles`, or missing `$USER`/`$HOME`: bootstrap must refuse with exit 1.
    - Secrets file missing, not decryptable by this instance's freshly generated key, or missing one of the 4 keys:
      bootstrap must stop **before** switching, with exit 2 and the exact next command. Otherwise sops-nix would
      fail at activation.
 4. **A v2 original of a copied file changes**: the drift check must fail and name the file. → Task 7 negative test.
-5. **An agent reaching secrets through `~/.config/sops-nix/secrets` or `/run/user/1000/secrets.d`** instead of
+5. **An agent reaching secrets through `~/.config/sops-nix/secrets` or `/run/user/*/secrets.d`** instead of
    `/run/secrets`: deny rules must exist for both, and for the tilde form in shell rules. → Task 6 unit tests.
 
 ---
@@ -65,9 +68,9 @@ script runs after the switch.
 
 **Interfaces:**
 - Produces:
-  - Flake outputs `homeConfigurations."asergi"` and `checks.x86_64-linux.generation`.
+  - Flake outputs `homeConfigurations.default` and `checks.x86_64-linux.generation`.
   - The `generation` check is `pkgs.runCommand "hm-generation-check" { nativeBuildInputs = [ pkgs.jq ]; }` and runs
-    `bash ${./tests/check-generation.sh} ${self.homeConfigurations.asergi.activationPackage}`, then `touch $out`.
+    `bash ${./tests/check-generation.sh} ${self.homeConfigurations.default.activationPackage}`, then `touch $out`.
   - Module args `pkgs-unstable` and `pkgs-master` (via `extraSpecialArgs`).
   - `tests/check-generation.sh GEN` takes `GEN` = the activation package. It provides these helpers, which later tasks reuse:
     - `has_bin NAME…` / `lacks_bin NAME…` test `$GEN/home-path/bin/NAME`.
@@ -80,7 +83,7 @@ script runs after the switch.
   - Each failure prints `FAIL: <helper> <args>`. The script exits 1 if anything failed, and otherwise prints `OK (<n> assertions)`.
   - Assertions are grouped under `# --- Task N: …` headers.
 
-- [ ] **Step 1: Create the branch.** Run `git -C /home/asergi/dotfiles switch -c wsl-home-manager`.
+- [ ] **Step 1: Create the branch.** Run `git -C ~/dotfiles switch -c wsl-home-manager`.
   Expected: `Switched to a new branch 'wsl-home-manager'`.
 
 - [ ] **Step 2: Write `tests/check-generation.sh`** with the helpers above and the Task 1 assertions:
@@ -105,11 +108,12 @@ script runs after the switch.
     - `ripwire-src` = `github:redhat-et/ripwire/v0.6.1`, `flake = false`
   - `pkgs-master` overlay: copy only the `ripwire` override from `nixos/flake.nix:105-113`.
   - Modules: `[ ./home.nix sops-nix.homeManagerModules.sops ]`.
-  - `home.nix` holds only `home.username = "asergi"`, `home.homeDirectory = "/home/asergi"` and `home.stateVersion = "26.05"`.
+  - `home.nix` holds only `home.username = user.username`, `home.homeDirectory = user.homeDirectory` (where
+    `user = import ../lib/user.nix`) and `home.stateVersion = "26.05"`.
 
 - [ ] **Step 4: Stage the files and pin the lock.**
   ```bash
-  cd /home/asergi/dotfiles && git add wsl/flake.nix wsl/home.nix wsl/tests/check-generation.sh
+  cd ~/dotfiles && git add wsl/flake.nix wsl/home.nix wsl/tests/check-generation.sh
   nix flake lock ./wsl \
     --override-input nixpkgs github:NixOS/nixpkgs/b1b875982b17dabde9b4a37f3e229e74913e6db3 \
     --override-input nixpkgs-unstable github:NixOS/nixpkgs/7fd4004d0511991fff3a0524856a9be09e28c5f0 \
@@ -134,7 +138,7 @@ script runs after the switch.
   - `EDITOR`, `VISUAL` and `SUDO_EDITOR` = `"nvim"`
 
 - [ ] **Step 7: Run the check again.** Same command. Expected: `OK (<n> assertions)` and no FAIL lines. Also run
-  `nix eval ./wsl#homeConfigurations.asergi.config.targets.genericLinux.gpu.enable`. Expected: `false`.
+  `nix eval ./wsl#homeConfigurations.default.config.targets.genericLinux.gpu.enable`. Expected: `false`.
 
 - [ ] **Step 8: Commit.** `git add wsl && git commit -m "wsl: flake skeleton, base home config, generation check"`
 
@@ -157,12 +161,12 @@ script runs after the switch.
   lacks_bin nix
   contains home-files/.config/tmux/tmux.conf sessionx
   contains home-files/.config/tmux/tmux.conf continuum-restore
-  links_to .config/nvim      /home/asergi/dotfiles/neovimrc
-  links_to .config/starship  /home/asergi/dotfiles/starship
-  links_to .config/atuin     /home/asergi/dotfiles/atuin
-  links_to .config/uv/uv.toml /home/asergi/dotfiles/wsl/uv/uv.toml
+  links_to .config/nvim      "$HOMEDIR/dotfiles/neovimrc"
+  links_to .config/starship  "$HOMEDIR/dotfiles/starship"
+  links_to .config/atuin     "$HOMEDIR/dotfiles/atuin"
+  links_to .config/uv/uv.toml "$HOMEDIR/dotfiles/wsl/uv/uv.toml"
   is_dir   .config/herdr
-  links_to .config/herdr/config.toml /home/asergi/dotfiles/herdr/config.toml
+  links_to .config/herdr/config.toml "$HOMEDIR/dotfiles/herdr/config.toml"
   ```
 
 - [ ] **Step 2: Run the check.** Expected: FAIL (`has_bin tmux` …).
@@ -225,7 +229,7 @@ script runs after the switch.
 
 **Interfaces:**
 - Produces:
-  - `config.sops.secrets.<name>.path` = `/home/asergi/.config/sops-nix/secrets/<name>` for `github_pat`,
+  - `config.sops.secrets.<name>.path` = `$HOMEDIR/.config/sops-nix/secrets/<name>` for `github_pat`,
     `openrouter`, `opencode` and `cheaper_inference`.
   - Flake outputs `packages.x86_64-linux.{home-manager,sops,age}`, taken from the locked inputs
     (`home-manager.packages.…home-manager`, `pkgs.sops`, `pkgs.age`). bootstrap uses them before the first switch.
@@ -251,13 +255,13 @@ script runs after the switch.
   U=home-files/.config/systemd/user/sops-nix.service; has_path $U
   M=$(grep -rhoE '/nix/store/[^ "]*manifest[^ "]*\.json' "$GEN/$U" $(grep -oE '/nix/store/[^ "]+' "$GEN/$U") 2>/dev/null | head -1)
   [[ "$(jq -r '.secrets[].name' "$M" | sort | xargs)" == "cheaper_inference github_pat opencode openrouter" ]] || fail "sops secret names"
-  [[ -z "$(jq -r '.secrets[].path' "$M" | grep -v '^/home/asergi/.config/sops-nix/secrets/')" ]] || fail "sops secret paths"
+  [[ -n "$M" && -z "$(jq -r '.secrets[].path' "$M" | grep -vF -- "$HOMEDIR/.config/sops-nix/secrets/")" ]] || fail "sops secret paths"
   Z=home-files/.zshrc
-  contains $Z 'home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup'
-  contains $Z '/home/asergi/dotfiles/scripts/tmux-sessionizer.sh'
+  contains $Z 'home-manager switch --flake ~/dotfiles/wsl#default -b hm-backup --impure --max-jobs 1 --cores 2'
+  contains $Z "$HOMEDIR/dotfiles/scripts/tmux-sessionizer.sh"
   contains $Z 'show_eza_tree'
-  contains $Z 'if [ -f /home/asergi/.config/sops-nix/secrets/github_pat ]'   # Review Focus 1
-  contains $Z 'if [ -f /home/asergi/.config/sops-nix/secrets/openrouter ]'
+  contains $Z "if [ -f $HOMEDIR/.config/sops-nix/secrets/github_pat ]"   # Review Focus 1
+  contains $Z "if [ -f $HOMEDIR/.config/sops-nix/secrets/openrouter ]"
   contains $Z 'GITHUB_PERSONAL_ACCESS_TOKEN'; contains $Z 'OPENROUTER_API'
   contains $Z 'starship init zsh'; contains $Z 'atuin init zsh'
   lacks $Z '/run/secrets'; lacks $Z 'nixos-rebuild'
@@ -336,24 +340,24 @@ script runs after the switch.
   - `transform(text: str) -> str`.
   - The CLI `sync_opencode_jsonc.py [--check] BASE OUT` writes `transform(BASE)` to `OUT`. With `--check`, it prints
     `stale: OUT` and exits 1 when `OUT` differs.
-  - Constants `MOUNT_DIR = "/run/user/1000/secrets.d"`, `SOPS_DIR = "/home/asergi/.config/sops-nix/secrets"` and
-    `TILDE_SOPS_DIR = "~/.config/sops-nix/secrets"`.
+  - Constants `MOUNT_DIR = "/run/user/*/secrets.d"`, `SOPS_DIR = "~/.config/sops-nix/secrets"`,
+    `SHELL_SOPS_DIR = "*/.config/sops-nix/secrets"` and `TILDE_SOPS_DIR = "~/.config/sops-nix/secrets"`.
   - `tests/check-overlay.sh V2_DIR OVERLAY_DIR TESTS_DIR` runs the unit tests and `--check`. Task 7 extends it.
 
 - [ ] **Step 1: Write the unit tests.** Use stdlib `unittest`, and build the fixtures as **pure JSON** strings in the
   v2 layout (tab-indented rule objects `{ "action", "resource", "effect" }` in a `"permissions"` list), so the
   output can be checked with `json.loads`.
   - `test_file_refs_rewritten`:
-    - `{file:/run/secrets/openrouter}` becomes `{file:/home/asergi/.config/sops-nix/secrets/openrouter}`.
+    - `{file:/run/secrets/openrouter}` becomes `{file:~/.config/sops-nix/secrets/openrouter}`.
     - No `{file:/run/secrets` remains.
   - `test_read_rule_mirrors_follow_source`: `read /run/secrets/** deny` becomes
-    `[orig, read /run/user/1000/secrets.d/** deny, read /home/asergi/.config/sops-nix/secrets/** deny]`, in that order.
-  - `test_dot_d_rule_maps_to_same_locations`: `/run/secrets.d/**` gives mirrors `/run/user/1000/secrets.d/**` and
-    `/home/asergi/.config/sops-nix/secrets/**`.
+    `[orig, read /run/user/*/secrets.d/** deny, read ~/.config/sops-nix/secrets/** deny]`, in that order.
+  - `test_dot_d_rule_maps_to_same_locations`: `/run/secrets.d/**` gives mirrors `/run/user/*/secrets.d/**` and
+    `~/.config/sops-nix/secrets/**`.
   - `test_shell_rule_gets_tilde_variant`: `shell *cat /run/secrets* deny` gives 3 mirrors. The last one is
-    `*cat ~/.config/sops-nix/secrets*`.
+    `*cat */.config/sops-nix/secrets*`.
   - `test_duplicate_mirrors_skipped`: rules for `/run/secrets/**` and `/run/secrets.d/**` produce
-    `/run/user/1000/secrets.d/**` exactly once.
+    `/run/user/*/secrets.d/**` exactly once.
   - `test_effect_and_action_preserved`: an `ask` rule mirrors with `ask`.
   - `test_last_rule_in_list`: a secrets rule last in the list still gives a `json.loads`-valid result.
   - `test_unrelated_text_untouched`: a `**/*.key` rule and a `// comment` line are byte-identical in the output.
@@ -371,7 +375,7 @@ script runs after the switch.
   ```bash
   python3 wsl/opencode/sync_opencode_jsonc.py my-opencode/v2/opencode.jsonc wsl/opencode/opencode.jsonc
   npx -y json5@2.2.3 --validate wsl/opencode/opencode.jsonc && echo VALID
-  npx -y json5@2.2.3 wsl/opencode/opencode.jsonc | python3 -c "import json,sys;d=json.load(sys.stdin);p=d['providers'];S='{file:/home/asergi/.config/sops-nix/secrets/';assert [p[k]['settings']['apiKey'] for k in ('openrouter','opencode-go','opencode','cheaper-inference')]==[S+'openrouter}',S+'opencode}',S+'opencode}',S+'cheaper_inference}'];r=[x['resource'] for x in d['permissions']];assert sum('/run/secrets' in x for x in r)==29;assert not any('{file:/run/secrets' in json.dumps(v) for v in p.values());print('jsonc OK')"
+  npx -y json5@2.2.3 wsl/opencode/opencode.jsonc | python3 -c "import json,sys;d=json.load(sys.stdin);p=d['providers'];S='{file:~/.config/sops-nix/secrets/';assert [p[k]['settings']['apiKey'] for k in ('openrouter','opencode-go','opencode','cheaper-inference')]==[S+'openrouter}',S+'opencode}',S+'opencode}',S+'cheaper_inference}'];r=[x['resource'] for x in d['permissions']];assert sum('/run/secrets' in x for x in r)==29;assert not any('{file:/run/secrets' in json.dumps(v) for v in p.values());print('jsonc OK')"
   ```
   Expected: `VALID` and `jsonc OK`.
 
@@ -408,7 +412,7 @@ script runs after the switch.
 
 - [ ] **Step 3: Copy the originals and record their checksums.**
   ```bash
-  cd /home/asergi/dotfiles/my-opencode/v2
+  cd ~/dotfiles/my-opencode/v2
   F="opencode.jsonc CLAUDE.md skills/agent-browser/SKILL.md skills/webapp-testing/SKILL.md skills/webapp-testing/examples/console_logging.py skills/webapp-testing/examples/element_discovery.py skills/webapp-testing/examples/static_html_automation.py skills/web-artifacts-builder/SKILL.md skills/pptx/SKILL.md skills/pptx/editing.md skills/transcribe-media/SKILL.md skills/strategic-compact/SKILL.md"
   for f in $F; do [ "$f" = opencode.jsonc ] || install -D -m644 "$f" "../../wsl/opencode/$f"; done
   sha256sum $F > ../../wsl/opencode/BASE.sha256
@@ -419,14 +423,14 @@ script runs after the switch.
 - [ ] **Step 5: Edit the copies** using the spec's "Prose copies" rules. Per file:
   - `CLAUDE.md:13-15`:
     - 13 → "You're using Ubuntu on WSL with a declarative Nix home-manager setup (flakes enabled). You have the `nixos` MCP to refer to for correct nix commands."
-    - 14 → "- The declarative configuration is the home-manager flake in `/home/asergi/dotfiles/wsl`"
+    - 14 → "- The declarative configuration is the home-manager flake in `~/dotfiles/wsl`"
     - 15 → "- The setup is declarative: DO NOT EVER ACT in an imperative manner. (Refer to …)"
   - `agent-browser/SKILL.md`:
     - Heading at :12 → "## WSL host: read this before anything else".
     - :14 → "This machine is **Ubuntu on WSL** with a declarative Nix home-manager setup, and the browser toolchain is already provided declaratively:".
-    - :16 → `/home/asergi/dotfiles/wsl/packages.nix`.
-    - :19 → "edit to `/home/asergi/dotfiles/wsl` (package added to `packages.nix`)".
-    - :30-31 → `/home/asergi/.nix-profile/bin/chromium`.
+    - :16 → `~/dotfiles/wsl/packages.nix`.
+    - :19 → "edit to `~/dotfiles/wsl` (package added to `packages.nix`)".
+    - :30-31 → `~/.nix-profile/bin/chromium`.
     - :54 → "keep these host constraints".
   - `webapp-testing/SKILL.md`:
     - :30, :73 and :82: drop the `LD_LIBRARY_PATH=…`/`env LD_LIBRARY_PATH=… \` parts.
@@ -435,8 +439,8 @@ script runs after the switch.
       - `executable_path` is the Nix chromium plus `--no-sandbox`, because Playwright's downloaded Chromium needs apt system libraries that are missing here. Keep "Do not run `playwright install`".
     - :91 → the Nix chromium path.
     - :95 → "…cannot resolve its shared-library deps on this host."
-  - `examples/*.py`: the comment says "required on this host"; `executable_path='/home/asergi/.nix-profile/bin/chromium'`.
-  - `web-artifacts-builder/SKILL.md:73` → "It carries the host-correct invocation: `uv run --with playwright python …`, launching the Nix-provided Chromium at `/home/asergi/.nix-profile/bin/chromium`."
+  - `examples/*.py`: the comment says "required on this host"; `executable_path=os.path.expanduser("~/.nix-profile/bin/chromium")`.
+  - `web-artifacts-builder/SKILL.md:73` → "It carries the host-correct invocation: `uv run --with playwright python …`, launching the Nix-provided Chromium at `~/.nix-profile/bin/chromium`."
   - `pptx/SKILL.md`:
     - :13, :23, :150, :158 and :213: drop the prefix. At :213 also drop the parenthetical.
     - :225 and :229: drop the `LD_LIBRARY_PATH=… \` line.
@@ -475,7 +479,7 @@ script runs after the switch.
 - [ ] **Step 1: Append the Task 8 assertions.**
   ```bash
   # --- Task 8: opencode + claude-code
-  B=/home/asergi/dotfiles/my-opencode/v2; O=/home/asergi/dotfiles/wsl/opencode; C=.config/opencode
+  B=$HOMEDIR/dotfiles/my-opencode/v2; O=$HOMEDIR/dotfiles/wsl/opencode; C=.config/opencode
   links_to $C/opencode.jsonc $O/opencode.jsonc; links_to $C/CLAUDE.md $O/CLAUDE.md
   for i in AGENTS.md RIPWIRE.md agents commands instructions prompts scripts tools; do links_to $C/$i $B/$i; done
   is_dir $C/plugins; links_to $C/plugins/herdr-agent-state.js $B/plugins/herdr-agent-state.js
@@ -486,7 +490,7 @@ script runs after the switch.
   links_to $C/skills/webapp-testing/examples/console_logging.py $O/skills/webapp-testing/examples/console_logging.py
   links_to $C/skills/webapp-testing/scripts $B/skills/webapp-testing/scripts
   for i in evals package-lock.json vastai; do lacks_path home-files/$C/$i; done
-  links_to .agents /home/asergi/dotfiles/.agents
+  links_to .agents $HOMEDIR/dotfiles/.agents
   contains home-path/etc/profile.d/hm-session-vars.sh 'OPENCODE_DISABLE_CLAUDE_CODE_SKILLS="true"'
   for s in explore-codebase high-perf-systems download-video; do links_to .claude/skills/$s $B/skills/$s; done
   links_to .claude/skills/transcribe-media/SKILL.md $O/skills/transcribe-media/SKILL.md
@@ -521,9 +525,9 @@ script runs after the switch.
       `missing-keys:<comma-separated names>`. It's read-only and uses `SOPS_AGE_KEY_FILE=$AGE_KEY_FILE`.
   - `--dry-run` prints each mutating command as `DRY-RUN: <cmd>` instead of running it, and skips the cleanup prompt.
     Read-only probes, including `secrets_status`, still run.
-  - Exit 1 when `$HOME` isn't `/home/asergi` or the script's repo root isn't `$HOME/dotfiles`. The message contains
-    `expects the repo at /home/asergi/dotfiles`.
-  - Switch command: `nix run /home/asergi/dotfiles/wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2`.
+  - Exit 1 when `$USER`/`$HOME` are missing, the script runs as root, or the script's repo root isn't
+    `$HOME/dotfiles`. The message contains `expects the repo at $HOME/dotfiles`.
+  - Switch command: `nix run $HOME/dotfiles/wsl#home-manager -- switch --flake $HOME/dotfiles/wsl#default -b hm-backup --impure --max-jobs 1 --cores 2`.
     Use `home-manager switch …` when `home-manager` is on PATH.
 
 - [ ] **Step 1: Write `tests/test-bootstrap.sh`.** It creates a temp dir `$T` with two keys, A and B (made with
@@ -542,7 +546,7 @@ script runs after the switch.
   - `AGE_KEY_FILE=$T/new.txt … --dry-run` (no key yet) prints `DRY-RUN: … age-keygen -o $T/new.txt`.
   - On this instance's real files (key from Task 4), `--dry-run`:
     - exits 0
-    - contains `DRY-RUN:` and `switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup`
+    - contains `DRY-RUN:` and `switch --flake $HOME/dotfiles/wsl#default -b hm-backup`
     - contains `locale-gen en_US.UTF-8` (missing here)
     - lacks `install.determinate.systems`, `wsl.conf` and `chsh` (already satisfied)
     - a second run gives identical output
@@ -570,11 +574,9 @@ per line and exits 1 on any FAIL.
   works with placeholders.
 
 - [ ] **Step 2: Write `check-live.sh`.** Every probe runs inside `zsh -lic '…'`, so the login environment is used.
-  - For `nvim tmux herdr rg go zig node cargo uv starship atuin chromium`, the first `which -a` hit is under
-    `/home/asergi/.nix-profile/bin/`.
-  - `claude` resolves to `/home/asergi/.local/bin/claude` and `opencode` to `/home/asergi/.opencode/bin/opencode`.
-    Print SKIP for either one when it's absent.
-  - `realpath` of `~/.config/{nvim,starship,atuin,uv/uv.toml,herdr/config.toml}` starts with `/home/asergi/dotfiles/`.
+  - For `nvim tmux herdr rg go zig node cargo uv starship atuin chromium claude opencode`, the first `whence -p` hit
+    is under `$HOME/.nix-profile/bin/`.
+  - `realpath` of `~/.config/{nvim,starship,atuin,uv/uv.toml,herdr/config.toml}` starts with `$HOME/dotfiles/`.
   - `find ~/.config/opencode ~/.claude/skills -xtype l` is empty (no dangling links).
   - `systemctl --user show -p Result sops-nix` = `Result=success`; there are 4 entries in `~/.config/sops-nix/secrets/`;
     `$GITHUB_PERSONAL_ACCESS_TOKEN` is non-empty; `$LD_LIBRARY_PATH` is empty.
@@ -586,7 +588,7 @@ per line and exits 1 on any FAIL.
     writes a non-empty PNG; `fc-list` lists Noto; `agent-browser doctor` exits 0.
 
 - [ ] **Step 3: Dry-run switch.**
-  `nix run ./wsl#home-manager -- switch --flake /home/asergi/dotfiles/wsl#asergi -b hm-backup -n`.
+  `nix run ./wsl#home-manager -- switch --flake $HOME/dotfiles/wsl#default -b hm-backup --impure -n`.
   Compare the "will be moved to …hm-backup" lines with the spec's "Collision handling" list.
   **Checkpoint: show the list to the user and wait for go-ahead.**
 
@@ -610,8 +612,8 @@ per line and exits 1 on any FAIL.
 ### Task 11: Fresh-instance acceptance (with the user)
 
 - [ ] **Step 1: Bundle the branch, no push needed.**
-  `git -C /home/asergi/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle wsl-home-manager`.
-- [ ] **Step 2: User, in PowerShell:** `wsl --install Ubuntu-24.04 --name hm-test`. Create user `asergi` at first launch.
+  `git -C ~/dotfiles bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle wsl-home-manager`.
+- [ ] **Step 2: User, in PowerShell:** `wsl --install Ubuntu-24.04 --name hm-test`. Use the existing WSL user at first launch.
 - [ ] **Step 3: In hm-test.**
   `git clone -b wsl-home-manager /mnt/c/Users/andre/dotfiles-wsl.bundle ~/dotfiles && git -C ~/dotfiles submodule update --init`.
 - [ ] **Step 4: First bootstrap.** Run `bash ~/dotfiles/wsl/bootstrap.sh`.
@@ -623,8 +625,8 @@ per line and exits 1 on any FAIL.
   - `git bundle create /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance`.
   - In hm-test: `git fetch /mnt/c/Users/andre/dotfiles-wsl.bundle hm-test-acceptance && git checkout FETCH_HEAD -- wsl/.sops.yaml wsl/secrets/secrets.yaml`.
 - [ ] **Step 6: Second bootstrap.** Re-run `bash ~/dotfiles/wsl/bootstrap.sh`. Expected: exit 0.
-- [ ] **Step 7: Verify.** `bash ~/dotfiles/wsl/tests/check-live.sh`. Expected: no FAIL lines. claude and opencode
-  print SKIP, because they're installed natively, outside this flake.
+- [ ] **Step 7: Verify.** `bash ~/dotfiles/wsl/tests/check-live.sh`. Expected: no FAIL lines. `claude` and `opencode`
+  resolve from the Nix profile.
 - [ ] **Step 8: Tear down.**
   - The user runs `wsl --unregister hm-test` and deletes the bundle.
   - Here: `git switch wsl-home-manager && git branch -D hm-test-acceptance`. Confirm with the user first: this

@@ -2,13 +2,16 @@
 """Regenerate wsl/opencode/opencode.jsonc from my-opencode/v2/opencode.jsonc.
 
 On WSL, sops-nix's home-manager module puts secrets under ~/.config/sops-nix
-(backed by /run/user/1000/secrets.d) instead of /run/secrets. The transform is
+(backed by /run/user/<uid>/secrets.d) instead of /run/secrets. The transform is
 text-level so comments and formatting outside the changed spans survive:
 
   * {file:/run/secrets/<name>} becomes {file:<SOPS_DIR>/<name>}.
   * Every permission rule whose resource mentions /run/secrets(.d) is kept and
-    immediately followed by mirrors for MOUNT_DIR and SOPS_DIR (plus
-    TILDE_SOPS_DIR for shell rules), skipping mirrors that already exist.
+    immediately followed by mirrors, skipping mirrors that already exist:
+    - read, edit, and external_directory resources get the literal ~ mirror.
+    - shell, glob, and grep resources get the wildcard mirror because opencode
+      does not home-expand them.
+    - shell resources also get the literal ~ mirror.
 
 Usage: sync_opencode_jsonc.py [--check] BASE OUT
 """
@@ -16,9 +19,10 @@ Usage: sync_opencode_jsonc.py [--check] BASE OUT
 import re
 import sys
 
-MOUNT_DIR = "/run/user/1000/secrets.d"
-SOPS_DIR = "/home/asergi/.config/sops-nix/secrets"
-TILDE_SOPS_DIR = "~/.config/sops-nix/secrets"
+MOUNT_DIR = "/run/user/*/secrets.d"
+SOPS_DIR = "~/.config/sops-nix/secrets"
+SHELL_SOPS_DIR = "*/.config/sops-nix/secrets"
+TILDE_SOPS_DIR = SOPS_DIR
 
 SECRETS = re.compile(r"/run/secrets(?:\.d)?")
 RULE = re.compile(
@@ -29,10 +33,11 @@ RULE = re.compile(
 
 
 def mirror_locations(action):
-    locations = [MOUNT_DIR, SOPS_DIR]
     if action == "shell":
-        locations.append(TILDE_SOPS_DIR)
-    return locations
+        return [MOUNT_DIR, SHELL_SOPS_DIR, TILDE_SOPS_DIR]
+    if action in {"glob", "grep"}:
+        return [MOUNT_DIR, SHELL_SOPS_DIR]
+    return [MOUNT_DIR, SOPS_DIR]
 
 
 def mirror_secret_rules(text):

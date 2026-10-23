@@ -1,9 +1,9 @@
 # WSL home-manager
 
 A standalone [home-manager](https://github.com/nix-community/home-manager) flake that sets up the same CLI/TUI
-environment as `../nixos` on any Ubuntu WSL instance. GUI apps and NixOS system services are left out.
+environment as `../nixos` on any Linux WSL instance (tested on Ubuntu and Arch). GUI apps and NixOS system services are left out.
 
-- `flake.nix`: inputs (pinned to the same revisions as `nixos/flake.lock`) and `homeConfigurations.asergi`
+- `flake.nix`: inputs (pinned to the same revisions as `nixos/flake.lock`) and `homeConfigurations.default`
 - `home.nix`: imports, links, session variables, build limits
 - `packages.nix`: the package set
 - `modules/`: WSL-specific modules (zsh, herdr, secrets, opencode, claude-code)
@@ -13,10 +13,11 @@ environment as `../nixos` on any Ubuntu WSL instance. GUI apps and NixOS system 
 
 ## Prerequisites (Windows side)
 
-- WSL 2 with an Ubuntu distro, and a user named `asergi`. The repo must be cloned at `/home/asergi/dotfiles`.
+- WSL 2 with a Linux distro (tested on Ubuntu and Arch) and any username. The repo must be cloned at `~/dotfiles`: the flake takes the
+  account name and home directory from `$USER`/`$HOME`.
 - Docker Desktop with WSL integration enabled for this distro, if you want `docker` and `lazydocker`.
 - A Nerd Font (e.g. JetBrainsMono Nerd Font) set in Windows Terminal. Terminal fonts are a Windows concern.
-- opencode and Claude Code are installed with their native installers. Neither is managed by this flake.
+- Claude Code and opencode come from `nixpkgs-unstable` via the flake, not native installers.
 
 ## Fresh instance
 
@@ -29,11 +30,12 @@ bash ~/dotfiles/wsl/bootstrap.sh
 `bootstrap.sh` is idempotent: re-run it after each "ACTION NEEDED" message. In order, it:
 
 1. enables systemd in `/etc/wsl.conf` (then asks you to run `wsl.exe --shutdown` from Windows)
-2. installs zsh, git and curl from apt, makes zsh the login shell, and generates `en_US.UTF-8`
+2. installs zsh, git and curl from the distro package manager (apt, pacman, dnf, zypper), makes zsh the login shell, and generates `en_US.UTF-8`
 3. installs Determinate Nix if it's missing
 4. initialises the `neovimrc` submodule
 5. **generates this instance's age key** at `~/.config/sops/age/keys.txt` and adds its public key to `wsl/.sops.yaml`
-6. checks that this key can decrypt `wsl/secrets/secrets.yaml` (see Secrets)
+6. checks that this key can decrypt `wsl/secrets/secrets.yaml` (see Secrets). If it cannot, run
+   `bash ~/dotfiles/wsl/bootstrap.sh --new-secrets` to create a local encrypted file for this instance.
 7. runs `home-manager switch -b hm-backup`. Existing files in the way are moved to `<file>.hm-backup`.
 
 Then remove the pre-Nix installs, so nothing shadows the Nix versions. It lists what it found and asks before removing:
@@ -47,8 +49,11 @@ bash ~/dotfiles/wsl/bootstrap.sh --cleanup
 ## Daily use
 
 ```bash
-update          # alias: home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2
+update          # alias: bash ~/dotfiles/wsl/update.sh
 ```
+
+`--impure` is required because `home.nix` reads the account name and home directory from the environment. Without it,
+pure evaluation falls back to `/home/asergi`.
 
 To add a package, edit `packages.nix`, `git add`, then `update`. Flakes only see files in the git index, so stage new
 files before `nix` commands.
@@ -76,14 +81,36 @@ bash ~/dotfiles/wsl/bootstrap.sh --add-recipient age1...   # adds the key, runs 
 git add wsl/.sops.yaml wsl/secrets/secrets.yaml && git commit -m "wsl: add recipient"
 ```
 
-If no instance can decrypt any more, delete `secrets/secrets.yaml`, re-run bootstrap and create the file again.
+If no instance can decrypt any more, or this instance cannot be added as a recipient, use the local fallback:
+
+```bash
+bash ~/dotfiles/wsl/bootstrap.sh --new-secrets
+```
+
+This creates `~/.config/sops-nix/wsl-secrets.yaml`, encrypted to this instance's age key, with the four keys and empty
+values, then stops so you can fill it. The local file is used automatically when it exists; `update` and
+`bootstrap.sh` both pick it up (it also exports `DOTFILES_WSL_SECRETS` for the switch). Fill it with:
+
+```bash
+EDITOR="${EDITOR:-vi}" SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt nix run ~/dotfiles/wsl#sops -- \
+  --config ~/dotfiles/wsl/.sops.yaml --filename-override secrets/secrets.yaml \
+  ~/.config/sops-nix/wsl-secrets.yaml
+```
+
+Sops decrypts the file to a temporary copy, opens `$EDITOR`, and re-encrypts it when you save and quit. Do **not**
+open `~/.config/sops-nix/wsl-secrets.yaml` directly with `nvim`/`nano`: that leaves plaintext values inside the
+encrypted file, and sops then fails with `Input string ... does not match sops' data format`. Set `EDITOR=nvim` instead if you prefer and it is on `PATH`.
+
+Set `DOTFILES_WSL_SECRETS` to point at a different file explicitly; it must be an absolute path to a sops-encrypted
+file. To switch back to the shared file, remove the local one.
 
 ## opencode and Claude Code config
 
 `~/.config/opencode` is linked from `../my-opencode/v2`. Where a v2 file is wrong for this host, `wsl/opencode/` holds
 a copy at the same relative path, and that copy is linked instead. Today that means:
 
-- `opencode.jsonc`: secrets read from the sops-nix paths. It's generated with
+- `opencode.jsonc`: secrets read from the sops-nix paths. It's static and portable (`~` and wildcards). The sync
+  script is a maintainer tool, not part of activation:
   `python3 wsl/opencode/sync_opencode_jsonc.py my-opencode/v2/opencode.jsonc wsl/opencode/opencode.jsonc`.
 - `CLAUDE.md` and a few skills: no NixOS paths or nix-ld prefixes.
 
@@ -94,12 +121,12 @@ The `nix-ld-env.js` plugin is not linked. `wsl/opencode/BASE.sha256` records the
 cd ~/dotfiles/my-opencode/v2 && sha256sum $(awk '{print $2}' ../../wsl/opencode/BASE.sha256) > ../../wsl/opencode/BASE.sha256
 ```
 
-Claude Code only gets four skills linked into `~/.claude/skills`. Its settings stay its own.
+Claude Code comes from `nixpkgs-unstable`. It only gets four skills linked into `~/.claude/skills`. Its settings stay its own.
 
 ## Python
 
-`uv` uses its own managed Pythons (`wsl/uv/uv.toml`: `python-preference = "managed"`). PyPI wheels then load Ubuntu's
-`libstdc++` directly. Don't set `LD_LIBRARY_PATH`: it would break Ubuntu's own programs.
+`uv` uses its own managed Pythons (`wsl/uv/uv.toml`: `python-preference = "managed"`). PyPI wheels then load the distro's
+`libstdc++` directly. Don't set `LD_LIBRARY_PATH`: it would break the distro's own programs.
 
 ## Build limits
 
@@ -117,6 +144,9 @@ nix flake check ~/dotfiles/wsl            # generation assertions, overlay, over
 bash ~/dotfiles/wsl/tests/test-bootstrap.sh
 bash ~/dotfiles/wsl/tests/check-live.sh   # after a switch: PATH, links, secrets, apps
 ```
+
+`check-live.sh` expects the native `claude` and `opencode` binaries to be removed first: run
+`bootstrap.sh --cleanup` so the Nix profile versions win.
 
 ## Troubleshooting
 

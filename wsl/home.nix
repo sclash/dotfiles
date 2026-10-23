@@ -5,7 +5,8 @@
   ...
 }:
 let
-  dotfiles = "${config.home.homeDirectory}/dotfiles";
+  user = import ../lib/user.nix;
+  dotfiles = user.dotfiles;
   link = config.lib.file.mkOutOfStoreSymlink;
 in
 {
@@ -28,10 +29,10 @@ in
     ./packages.nix
   ];
 
-  home.username = "asergi";
-  home.homeDirectory = "/home/asergi";
+  home.username = user.username;
+  home.homeDirectory = user.homeDirectory;
 
-  # Ubuntu, not NixOS: XDG data dirs, locale archive and terminfo for Nix
+  # Linux, not NixOS: XDG data dirs, locale archive and terminfo for Nix
   # programs. Nothing here is GUI, so skip the GPU driver integration (it
   # would otherwise ask for a one-time sudo setup).
   targets.genericLinux.enable = true;
@@ -53,13 +54,13 @@ in
 
   home.language.base = "en_US.UTF-8";
 
-  # Native installers live here: claude (~/.local/bin), opencode (~/.opencode/bin).
+  # Claude Code and opencode come from pkgs-unstable; ~/.local/bin is kept for
+  # other native tools.
   home.sessionPath = [
     "$HOME/.local/bin"
-    "$HOME/.opencode/bin"
   ];
 
-  # No LD_LIBRARY_PATH: on Ubuntu it would push Nix's libstdc++ into system
+  # No LD_LIBRARY_PATH: on Linux it would push Nix's libstdc++ into system
   # binaries built against the older glibc.
   home.sessionVariables = {
     EDITOR = "nvim";
@@ -87,7 +88,7 @@ in
     ".config/starship".source = link "${dotfiles}/starship";
     ".config/atuin".source = link "${dotfiles}/atuin";
     # WSL copy: python-preference = "managed", so uv's standalone Pythons load
-    # PyPI wheels against Ubuntu's libstdc++ without any LD_LIBRARY_PATH.
+    # PyPI wheels against the distro's libstdc++ without any LD_LIBRARY_PATH.
     ".config/uv/uv.toml".source = lib.mkForce (link "${dotfiles}/wsl/uv/uv.toml");
   };
 

@@ -13,10 +13,10 @@ Fast browser automation CLI for AI agents. Chrome/Chromium via CDP with accessib
 
 This machine is **Ubuntu on WSL** with a declarative Nix home-manager setup, and the browser toolchain is already provided declaratively:
 
-- `agent-browser` is installed via nixpkgs (home-manager `home.packages`, `/home/asergi/dotfiles/wsl/packages.nix`) — it is on `PATH`, so just call `agent-browser`. **Never `npm i -g agent-browser`.**
+- `agent-browser` is installed via nixpkgs (home-manager `home.packages`, `~/dotfiles/wsl/packages.nix`) — it is on `PATH`, so just call `agent-browser`. **Never `npm i -g agent-browser`.**
 - Chrome/Chromium comes from nixpkgs, not from a downloaded binary. **Never run `agent-browser install` or `agent-browser install --with-deps`** — both fetch/download browsers imperatively into `~/.cache` and bypass the declarative config. This also overrides the "Install once" quickstart printed by `agent-browser skills get core`; treat that section as inapplicable on this host.
 
-If a browser binary is ever missing, do **not** install one. Report it and let the user decide; the fix is a declarative edit to `/home/asergi/dotfiles/wsl` (package added to `packages.nix`), which requires their explicit approval first.
+If a browser binary is ever missing, do **not** install one. Report it and let the user decide; the fix is a declarative edit to `~/dotfiles/wsl` (package added to `packages.nix`), which requires their explicit approval first.
 
 Temporary, non-invasive invocation when the tool is missing and the user approves it:
 
@@ -27,8 +27,8 @@ nix run nixpkgs#agent-browser -- <args>   # ephemeral, nothing added to the syst
 Browser selection, if ever needed, points at the nix-provided binary rather than a downloaded one:
 
 ```bash
-agent-browser --executable-path /home/asergi/.nix-profile/bin/chromium <cmd>
-# or: export AGENT_BROWSER_EXECUTABLE_PATH=/home/asergi/.nix-profile/bin/chromium
+agent-browser --executable-path ~/.nix-profile/bin/chromium <cmd>
+# or: export AGENT_BROWSER_EXECUTABLE_PATH=~/.nix-profile/bin/chromium
 ```
 
 Sanity-check the environment any time something misbehaves — it reports CLI version, resolved Chrome path, ffmpeg, daemons, and a live launch test:

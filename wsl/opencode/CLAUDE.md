@@ -11,7 +11,7 @@ If there are any conflicts in a project, what follows should always have precede
 
 ## REMEBER
 You're using Ubuntu on WSL with a declarative Nix home-manager setup (flakes enabled). You have the `nixos` MCP to refer to for correct nix commands.
-- The declarative configuration is the home-manager flake in `/home/asergi/dotfiles/wsl`
+- The declarative configuration is the home-manager flake in `~/dotfiles/wsl`
 - The setup is declarative: DO NOT EVER ACT in an imperative manner. (Refer to the [DO NOT EVER](#do-not-ever) section just below) 
 - If the system does not currently meet requirements you should NEVER make changes to the system. 
 - When absolutely necessary always prefer temporary solutions (pick the more convenient according to the use case):

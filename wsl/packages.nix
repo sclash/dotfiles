@@ -91,6 +91,8 @@
       cargo
       zig
       agent-browser
+      claude-code
+      opencode
       # lldb 23.1.0 from 26.05 is not in the binary cache (a local LLVM build
       # would exhaust the WSL VM); unstable's latest lldb is.
       llvmPackages_latest.lldb

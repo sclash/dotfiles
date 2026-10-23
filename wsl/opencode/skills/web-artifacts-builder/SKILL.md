@@ -70,7 +70,7 @@ Note: This is a completely optional step. Only perform if necessary or requested
 To test/visualize the artifact, use whatever browser tooling is live in this session:
 
 - **Playwright MCP server** — if it is enabled (`~/.config/opencode/opencode.json`), its tools are already in your tool list; use them directly.
-- **`webapp-testing` skill** — otherwise. It carries the host-correct invocation: `uv run --with playwright python …`, launching the Nix-provided Chromium at `/home/asergi/.nix-profile/bin/chromium`.
+- **`webapp-testing` skill** — otherwise. It carries the host-correct invocation: `uv run --with playwright python …`, launching the Nix-provided Chromium at `~/.nix-profile/bin/chromium`.
 
 Note there is no ambient `playwright` module, so a bare `python` script that imports it will fail. Load that skill rather than re-deriving the launch incantation.
 

@@ -35,7 +35,7 @@ On this host:
 - No `LD_LIBRARY_PATH` prefix is needed: `uv` uses uv-managed Python here
   (`python-preference = "managed"`), so Playwright's numpy/greenlet wheels load Ubuntu's
   `libstdc++` directly.
-- `executable_path` must point at the Nix-provided Chromium (`/home/asergi/.nix-profile/bin/chromium`)
+- `executable_path` must point at the Nix-provided Chromium (`~/.nix-profile/bin/chromium`)
   in the launch call, plus `--no-sandbox`. Playwright's own downloaded Chromium build needs apt
   system libraries (`libnss3`, `libnspr4`, and friends) that this host does not have. The
   Nix-built Chromium has all of its dependencies satisfied already. Do not run
@@ -84,9 +84,11 @@ python scripts/with_server.py \
 To create an automation script, include only Playwright logic (servers are managed automatically).
 Always launch Chromium through the system binary:
 ```python
+import os
+
 from playwright.sync_api import sync_playwright
 
-CHROMIUM = "/home/asergi/.nix-profile/bin/chromium"
+CHROMIUM = os.path.expanduser("~/.nix-profile/bin/chromium")
 
 with sync_playwright() as p:
     # executable_path + --no-sandbox are required: Playwright's bundled

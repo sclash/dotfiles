@@ -1,3 +1,5 @@
+import os
+
 from playwright.sync_api import sync_playwright
 
 # Example: Discovering buttons and other elements on a page
@@ -6,7 +8,7 @@ with sync_playwright() as p:
     # executable_path + --no-sandbox are required on this host: Playwright's
     # bundled Chromium cannot resolve its shared-library dependencies.
     browser = p.chromium.launch(headless=True,
-                                executable_path='/home/asergi/.nix-profile/bin/chromium',
+                                executable_path=os.path.expanduser("~/.nix-profile/bin/chromium"),
                                 args=['--no-sandbox', '--disable-dev-shm-usage'])
     page = browser.new_page()
 

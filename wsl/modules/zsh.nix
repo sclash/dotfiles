@@ -16,7 +16,7 @@ in
     shellAliases = {
       ll = "ls -l";
       edit = "sudo -e";
-      update = "home-manager switch --flake ~/dotfiles/wsl#asergi -b hm-backup --max-jobs 1 --cores 2";
+      update = "bash ~/dotfiles/wsl/update.sh";
       ftm = "${config.home.homeDirectory}/dotfiles/scripts/tmux-sessionizer.sh";
     };
 

@@ -1,6 +1,5 @@
 # opencode config from my-opencode/v2, with WSL copies from wsl/opencode.
-# opencode itself is not installed here: it comes from its native installer
-# in ~/.opencode/bin (on PATH via home.sessionPath).
+# opencode itself comes from pkgs-unstable via wsl/packages.nix.
 { config, lib, ... }:
 let
   v2 = import ../lib/v2-overlay.nix { inherit config lib; };
