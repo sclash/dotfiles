@@ -432,7 +432,6 @@
       fd
       jq
       starship
-      atuin
       xclip
       wl-clipboard
     ])

@@ -80,7 +80,6 @@
       man-pages-posix
       gh
       eza
-      atuin
       ncdu
       tor-browser
       icu

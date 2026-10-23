@@ -3,7 +3,7 @@
   lib,
   pkgs,
   pkgs-master,
-  pkgs-unstable
+  pkgs-unstable,
   ...
 }:
 {
