@@ -3,6 +3,7 @@
   lib,
   pkgs,
   pkgs-master,
+  pkgs-unstable
   ...
 }:
 {
@@ -18,7 +19,7 @@
     # ".opencode-wrapped_", which Herdr does not match (it only knows
     # opencode/opencode2/open-code), so panes never show up in its Agents tab.
     # Put runtime env vars in home.sessionVariables below instead.
-    package = pkgs-master.opencode.override { bun = pkgs.bun; };
+    package = pkgs-unstable.opencode.override { bun = pkgs.bun; };
     # enableMcpIntegration = true;
     # settings = {
     #   provider = {
