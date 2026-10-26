@@ -1,5 +1,5 @@
 {
-  description = "NixOS asergi cofniguration";
+  description = "NixOS configuration";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-26.05";
@@ -126,25 +126,52 @@
           })
         ];
       };
-      username = "asergi";
+      user = import ../lib/user.nix;
+      inherit (user) username homeDirectory dotfiles;
 
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
       debug = true;
       systems = [ system ];
-      perSystem = { config, ... }: { };
+      perSystem =
+        { pkgs, ... }:
+        {
+          checks.generation = pkgs.runCommand "nixos-generation-check" { } ''
+            bash ${./tests/check-generation.sh} \
+              ${pkgs.lib.escapeShellArg self.nixosConfigurations.nixos-os.config.home-manager.users.${username}.home.activationPackage} \
+              ${pkgs.lib.escapeShellArg self.homeConfigurations.default.config.home.homeDirectory} \
+              ${pkgs.lib.escapeShellArg self.nixosConfigurations.nixos-os.config.sops.age.keyFile} \
+              ${../my-opencode/v2/opencode.jsonc}
+            touch $out
+          '';
+
+          checks.portable = pkgs.runCommand "nixos-portable-check" { } ''
+            bash ${./tests/check-generation.sh} \
+              ${pkgs.lib.escapeShellArg self.homeConfigurations.check.activationPackage} \
+              ${pkgs.lib.escapeShellArg "/tmp/checkuser"} \
+              ${pkgs.lib.escapeShellArg "/tmp/checkuser/.config/sops/age/keys.txt"} \
+              ${../my-opencode/v2/opencode.jsonc}
+            touch $out
+          '';
+
+          checks.identity =
+            assert self.nixosConfigurations.nixos-os.config.users.users.${username}.home == homeDirectory;
+            assert self.nixosConfigurations.nixos-os.config.services.greetd.settings.initial_session.user == username;
+            assert self.nixosConfigurations.nixos-os.config.sops.secrets.github_pat.owner == username;
+            assert builtins.hasAttr username self.nixosConfigurations.nixos-os.config.home-manager.users;
+            pkgs.runCommand "nixos-identity-check" { } "touch $out";
+        };
 
       flake = {
 
         nixosConfigurations = {
-          nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
           nixos-os = inputs.nixpkgs.lib.nixosSystem {
             modules = [
               ./configuration.nix
               inputs.sops-nix.nixosModules.sops
 
               {
-                # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
+                nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
                 nixpkgs.overlays = [ nixd.overlays.default ];
                 environment.systemPackages = with pkgs; [ nixd ];
               }
@@ -153,12 +180,13 @@
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
-                home-manager.users.asergi = ./home.nix;
+                home-manager.users.${username} = ./home.nix;
                 home-manager.extraSpecialArgs = {
                   inherit my-dotfiles;
                   # inherit neovimrc;
                   inherit pkgs-unstable;
                   inherit pkgs-master;
+                  inherit (user) username homeDirectory dotfiles;
                 };
                 # home-manager.backupCommand = "mv $source $target";
                 # home-manager.backupCommand = "false";
@@ -170,7 +198,7 @@
               }
             ];
             specialArgs = {
-              username = "asergi";
+              inherit (user) username homeDirectory dotfiles;
               inherit pkgs-unstable;
               inherit inputs;
             };
@@ -178,28 +206,38 @@
         };
 
         homeConfigurations = {
-          "asergi@nixos-os" = inputs.home-manager.lib.homeManagerConfiguration {
+          default = inputs.home-manager.lib.homeManagerConfiguration {
             pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
-            # pkgs-unstable = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux;
-            # imports = [ ./home.nix ];
             modules = [
               ./home.nix
               {
-                home.stateVersion = "25.11";
-                # home.stateVersion = "25.05";
-                home.username = "asergi";
-                home.homeDirectory = "/home/asergi";
+                home.username = username;
+                home.homeDirectory = homeDirectory;
                 nix.package = pkgs.nix;
-                # nix.package = pkgs-unstable.nix;
               }
             ];
             extraSpecialArgs = {
               inherit my-dotfiles;
-              # inherit neovimrc;
-              # inherit pkgs;
-              # inherit pkgs-unstable;
+              inherit pkgs-unstable pkgs-master;
+              inherit (user) username homeDirectory dotfiles;
             };
-
+          };
+          check = inputs.home-manager.lib.homeManagerConfiguration {
+            pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+            modules = [
+              ./home.nix
+              {
+                home.username = "checkuser";
+                home.homeDirectory = "/tmp/checkuser";
+                nix.package = pkgs.nix;
+              }
+            ];
+            extraSpecialArgs = {
+              inherit my-dotfiles pkgs-unstable pkgs-master;
+              username = "checkuser";
+              homeDirectory = "/tmp/checkuser";
+              dotfiles = "/tmp/checkuser/dotfiles";
+            };
           };
         };
       };

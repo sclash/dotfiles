@@ -13,7 +13,6 @@
 
   # home.file = {
   #   ".config/herdr" = {
-  #     source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/herdr";
   #     force = true;
   #   };
   # };

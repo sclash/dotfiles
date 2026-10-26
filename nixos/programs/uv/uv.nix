@@ -38,7 +38,7 @@
   ## Comment settings above and above this below to have the uv configuration outOfStore
   home.file = {
     ".config/uv/uv.toml" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/nixos/programs/uv/uv.toml";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/nixos/programs/uv/uv.toml";
       force = true;
     };
   };

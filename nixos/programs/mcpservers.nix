@@ -79,9 +79,9 @@
         args = [
           "-y"
           "@modelcontextprotocol/server-filesystem"
-          "/home/asergi/"
-          "/home/asergi/hacking/"
-          "/home/asergi/Downloads/"
+          "${config.home.homeDirectory}/"
+          "${config.home.homeDirectory}/hacking/"
+          "${config.home.homeDirectory}/Downloads/"
         ];
       };
 

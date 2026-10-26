@@ -101,7 +101,7 @@ key-[A-Za-z0-9]{32}
 | Pattern | Replacement |
 |---------|-------------|
 | Custom internal domains | `your-domain.com` |
-| Absolute home paths `/home/username/` | `/home/user/` or `$HOME/` |
+| Absolute home paths `/home/<user>/` | `$HOME/` |
 | Secret file references `~/.secrets/` | `.env` |
 | Private IPs `192.168.x.x`, `10.x.x.x` | `your-server-ip` |
 | Internal service URLs | Generic placeholders |
@@ -163,7 +163,7 @@ Create `FORK_REPORT.md` in the staging directory:
 
 ## Internal References Replaced
 - internal.example.com -> your-domain.com (N occurrences in N files)
-- /home/username -> /home/user (N occurrences in N files)
+- /home/<user> -> $HOME (N occurrences in N files)
 
 ## Warnings
 - [ ] Any items needing manual review
@@ -184,7 +184,7 @@ On completion, report:
 ## Examples
 
 ### Example: Fork a FastAPI service
-Input: `Fork project: /home/user/my-api, Target: /home/user/opensource-staging/my-api, License: MIT`
+Input: `Fork project: $HOME/my-api, Target: $HOME/opensource-staging/my-api, License: MIT`
 Action: Copies files, strips `DATABASE_URL` from `docker-compose.yml`, replaces `internal.company.com` with `your-domain.com`, creates `.env.example` with 8 variables, fresh git init
 Output: `FORK_REPORT.md` listing all changes, staging directory ready for sanitizer
 

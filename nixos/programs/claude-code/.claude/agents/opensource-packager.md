@@ -234,7 +234,7 @@ On completion, report:
 ## Examples
 
 ### Example: Package a FastAPI service
-Input: `Package: /home/user/opensource-staging/my-api, License: MIT, Description: "Async task queue API"`
+Input: `Package: $HOME/opensource-staging/my-api, License: MIT, Description: "Async task queue API"`
 Action: Detects Python + FastAPI + PostgreSQL from `requirements.txt` and `docker-compose.yml`, generates `CLAUDE.md` (62 lines), `setup.sh` with pip + alembic migrate steps, enhances existing `README.md`, adds `MIT LICENSE`
 Output: 5 files generated, setup.sh executable, "Using with Claude Code" section added
 

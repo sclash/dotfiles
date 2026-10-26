@@ -16,7 +16,7 @@
 
   home.file = {
     ".config/herdr" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/herdr";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/herdr";
       force = true;
     };
   };

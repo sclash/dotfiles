@@ -29,8 +29,8 @@
 | File | Role | Consumed by |
 |------|------|-------------|
 | `.sops.yaml` (repo root) | `creation_rules` → age **pubkey** `age1ntvf6hjhdvgeunxtgwqqf7smlfsdu5l54t27ll8z306488he7q7qyk050s` for `path_regex: nixos/secrets/.*\.ya?ml$` | `sops` CLI on every save |
-| `~/.config/sops/age/keys.txt` (0600, **not in git**) | age **private key** | `sops` edits + sops-nix (`sops.age.keyFile = "/home/asergi/.config/sops/age/keys.txt"`) |
-| `nixos/sops.nix` | `sops.secrets.<name> = { owner = "asergi"; mode = "0600"; }` → `/run/secrets/<name>` | NixOS activation (`sops-install-secrets`) |
+| `~/.config/sops/age/keys.txt` (0600, **not in git**) | age **private key** | `sops` edits + sops-nix (`sops.age.keyFile = "<homeDirectory>/.config/sops/age/keys.txt"`) |
+| `nixos/sops.nix` | `sops.secrets.<name> = { owner = username; mode = "0600"; }` → `/run/secrets/<name>` | NixOS activation (`sops-install-secrets`) |
 | `nixos/secrets/secrets.yaml` | single encrypted YAML — **tracked** (`nixos/.gitignore` is `secrets/*` + `!secrets/secrets.yaml`) | copied into the Nix store at build time; decrypted from that store copy |
 | `nixos/programs/zsh.nix` `initContent` | `cat /run/secrets/github_pat` → `GITHUB_PERSONAL_ACCESS_TOKEN` | every new interactive zsh; opencode's local MCP servers inherit it |
 | `my-opencode/opencode.json` github entry | `["nix","run","nixpkgs#github-mcp-server","--","stdio"]`, no `environment` block | opencode (child inherits parent env) |
@@ -46,7 +46,7 @@ nix shell nixpkgs#age -c age-keygen -o ~/.config/sops/age/keys.txt
 chmod 600 ~/.config/sops/age/keys.txt
 # pubkey printed by age-keygen goes into .sops.yaml creation_rules
 # nixos/flake.nix: sops-nix input + inputs.sops-nix.nixosModules.sops
-# nixos/sops.nix: sops = { age.keyFile = "..."; defaultSopsFile = ./secrets/secrets.yaml; secrets.github_pat.owner = "asergi"; }
+# nixos/sops.nix: sops = { age.keyFile = "${homeDirectory}/.config/sops/age/keys.txt"; defaultSopsFile = ./secrets/secrets.yaml; secrets.github_pat.owner = username; }
 # nixos/.gitignore: secrets/*  +  !secrets/secrets.yaml
 
 nix shell nixpkgs#sops -c sops encrypt -i nixos/secrets/secrets.yaml
@@ -64,7 +64,7 @@ Backup `~/.config/sops/age/keys.txt` somewhere safe (password manager, offline c
 ```bash
 sops edit nixos/secrets/secrets.yaml   # $EDITOR opens decrypted view — edit github_pat: <new>, save → auto re-encrypts
 git add nixos/secrets/secrets.yaml
-update                            # alias → sudo nixos-rebuild switch --flake ~/dotfiles/nixos#nixos-os
+update                            # alias → sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#nixos-os
 # new shells pick it up automatically; restart opencode
 ```
 
@@ -79,8 +79,8 @@ Then declare it in `nixos/sops.nix` — **required**, sops-nix only materializes
 
 ```nix
 sops.secrets = {
-  github_pat.owner = "asergi";
-  my_service_token = { owner = "asergi"; mode = "0600"; };
+  github_pat.owner = username;
+  my_service_token = { owner = username; mode = "0600"; };
   # → appears at /run/secrets/my_service_token
 };
 ```
@@ -98,7 +98,7 @@ update
 ```nix
 sops.secrets.ci_token = {
   sopsFile = ./secrets/ci.yaml;
-  owner = "asergi";
+  owner = username;
 };
 ```
 
@@ -128,7 +128,7 @@ sops edit nixos/secrets/secrets.yaml
 # edit:  github_pat: <new-value>
 # :wq  → sops re-encrypts automatically with the key in .sops.yaml
 git add nixos/secrets/secrets.yaml
-update   # sudo nixos-rebuild switch --flake ~/dotfiles/nixos#nixos-os
+update   # sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#nixos-os
 ```
 
 No regex or flag needed — editing the key in place is the update.
@@ -148,8 +148,8 @@ Then **declare** it in `nixos/sops.nix` — sops-nix only materializes declared 
 # nixos/sops.nix
 {
   sops.secrets = {
-    github_pat.owner = "asergi"; # shorthand keeps existing
-    my_service_token = { owner = "asergi"; mode = "0600"; };
+    github_pat.owner = username; # shorthand keeps existing
+    my_service_token = { owner = username; mode = "0600"; };
     # appears at /run/secrets/my_service_token after next switch
   };
 }
@@ -158,7 +158,7 @@ Then **declare** it in `nixos/sops.nix` — sops-nix only materializes declared 
 ```bash
 git add nixos/secrets/secrets.yaml nixos/sops.nix
 update
-ls -l /run/secrets/my_service_token   # 0600 asergi
+ls -l /run/secrets/my_service_token   # 0600 <user>
 ```
 
 Expose to a shell if needed (`nixos/programs/zsh.nix:39` pattern):
@@ -270,7 +270,7 @@ grep -q 'ENC\[' nixos/secrets/secrets.yaml && echo ok
 nix shell nixpkgs#sops -c sops -d nixos/secrets/secrets.yaml | head
 
 # after rebuild
-ls -l /run/secrets/github_pat          # expect 0600 asergi
+ls -l /run/secrets/github_pat          # expect 0600 <user>
 sudo cat /run/secrets/github_pat | wc -c
 zsh -c 'echo ${GITHUB_PERSONAL_ACCESS_TOKEN:+SET}'   # fresh shell
 ```
@@ -282,7 +282,7 @@ zsh -c 'echo ${GITHUB_PERSONAL_ACCESS_TOKEN:+SET}'   # fresh shell
 |---------|-------|-----|
 | Edited but not encrypted | edited with plain editor | `sops edit <file>` is the only writer (`sops <file>` shorthand) |
 | Not in `/run/secrets` after `update` | forgot `git add`, or plaintext in file → decrypt fails at activation | `sops` edit → `git add` → `update` |
-| Flake says `access to absolute path ... forbidden in pure evaluation` | `home.file` / `builtins.readFile` with absolute `/home/...` outside the flake | use `./relative` or `config.lib.file.mkOutOfStoreSymlink "/home/..."` (see `home.nix`, `tmux.nix` fixes) |
+| Flake says `access to absolute path ... forbidden in pure evaluation` | `home.file` / `builtins.readFile` with an absolute `$HOME/...` path outside the flake | use `./relative` or `config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/..."` (see `home.nix`, `tmux.nix` fixes) |
 | `Error installing file '.config/swaync/config.json' outside $HOME` | dir-level `.config/swaync` symlink colliding with `services.swaync` generated `config.json` | per-file symlinks for `style.css`/`refresh.sh` instead of a dir symlink |
 
 <a id="quick-reference"></a>

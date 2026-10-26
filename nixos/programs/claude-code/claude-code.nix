@@ -111,9 +111,9 @@ in
         args = [
           "-y"
           "@modelcontextprotocol/server-filesystem"
-          "/home/asergi/Downloads"
-          "/home/asergi/dotfiles"
-          "/home/asergi/hacking"
+          "${config.home.homeDirectory}/Downloads"
+          "${config.home.homeDirectory}/dotfiles"
+          "${config.home.homeDirectory}/hacking"
         ];
       };
     };
@@ -253,19 +253,19 @@ in
 
     home.file = {
 	".claude/skills/explore-codebase" = {
-	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/explore-codebase";
+	  source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/skills/explore-codebase";
 	  force = true;
 	};
 	".claude/skills/high-perf-systems" = {
-	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/high-perf-systems/";
+	  source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/skills/high-perf-systems";
 	  force = true;
 	};
 	".claude/skills/download-video" = {
-	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/download-video/";
+	  source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/skills/download-video";
 	  force = true;
 	};
 	".claude/skills/transcribe-media" = {
-	  source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/skills/transcribe-media/";
+	  source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/skills/transcribe-media";
 	  force = true;
 	};
     };

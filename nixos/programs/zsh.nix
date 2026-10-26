@@ -27,9 +27,8 @@
     shellAliases = {
       ll = "ls -l";
       edit = "sudo -e";
-      update = "sudo nixos-rebuild switch --flake /home/asergi/dotfiles/nixos#nixos-os";
-      # ftm = "~/tmux-sessionizer.sh";
-      ftm = "/home/asergi/dotfiles/scripts/tmux-sessionizer.sh";
+      update = "sudo env SUDO_USER=\"$USER\" DOTFILES_HOME=\"$HOME\" nixos-rebuild switch --flake $HOME/dotfiles/nixos#nixos-os --impure";
+      ftm = "${config.home.homeDirectory}/dotfiles/scripts/tmux-sessionizer.sh";
     };
 
     history.ignoreAllDups = true;

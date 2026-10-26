@@ -2,24 +2,18 @@
   config,
   lib,
   pkgs,
-  pkgs-master,
   pkgs-unstable,
   ...
 }:
 {
   programs.opencode = {
     enable = true;
-    # Build with the older bun from stable nixpkgs (1.3.x): bun 1.4.2 miscompiles
-    # opencode's bundle and every prompt fails with
-    # "TypeError: undefined is not an object (evaluating 'a.name')".
-    # Drop the override once NixOS/nixpkgs#564101 lands in nixpkgs-master.
-    #
     # Never wrap $out/bin/opencode here. nixpkgs already wraps it once, and a
     # second wrapProgram layer makes the running process report argv0
     # ".opencode-wrapped_", which Herdr does not match (it only knows
     # opencode/opencode2/open-code), so panes never show up in its Agents tab.
     # Put runtime env vars in home.sessionVariables below instead.
-    package = pkgs-unstable.opencode.override { bun = pkgs.bun; };
+    package = pkgs-unstable.opencode;
     # enableMcpIntegration = true;
     # settings = {
     #   provider = {
@@ -562,69 +556,73 @@
   # resolve correctly relative to the config directory.
   home.file = {
     ".config/opencode/opencode.jsonc" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/opencode.jsonc";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/opencode.jsonc";
       force = true;
     };
     ".agents/" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/.agents";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/.agents";
       force = true;
       recursive = true;
     };
     # ".local/share/opencode/auth.json" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/openrouter-auth.json";
+    #   source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/openrouter-auth.json";
     #   force = true;
     # };
     # ".config/opencode/agents" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/agents";
+    #   source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/agents";
     #   force = true;
     #   # recursive = true;
     # };
     ".config/opencode/scripts" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/scripts";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/scripts";
       force = true;
       # recursive = true;
     };
     ".config/opencode/plugins" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/plugins";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/plugins";
       force = true;
       # recursive = true;
     };
     ".config/opencode/tools" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/tools";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/tools";
       force = true;
       # recursive = true;
     };
     ".config/opencode/agents" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/agents";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/agents";
       force = true;
       # recursive = true;
     };
     ".config/opencode/prompts" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/prompts";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/prompts";
       force = true;
       # recursive = true;
     };
     ".config/opencode/commands" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/commands";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/commands";
       force = true;
       # recursive = true;
     };
     ".config/opencode/instructions" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/instructions";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/instructions";
       force = true;
       # recursive = true;
     };
     ".config/opencode/skills" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/skills";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/skills";
       force = true;
       # recursive = true;
     };
     ".config/opencode/AGENTS.md" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/AGENTS.md";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/AGENTS.md";
       force = true;
     };
     ".config/opencode/CLAUDE.md" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/my-opencode/v2/CLAUDE.md";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/CLAUDE.md";
+      force = true;
+    };
+    ".config/opencode/RIPWIRE.md" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/my-opencode/v2/RIPWIRE.md";
       force = true;
     };
   };

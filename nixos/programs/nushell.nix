@@ -27,7 +27,6 @@
   };
   # home.file = {
   #   ".config/nushell/config.nu" = {
-  #     source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/config.nu";
   #     force = true;
   #   };
   # };

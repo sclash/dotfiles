@@ -133,8 +133,8 @@ Per-machine keys replace one shared identity, with no new shared script.
 - `wsl/bootstrap.sh --add-recipient` stays as the WSL key-registration path.
 - Fallback when no instance can decrypt the shared file: `wsl/bootstrap.sh
   --new-secrets` creates `~/.config/sops-nix/wsl-secrets.yaml`, encrypted to
-  this instance's age key with the four required keys and empty values, then
-  stops so the user can fill it. The local file is selected automatically when
+  this instance's age key with the four required keys and empty values, and
+  continues the switch; the user fills the values later. The local file is selected automatically when
   it exists; `DOTFILES_WSL_SECRETS` can point at it explicitly. `wsl/modules/
   secrets.nix` uses that variable when set, otherwise the shared file;
   `wsl/update.sh` exports it when the local file exists.

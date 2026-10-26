@@ -83,7 +83,7 @@ severity: CRITICAL
 
 ```
 # Absolute paths to specific user home directories
-pattern: /home/[a-z][a-z0-9_-]*/  (anything other than /home/user/)
+pattern: /home/[a-z][a-z0-9_-]*/  (anything other than $HOME/)
 pattern: /Users/[A-Za-z][A-Za-z0-9_-]*/  (macOS home directories)
 pattern: C:\\Users\\[A-Za-z]  (Windows home directories)
 severity: CRITICAL
@@ -173,7 +173,7 @@ Generate `SANITIZATION_REPORT.md` in the project directory:
 ## Examples
 
 ### Example: Scan a sanitized Node.js project
-Input: `Verify project: /home/user/opensource-staging/my-api`
+Input: `Verify project: $HOME/opensource-staging/my-api`
 Action: Runs all 6 scan categories across 47 files, checks git log (1 commit), verifies `.env.example` covers 5 variables found in code
 Output: `SANITIZATION_REPORT.md` — PASS WITH WARNINGS (one hardcoded port in README)
 

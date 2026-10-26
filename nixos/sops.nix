@@ -1,22 +1,27 @@
 {
+  username,
+  homeDirectory,
+  ...
+}:
+{
   sops = {
-    age.keyFile = "/home/asergi/.config/sops/age/keys.txt";
+    age.keyFile = "${homeDirectory}/.config/sops/age/keys.txt";
     defaultSopsFile = ./secrets/secrets.yaml;
     defaultSopsFormat = "yaml";
     secrets.github_pat = {
-      owner = "asergi";
+      owner = username;
       mode = "0600";
     };
     secrets.openrouter = {
-      owner = "asergi";
+      owner = username;
       mode = "0600";
     };
     secrets.opencode = {
-      owner = "asergi";
+      owner = username;
       mode = "0600";
     };
     secrets.cheaper_inference = {
-      owner = "asergi";
+      owner = username;
       mode = "0600";
     };
   };

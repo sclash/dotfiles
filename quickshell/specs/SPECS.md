@@ -277,9 +277,9 @@ Summary:
 
 ## 9. Useful References
 
-* `/home/asergi/hacking/omarchy/` — modular config precedent; Hyprland helpers in `config/hypr/`.
-* `/home/asergi/dotfiles/hypr/hyprland.lua` — current bindings + autostart (`Bar.qml:…` parity).
-* `/home/asergi/dotfiles/waybar/{config.jsonc,style.css}` — legacy bar behaviour + colours.
-* `/home/asergi/dotfiles/nixos/programs/{quickshell.nix,herdr.nix}` — Nix wiring for the shell.
+* `~/hacking/omarchy/` — modular config precedent; Hyprland helpers in `config/hypr/`.
+* `~/dotfiles/hypr/hyprland.lua` — current bindings + autostart (`Bar.qml:…` parity).
+* `~/dotfiles/waybar/{config.jsonc,style.css}` — legacy bar behaviour + colours.
+* `~/dotfiles/nixos/programs/{quickshell.nix,herdr.nix}` — Nix wiring for the shell.
 * [`STYLE.md`](./STYLE.md) — colour/spacing/typography tokens.
 * [`AGENTIC-SETUP.md`](./AGENTIC-SETUP.md) — Herdr orchestration contract.

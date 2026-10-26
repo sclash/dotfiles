@@ -5,11 +5,11 @@
 # this file and re-run i3-config-wizard(1).
 #
 #### Desktop Wallpaper
-exec_always  feh --bg-fill /home/asergi/Images/bg.jpg
+exec_always  feh --bg-fill $HOME/Images/bg.jpg
 
 exec_always picom -f
 # Shortcut for Lockscreen
-bindsym $mod+x exec /home/$USER/.config/scripts/lock
+bindsym $mod+x exec $HOME/.config/scripts/lock
 
 
 
@@ -200,9 +200,8 @@ bindsym $mod+r mode "resize"
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
 bar {
-        status_command i3status
 	font pango:JetBrainsMono Nerd Font 10
-        status_command i3status -c /home/asergi/.config/i3/i3status/i3status.conf
+        status_command i3status -c $HOME/.config/i3/i3status/i3status.conf
 	colors {
 		background $bgcolor
 		separator #191919

@@ -37,19 +37,19 @@
 
   home.file = {
     ".config/quickshell" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/quickshell";
       force = true;
     };
     # Walker (AppLauncher backend) — config.toml + themes/, raw files in
     # quickshell/walker-style/. Out-of-store: CSS edits only need a walker restart.
     ".config/walker" = {
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell/walker-style";
+      source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/quickshell/walker-style";
       force = true;
     };
     # GTK4 global settings — block caret, no blink (walker search parity).
     # Raw file in quickshell/gtk4/settings.ini.
     # ".config/gtk-4.0" = {
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/quickshell/gtk4";
+    #   source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/quickshell/gtk4";
     #   force = true;
     # };
   };

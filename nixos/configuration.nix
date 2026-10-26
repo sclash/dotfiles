@@ -9,6 +9,8 @@
   pkgs,
   pkgs-unstable,
   nixd,
+  username,
+  homeDirectory,
   ...
 }:
 {
@@ -29,8 +31,6 @@
     # inputs.elephant.nixosModules.default
     inputs.nixd.nixosModules
   ];
-
-  # home-manager.users.asergi = import ./home.nix;
 
   # programs.nixd = {
   #   enable = true;
@@ -130,7 +130,7 @@
         # command = "hyprland > /dev/null 2>&1";
         # command = "start-hyprland";
         command = "uwsm start hyprland.desktop";
-        user = "asergi";
+        user = username;
         shell = pkgs.zsh;
       };
       default_session = initial_session;
@@ -218,8 +218,9 @@
     shell = pkgs.zsh;
   };
 
-  users.users.asergi = {
+  users.users.${username} = {
     isNormalUser = true;
+    home = homeDirectory;
     extraGroups = [
       "input"
       "wheel"

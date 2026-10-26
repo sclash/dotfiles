@@ -6,6 +6,9 @@
   pkgs-master,
   # neovimrc,
   my-dotfiles,
+  username,
+  homeDirectory,
+  dotfiles,
   ...
 }:
 # let
@@ -23,6 +26,9 @@
 #     # sha256 = "01ribl326n6n0qcq68a8pllbrz6mgw55kxhf9mjdc5vw01zjcvw5";
 #   };
 # in
+let
+  link = config.lib.file.mkOutOfStoreSymlink;
+in
 {
 
   imports = [
@@ -156,24 +162,21 @@
     # ".config/nix".source = ~/dotfiles/nix;
     # ".config/nix-darwin".source = ~/dotfiles/nix-darwin;
     # ".config/tmux".source = ~/dotfiles/tmux;
-    # ".config/tmux".source = builtins.path {path = "/home/asergi/dotfiles/tmux";};
     # ".config/tmux".source = builtins.path { path = "${my-dotfiles}/tmux"; };
     # ".config/tmux".source = "${my_dotfiles}/tmux";
     # ".config/tmux".source = "${my-dotfiles}/tmux";
 
     ".config/nvim" = {
       # source = "${my-dotfiles}/starship";
-      # source = "/home/asergi/dotfiles/starship";
       # executable = false;
       # force = true;
       # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/neovimrc";
+      source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/neovimrc";
       force = true;
     };
     # ".config/nvim" = {
     #   source = config.lib.file.mkOutOfStoreSymlink "${neovimrc}";
     #   # source = "${neovimrc}";
-    #   # source = "/home/asergi/neovimrc";
     #   # executable = false;
     #   # recursive = true;
     #   force = true;
@@ -186,7 +189,6 @@
     # };
     # ".config/tmux/plugins" = "${tpm}";
     # ".config/tmux".source ="${config.home.homeDirectory}/dotfiles/tmux/tmux.conf";
-    # "/home/asergi/.config/tmux".source ="/home/asergi/dotfiles/tmux/tmux.conf";
     #    ".config/tmux/plugins".source = pkgs.fetchFromGitHub {
     #      owner = "tmux-plugins";
     #      repo = "tpm";
@@ -210,56 +212,48 @@
     # ".config/ghostty".source = ~/dotfiles/ghostty;
     ".config/starship" = {
       # source = "${my-dotfiles}/starship";
-      # source = "/home/asergi/dotfiles/starship";
       # executable = false;
       # force = true;
       # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/starship";
+      source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/starship";
       force = true;
     };
     ".config/atuin" = {
       # source = "${my-dotfiles}/starship";
-      source = "/home/asergi/dotfiles/atuin";
+      source = link "${dotfiles}/atuin";
       executable = false;
       force = true;
       recursive = true;
-      # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/atuin";
       # force = true;
     };
     ".config/ghostty" = {
       # source = "${my-dotfiles}/ghostty";
-      # source = "/home/asergi/dotfiles/ghostty";
       # executable = false;
       # force = true;
       # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/ghostty";
+      source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/ghostty";
       force = true;
     };
     ".config/hypr" = {
       # source = "${my-dotfiles}/hypr";
-      # source = "/home/asergi/dotfiles/hypr";
       # executable = false;
       # force = true;
       # recursive = true;
-      source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/hypr";
+      source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/hypr";
       force = true;
     };
     # ".config/waybar" = {
     #   # source = "${my-dotfiles}/waybar";
-    #   # source = "/home/asergi/dotfiles/waybar";
     #   # executable = false;
     #   # force = true;
     #   # recursive = true;
-    #   source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/waybar";
     #   force = true;
     # };
     # ".config/swaync" = {
     #   # source = "${my-dotfiles}/swaync";
-    #   source = "/home/asergi/dotfiles/swaync";
     #   executable = false;
     #   force = true;
     #   recursive = true;
-    #   # source = config.lib.file.mkOutOfStoreSymlink "/home/asergi/dotfiles/swaync";
     #   # force = true;
     # };
     # ".config/ghostty".source = "${my-dotfiles}/tmux";
