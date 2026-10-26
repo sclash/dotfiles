@@ -20,8 +20,9 @@ Usage: bootstrap.sh [--dry-run] [--cleanup] [--new-secrets]
                    lists them and asks first
   --new-secrets    create a local encrypted file at
                    ~/.config/sops-nix/wsl-secrets.yaml with empty values,
-                   encrypted to this instance's age key; fill it and re-run
-                   (used when the shared secrets file cannot be decrypted)
+                   encrypted to this instance's age key, and continue the
+                   switch; fill the values later (used when the shared secrets
+                   file cannot be decrypted)
   --add-recipient AGE_PUBKEY
                    on an instance that can decrypt wsl/secrets/secrets.yaml:
                    add another instance's public key and re-encrypt
@@ -75,10 +76,11 @@ register_recipient() {
   sed -i -E "s|^([[:space:]]*age:[[:space:]]*.*[^[:space:]])[[:space:]]*\$|\\1,$pubkey|" "$config"
 }
 
-# Print ok | missing | undecryptable | missing-keys:<a,b>. Read-only.
+# Print ok | missing | undecryptable | missing-keys:<a,b> | empty-keys:<a,b>.
+# Read-only.
 secrets_status() {
   local config=$1 file=$2 plain key value
-  local -a absent=()
+  local -a missing=() empty=()
   [[ -f "$file" ]] || {
     echo missing
     return 0
@@ -88,13 +90,25 @@ secrets_status() {
     return 0
   }
   for key in "${SECRET_KEYS[@]}"; do
+    if ! grep -qE "^${key}:" <<<"$plain"; then
+      missing+=("$key")
+      continue
+    fi
     value=$(sed -n "s/^${key}:[[:space:]]*//p" <<<"$plain")
-    [[ -n "$value" && "$value" != "null" ]] || absent+=("$key")
+    value=${value%$'\r'}
+    case "$value" in
+      "" | "null" | '""' | "''") empty+=("$key") ;;
+    esac
   done
-  if ((${#absent[@]})); then
+  if ((${#missing[@]})); then
     (
       IFS=,
-      echo "missing-keys:${absent[*]}"
+      echo "missing-keys:${missing[*]}"
+    )
+  elif ((${#empty[@]})); then
+    (
+      IFS=,
+      echo "empty-keys:${empty[*]}"
     )
   else
     echo ok
@@ -114,12 +128,14 @@ resolve_secrets() {
 }
 
 # Create a local, encrypted secrets file with the required keys and empty
-# values, then stop so the user can fill it.
+# values. The switch continues; the user fills the values later.
 new_secrets() {
   local target=${DOTFILES_WSL_SECRETS:-$LOCAL_SECRETS}
   [[ "$target" == /* ]] || action_needed "DOTFILES_WSL_SECRETS must be an absolute path"
   if [[ -e "$target" || -L "$target" ]]; then
-    action_needed "$target already exists. Fill it or remove it before re-running --new-secrets."
+    echo "bootstrap: using existing local secrets $target"
+    ACTIVE_SECRETS=$target
+    return 0
   fi
   [[ -n "${PUBKEY:-}" ]] || action_needed "age public key is not available; re-run without --dry-run."
   [[ -f "$SOPS_CONFIG" ]] || action_needed "missing sops config: $SOPS_CONFIG"
@@ -128,12 +144,15 @@ new_secrets() {
   if ((DRY_RUN)); then
     run mkdir -p -m 700 "$dir"
     echo "DRY-RUN: env SOPS_AGE_KEY_FILE=$AGE_KEY_FILE nix run $FLAKE#sops -- --config $SOPS_CONFIG --encrypt --age $PUBKEY --filename-override secrets/secrets.yaml --input-type yaml --output-type yaml <template> > $target"
-    action_needed "would create $target with empty values. Re-run without --dry-run, then fill them."
+    return 0
   fi
   template=$(mktemp) || action_needed "could not create a temporary file"
   chmod 600 "$template"
-  printf '%s:\n' "${SECRET_KEYS[@]}" > "$template"
-  run mkdir -p -m 700 "$dir" || action_needed "could not create $dir"
+  printf '%s: ""\n' "${SECRET_KEYS[@]}" > "$template"
+  run mkdir -p -m 700 "$dir" || {
+    rm -f "$template"
+    action_needed "could not create $dir"
+  }
   umask 077
   tmp=$(mktemp "$dir/.wsl-secrets.XXXXXX") || {
     rm -f "$template"
@@ -156,10 +175,11 @@ new_secrets() {
     action_needed "could not move the new secrets file into place"
   }
   rm -f "$template"
-  action_needed "created $target with empty values. Fill them through sops:
-  EDITOR=vi SOPS_AGE_KEY_FILE=$AGE_KEY_FILE nix run $FLAKE#sops -- --config $SOPS_CONFIG --filename-override secrets/secrets.yaml $target
-Sops opens \$EDITOR; do not edit the encrypted file directly.
-then re-run this script."
+  ACTIVE_SECRETS=$target
+  echo "bootstrap: created $target with empty values; continuing."
+  echo "bootstrap: fill them later through sops:"
+  echo "  EDITOR=vi SOPS_AGE_KEY_FILE=$AGE_KEY_FILE nix run $FLAKE#sops -- --config $SOPS_CONFIG --filename-override secrets/secrets.yaml $target"
+  echo "bootstrap: sops opens \$EDITOR; do not edit the encrypted file directly."
 }
 
 check_location() {
@@ -367,6 +387,15 @@ Remove it and re-run:
   rm -f $ACTIVE_SECRETS
   bash ~/dotfiles/wsl/bootstrap.sh --new-secrets"
       fi
+      ;;
+    empty-keys:*)
+      if [[ "$ACTIVE_SECRETS" == "$SECRETS_FILE" ]]; then
+        action_needed "the shared secrets file has empty values: ${status#empty-keys:}. Fill them:
+  nix run $FLAKE#sops -- --config \"$SOPS_CONFIG\" --filename-override secrets/secrets.yaml \"$ACTIVE_SECRETS\""
+      fi
+      echo "bootstrap: local secrets are empty (${status#empty-keys:}); continuing."
+      echo "bootstrap: fill them later through sops:"
+      echo "  EDITOR=vi SOPS_AGE_KEY_FILE=$AGE_KEY_FILE nix run $FLAKE#sops -- --config $SOPS_CONFIG --filename-override secrets/secrets.yaml $ACTIVE_SECRETS"
       ;;
     missing-keys:*)
       action_needed "$ACTIVE_SECRETS lacks: ${status#missing-keys:}. Add them:

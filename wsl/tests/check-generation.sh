@@ -90,7 +90,7 @@ contains home-files/.config/git/config 'name = "sclash"'
 has_bin tmux starship atuin nu uv devenv pandoc xelatex ripwire herdr \
   vtsls pyright clangd gopls zls lua-language-server texlab rust-analyzer \
   codelldb debugpy-adapter prettier black dlv
-run_contains 0.6.5 ripwire --version
+run_contains 0.6.8 ripwire --version
 contains home-files/.config/tmux/tmux.conf sessionx
 contains home-files/.config/tmux/tmux.conf continuum-restore
 links_to .config/nvim "$HOMEDIR/dotfiles/neovimrc"

@@ -79,13 +79,16 @@ If no instance can decrypt the shared file (or you cannot use an existing instan
 fallback on the new instance instead of steps 4–5:
 
 ```bash
-bash ~/dotfiles/wsl/bootstrap.sh --new-secrets   # creates ~/.config/sops-nix/wsl-secrets.yaml, exits 2
-# fill the four values through sops (it opens $EDITOR; do not edit the encrypted file directly):
+bash ~/dotfiles/wsl/bootstrap.sh --new-secrets   # creates the local file with empty values and continues
+```
+
+Fill the four values whenever you like, through sops (it opens `$EDITOR`; do not edit the encrypted file directly):
+
+```bash
 EDITOR="${EDITOR:-vi}" SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt \
   nix run ~/dotfiles/wsl#sops -- \
   --config ~/dotfiles/wsl/.sops.yaml --filename-override secrets/secrets.yaml \
   ~/.config/sops-nix/wsl-secrets.yaml
-bash ~/dotfiles/wsl/bootstrap.sh                  # uses the local file automatically
 ```
 
 `update` also uses `~/.config/sops-nix/wsl-secrets.yaml` when it exists. Editing that file directly with `nvim`/`nano`

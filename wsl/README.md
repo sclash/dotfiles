@@ -88,8 +88,9 @@ bash ~/dotfiles/wsl/bootstrap.sh --new-secrets
 ```
 
 This creates `~/.config/sops-nix/wsl-secrets.yaml`, encrypted to this instance's age key, with the four keys and empty
-values, then stops so you can fill it. The local file is used automatically when it exists; `update` and
-`bootstrap.sh` both pick it up (it also exports `DOTFILES_WSL_SECRETS` for the switch). Fill it with:
+values, and continues the installation. The local file is used automatically when it exists; `update` and
+`bootstrap.sh` both pick it up (it also exports `DOTFILES_WSL_SECRETS` for the switch). Fill the values whenever you
+like with:
 
 ```bash
 EDITOR="${EDITOR:-vi}" SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt nix run ~/dotfiles/wsl#sops -- \
@@ -134,7 +135,7 @@ The VM has about 3.6 GiB of RAM, so `~/.config/nix/nix.conf` sets `max-jobs = 1`
 passes the same values as flags. On a VM with more memory (Windows `%UserProfile%\.wslconfig`: `[wsl2]` and
 `memory=8GB`), raise them in `home.nix`.
 
-Packages are picked so that nothing heavy compiles locally. ripwire is the cached nixpkgs-master build (0.6.5),
+Packages are picked so that nothing heavy compiles locally. ripwire is the cached nixpkgs-master build (0.6.8),
 not NixOS's v0.6.1 source pin, and lldb comes from nixos-unstable.
 
 ## Tests

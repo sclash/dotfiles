@@ -114,7 +114,7 @@ expect "status ok" [ "$(secrets_status "$T/.sops.yaml" "$T/full.yaml")" = ok ]
 expect "status missing-keys" \
   [ "$(secrets_status "$T/.sops.yaml" "$T/partial.yaml")" = missing-keys:cheaper_inference ]
 expect "status missing" [ "$(secrets_status "$T/.sops.yaml" "$T/none.yaml")" = missing ]
-expect "status empty values" [ "$(secrets_status "$T/.sops.yaml" "$T/empty.yaml")" = "missing-keys:github_pat,openrouter,opencode,cheaper_inference" ]
+expect "status empty values" [ "$(secrets_status "$T/.sops.yaml" "$T/empty.yaml")" = "empty-keys:github_pat,openrouter,opencode,cheaper_inference" ]
 AGE_KEY_FILE="$T/B.txt"
 expect "status undecryptable" [ "$(secrets_status "$T/.sops.yaml" "$T/full.yaml")" = undecryptable ]
 
@@ -128,7 +128,7 @@ expect "register_recipient keeps A" grep -q "age: $PUB_A,$PUB_B\$" "$T/reg.sops.
 rm -f "$T/local.yaml"
 out=$(DRY_RUN=1 PUBKEY="$PUB_A" LOCAL_SECRETS="$T/local.yaml" bash -c 'source "$1"; new_secrets' _ "$BOOT" 2>&1)
 rc=$?
-expect "new-secrets exits 2" [ "$rc" -eq 2 ]
+expect "new-secrets dry run exits 0" [ "$rc" -eq 0 ]
 expect "new-secrets encrypts with age" has "$out" "--encrypt --age $PUB_A"
 expect "new-secrets targets local file" has "$out" "$T/local.yaml"
 
@@ -140,16 +140,20 @@ set +e
 out=$(AGE_KEY_FILE="$T/A.txt" SOPS_CONFIG="$T/local.sops.yaml" LOCAL_SECRETS="$LOCAL_REAL" PUBKEY="$PUB_A" bash -c 'source "$1"; new_secrets' _ "$BOOT" 2>&1)
 rc=$?
 set +e
-expect "new-secrets real exits 2" [ "$rc" -eq 2 ]
+expect "new-secrets real exits 0" [ "$rc" -eq 0 ]
 expect "new-secrets creates file" [ -f "$LOCAL_REAL" ]
 expect "new-secrets mode 600" [ "$(stat -c %a "$LOCAL_REAL")" = 600 ]
 decrypted=$(SOPS_AGE_KEY_FILE="$T/A.txt" sops --config "$T/local.sops.yaml" --filename-override secrets/secrets.yaml -d "$LOCAL_REAL")
 expect "new-secrets has keys" has "$decrypted" "github_pat:"
-expect "new-secrets values empty" has "$decrypted" "github_pat: null"
+expect "new-secrets values empty" has "$decrypted" 'github_pat: ""'
 out=$(AGE_KEY_FILE="$T/A.txt" SOPS_CONFIG="$T/local.sops.yaml" LOCAL_SECRETS="$LOCAL_REAL" PUBKEY="$PUB_A" bash -c 'source "$1"; new_secrets' _ "$BOOT" 2>&1)
 rc=$?
-expect "new-secrets refuses existing" [ "$rc" -eq 2 ]
-expect "new-secrets refusal message" has "$out" "already exists"
+expect "new-secrets uses existing" [ "$rc" -eq 0 ]
+expect "new-secrets existing message" has "$out" "using existing local secrets"
+out=$(AGE_KEY_FILE="$T/A.txt" SOPS_CONFIG="$T/local.sops.yaml" PUBKEY="$PUB_A" bash -c 'source "$1"; ACTIVE_SECRETS="$2"; check_secrets' _ "$BOOT" "$LOCAL_REAL" 2>&1)
+rc=$?
+expect "empty local secrets do not block" [ "$rc" -eq 0 ]
+expect "empty local secrets warning" has "$out" "local secrets are empty"
 
 rm -f "$LOCAL_REAL"
 out=$(AGE_KEY_FILE="$T/A.txt" SOPS_CONFIG="$T/missing.sops.yaml" LOCAL_SECRETS="$LOCAL_REAL" PUBKEY="$PUB_A" bash -c 'source "$1"; new_secrets' _ "$BOOT" 2>&1)
@@ -171,7 +175,7 @@ LOCAL_OTHER="$T/localdir/other-secrets.yaml"
 out=$(AGE_KEY_FILE="$T/A.txt" SOPS_CONFIG="$T/local.sops.yaml" LOCAL_SECRETS="$LOCAL_OTHER" PUBKEY="$PUB_A" bash -c 'source "$1"; new_secrets' _ "$BOOT" 2>&1)
 rc=$?
 after=$(sha256sum "$T/local.sops.yaml" | cut -d' ' -f1)
-expect "new-secrets successful run exits 2" [ "$rc" -eq 2 ]
+expect "new-secrets successful run exits 0" [ "$rc" -eq 0 ]
 expect "new-secrets does not edit sops config" [ "$before" = "$after" ]
 
 # --- package manager command mapping
