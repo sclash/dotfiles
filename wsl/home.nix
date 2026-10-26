@@ -76,6 +76,9 @@ in
       github.user = "sclash";
       init.defaultBranch = "main";
       color.ui = true;
+      # `less` is not installed; without this, paged commands (git log/diff/show)
+      # fail with "unable to execute pager 'less'". bat keeps syntax colours.
+      core.pager = "bat --plain";
     };
   };
 
