@@ -13,10 +13,10 @@ Fast browser automation CLI for AI agents. Chrome/Chromium via CDP with accessib
 
 This machine is **NixOS** and the browser toolchain is already provided declaratively:
 
-- `agent-browser` is installed via nixpkgs (home-manager `home.packages`, `/home/asergi/dotfiles/nixos/home.nix`) — it is on `PATH`, so just call `agent-browser`. **Never `npm i -g agent-browser`.**
+- `agent-browser` is installed via nixpkgs (home-manager `home.packages`, `~/dotfiles/nixos/home.nix`) — it is on `PATH`, so just call `agent-browser`. **Never `npm i -g agent-browser`.**
 - Chrome/Chromium comes from nixpkgs, not from a downloaded binary. **Never run `agent-browser install` or `agent-browser install --with-deps`** — both fetch/download browsers imperatively into `~/.cache` and bypass the declarative config. This also overrides the "Install once" quickstart printed by `agent-browser skills get core`; treat that section as inapplicable on this host.
 
-If a browser binary is ever missing, do **not** install one. Report it and let the user decide; the fix is a declarative edit to `/home/asergi/dotfiles/nixos` (package added to `configuration.nix` / `home.nix`), which requires their explicit approval first.
+If a browser binary is ever missing, do **not** install one. Report it and let the user decide; the fix is a declarative edit to `~/dotfiles/nixos` (package added to `configuration.nix` / `home.nix`), which requires their explicit approval first.
 
 Temporary, non-invasive invocation when the tool is missing and the user approves it:
 

@@ -11,7 +11,7 @@ If there are any conflicts in a project, what follows should always have precede
 
 ## REMEBER
 You're using `NixOS` with develop features enabled. You have the `nixos` MCP to refer too for corret nix commands.
-- The nixos declarative configuration is in `/home/asergi/dotfiles/nixos`
+- The nixos declarative configuration is in `~/dotfiles/nixos`
 - NixOs is declarative DO NOT EVER ACT in an imperative manner. (Refer to the [DO NOT EVER](#do-not-ever) section just below) 
 - If the system does not currently meet requirements you should NEVER make changes to the system. 
 - When absolutely necessary always prefer temporary solutions (pick the more convenient according to the use case):

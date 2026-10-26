@@ -427,9 +427,9 @@
 				"npx",
 				"-y",
 				"@modelcontextprotocol/server-filesystem",
-				"/home/asergi/",
-				"/home/asergi/hacking/",
-				"/home/asergi/Downloads/"
+				"{env:HOME}/",
+				"{env:HOME}/hacking/",
+				"{env:HOME}/Downloads/"
 			]
 		}
 	},
