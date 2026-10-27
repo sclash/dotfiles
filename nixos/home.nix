@@ -218,14 +218,14 @@ in
       source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/starship";
       force = true;
     };
-    ".config/atuin" = {
-      # source = "${my-dotfiles}/starship";
-      source = link "${dotfiles}/atuin";
-      executable = false;
-      force = true;
-      recursive = true;
-      # force = true;
-    };
+    # ".config/atuin" = {
+    #   # source = "${my-dotfiles}/starship";
+    #   source = link "${dotfiles}/atuin";
+    #   executable = false;
+    #   force = true;
+    #   recursive = true;
+    #   # force = true;
+    # };
     ".config/ghostty" = {
       # source = "${my-dotfiles}/ghostty";
       # executable = false;
