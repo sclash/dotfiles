@@ -89,7 +89,7 @@ in
   home.file = {
     ".config/nvim".source = link "${dotfiles}/neovimrc";
     ".config/starship".source = link "${dotfiles}/starship";
-    ".config/atuin".source = link "${dotfiles}/atuin";
+    # ".config/atuin".source = link "${dotfiles}/atuin";
     # WSL copy: python-preference = "managed", so uv's standalone Pythons load
     # PyPI wheels against the distro's libstdc++ without any LD_LIBRARY_PATH.
     ".config/uv/uv.toml".source = lib.mkForce (link "${dotfiles}/wsl/uv/uv.toml");
