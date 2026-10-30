@@ -20,7 +20,7 @@
 			},
 			"models": {
 				"xiaomi/mimo-v2.6-pro": {},
-				"openai/gtp-6-astra-pro": {
+				"openai/gpt-6-astra-pro": {
 					"settings": {
 						"provider": {
 							"order": [
@@ -30,7 +30,7 @@
 						}
 					}
 				},
-				"openai/gtp-6-astra": {
+				"openai/gpt-6-astra": {
 					"settings": {
 						"provider": {
 							"order": [
@@ -40,7 +40,7 @@
 						}
 					}
 				},
-				"openai/gtp-6.1-sol-pro": {
+				"openai/gpt-6.1-sol-pro": {
 					"settings": {
 						"provider": {
 							"order": [
@@ -50,7 +50,7 @@
 						}
 					}
 				},
-				"openai/gtp-6.1-sol": {
+				"openai/gpt-6.1-sol": {
 					"settings": {
 						"provider": {
 							"order": [
@@ -60,11 +60,14 @@
 						}
 					}
 				},
-				"deepseek/deepseek-v4.1-flash": {
+				"deepseek/deepseek-v4.1-flash-1017": {
 					"settings": {
 						"provider": {
 							"order": [
-								"deepseek"
+								"morph/fp8",
+								"digitalocean",
+								"deepseek",
+								"inference-net/fp8",
 							],
 							"allow_fallbacks": false
 						}
@@ -75,17 +78,6 @@
 						"provider": {
 							"order": [
 								"streamlake"
-							],
-							"allow_fallbacks": false
-						}
-					}
-				},
-				"deepseek/deepseek-v4-flash-0731": {
-					"settings": {
-						"provider": {
-							"order": [
-								"open-inference/fp8",
-								"akashml/fp8"
 							],
 							"allow_fallbacks": false
 						}
@@ -138,6 +130,10 @@
 			"models": {
 				"glm-5.3": {
 					"name": "glm-5.3",
+					"limit": {
+						"context": 1048576,
+						"output": 943718
+					},
 					"variants": [
 						{
 							"id": "low",
@@ -161,6 +157,10 @@
 				},
 				"glm-5.3-flash": {
 					"name": "glm-5.3-flash",
+					"limit": {
+						"context": 1048576,
+						"output": 943717
+					},
 					"variants": [
 						{
 							"id": "low",
@@ -184,6 +184,11 @@
 				},
 				"glm-6.1-sol": {
 					"name": "gpt-6.1-sol",
+					"limit": {
+						"context": 1050000,
+						"input": 922000,
+						"output": 128000
+					},
 					"variants": [
 						{
 							"id": "none",
@@ -225,6 +230,11 @@
 				},
 				"gpt-6-astra": {
 					"name": "gpt-6-astra",
+					"limit": {
+						"context": 1050000,
+						"input": 922000,
+						"output": 128000
+					},
 					"variants": [
 						{
 							"id": "low",
@@ -260,6 +270,10 @@
 				},
 				"fable-5.1": {
 					"name": "claude-fable-5.1",
+					"limit": {
+						"context": 1000000,
+						"output": 128000
+					},
 					"variants": [
 						{
 							"id": "low",
@@ -295,6 +309,10 @@
 				},
 				"opus-5.5": {
 					"name": "claude-opus-5.5",
+					"limit": {
+						"context": 1000000,
+						"output": 128000
+					},
 					"variants": [
 						{
 							"id": "low",
@@ -330,6 +348,10 @@
 				},
 				"deepseek-v4-pro-0813": {
 					"name": "deepseek-v4-pro-0813",
+					"limit": {
+						"context": 1048576,
+						"output": 393216
+					},
 					"variants": [
 						{
 							"id": "none",
@@ -357,8 +379,12 @@
 						}
 					]
 				},
-				"deepseek-v4.1-flash": {
-					"name": "deepseek-v4.1-flash",
+				"deepseek/deepseek-v4.1-flash-1017": {
+					"name": "deepseek-v4.1-flash-1017",
+					"limit": {
+						"context": 1048576,
+						"output": 393216
+					},
 					"variants": [
 						{
 							"id": "none",
