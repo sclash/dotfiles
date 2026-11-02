@@ -88,7 +88,12 @@ in
       };
       nixos = {
         type = "stdio";
-        command = "mcp-nixos";
+        command = "nix";
+	args = [
+		"run"
+		"github:utensils/mcp-nixos"
+		"--"
+	];
       };
       chrome-devtools = {
         type = "stdio";
