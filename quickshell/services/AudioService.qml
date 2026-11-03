@@ -19,10 +19,11 @@ QtObject {
     readonly property string sinkName: sink ? (sink.nickname || sink.description || sink.name || "") : ""
     readonly property string sourceName: source ? (source.nickname || source.description || source.name || "") : ""
 
-    // 0.3.0: pipewire objects are unbound by default. PwObjectTracker binds the
-    // defaults so that sink.audio.muted / sink.audio.volume are live and writable.
+    // 0.3.0: pipewire objects are unbound by default. PwObjectTracker binds every
+    // sink/source so that node.audio.muted / node.audio.volume are live and
+    // writable for the focused device, not just the defaults.
     property PwObjectTracker tracker: PwObjectTracker {
-        objects: [root.sink, root.source]
+        objects: root.sinkList.concat(root.sourceList)
     }
 
     Component.onCompleted: refresh()
@@ -32,6 +33,12 @@ QtObject {
         function onReadyChanged() { root.refresh() }
         function onDefaultAudioSinkChanged() { root.refresh() }
         function onDefaultAudioSourceChanged() { root.refresh() }
+    }
+
+    // Hot-plug: the node graph itself changes, not just the defaults.
+    property Connections nodesConn: Connections {
+        target: Pipewire.nodes
+        function onValuesChanged() { root.updateLists() }
     }
 
     property Connections sinkConn: Connections {
@@ -83,6 +90,11 @@ QtObject {
         for (let i = 0; i < list.length; i++) if (list[i].id === id) return list[i]
         return null
     }
+    function sameNodes(a, b) {
+        if (!a || !b || a.length !== b.length) return false
+        for (let i = 0; i < a.length; i++) if (a[i].id !== b[i].id) return false
+        return true
+    }
     function setDefaultSink(id) {
         const n = findById(root.sinkList, id)
         if (n) Pipewire.preferredDefaultAudioSink = n
@@ -103,8 +115,8 @@ QtObject {
             if (n.isSink && !n.isStream) sinks.push(n)
             else if (!n.isSink && !n.isStream) sources.push(n)
         }
-        root.sinkList = sinks
-        root.sourceList = sources
+        if (!sameNodes(root.sinkList, sinks)) root.sinkList = sinks
+        if (!sameNodes(root.sourceList, sources)) root.sourceList = sources
     }
 
     // Degraded fallback — polls wpctl only while PipeWire itself is not ready (spec §6)
