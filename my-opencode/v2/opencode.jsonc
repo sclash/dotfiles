@@ -415,7 +415,235 @@
 			}
 		}
 	},
+	// NOTE: OpenCode V2 (through 2.2.1) validates and preserves this block but
+	// has no LSP runtime: it never starts a server or surfaces diagnostics.
+	// Entries mirror neovimrc/after/plugin/lsp.lua so they work if upstream
+	// port lands (anomalyco/opencode#38528). For working diagnostics today, use
+	// the diagnostics-fallback skill.
 	"lsp": {
+		"clangd": {
+			"command": [
+				"clangd",
+				"--background-index",
+				"--clang-tidy"
+			],
+			"extensions": [
+				".c",
+				".h",
+				".cc",
+				".cpp",
+				".cxx",
+				".hpp",
+				".hxx",
+				".m",
+				".mm",
+				".cu",
+				".cuh"
+			]
+		},
+		"nixd": {
+			"command": [
+				"nixd"
+			],
+			"extensions": [
+				".nix"
+			],
+			// Same options as the neovim config. `formatting` is intentionally
+			// omitted because nixfmt is not installed on this system.
+			"initialization": {
+				"nixpkgs": {
+					"expr": "import <nixpkgs> { }"
+				},
+				"options": {
+					"nixos": {
+						"expr": "(builtins.getFlake \"/home/asergi/dotfiles/nixos\").nixosConfigurations.nixos-os.options"
+					},
+					"home_manager": {
+						"expr": "(builtins.getFlake \"/home/asergi/dotfiles/nixos\").homeConfigurations.\"asergi@nixos-os\".options"
+					},
+					"flake_parts": {
+						"expr": "let flake = builtins.getFlake (\"/home/asergi/dotfiles/nixos\"); in flake.debug.options // flake.currentSystem.options"
+					}
+				}
+			}
+		},
+		"qmlls": {
+			"command": [
+				"qmlls",
+				"-E",
+				"-I",
+				"/etc/profiles/per-user/asergi/lib/qt-6/qml"
+			],
+			"extensions": [
+				".qml",
+				".qmljs"
+			]
+		},
+		"rust_analyzer": {
+			"command": [
+				"rust-analyzer"
+			],
+			"extensions": [
+				".rs"
+			]
+		},
+		"pyright": {
+			"command": [
+				"pyright-langserver",
+				"--stdio"
+			],
+			"extensions": [
+				".py",
+				".pyi"
+			]
+		},
+		"lua_ls": {
+			"command": [
+				"lua-language-server"
+			],
+			"extensions": [
+				".lua"
+			]
+		},
+		"bashls": {
+			"command": [
+				"bash-language-server",
+				"start"
+			],
+			"extensions": [
+				".sh",
+				".bash",
+				".zsh"
+			]
+		},
+		"gopls": {
+			"command": [
+				"gopls"
+			],
+			"extensions": [
+				".go",
+				".mod",
+				".sum",
+				".work"
+			]
+		},
+		"zls": {
+			"command": [
+				"zls"
+			],
+			"extensions": [
+				".zig",
+				".zon",
+				".zir"
+			]
+		},
+		// vtsls needs the @vue/typescript-plugin initialization used in
+		// neovim to understand .vue files; .vue is left to vue_ls here.
+		"vtsls": {
+			"command": [
+				"vtsls",
+				"--stdio"
+			],
+			"extensions": [
+				".ts",
+				".tsx",
+				".js",
+				".jsx",
+				".mjs",
+				".cjs",
+				".mts",
+				".cts"
+			]
+		},
+		"vue_ls": {
+			"command": [
+				"vue-language-server",
+				"--stdio"
+			],
+			"extensions": [
+				".vue"
+			]
+		},
+		"html": {
+			"command": [
+				"vscode-html-language-server",
+				"--stdio"
+			],
+			"extensions": [
+				".html",
+				".htm"
+			]
+		},
+		"jsonls": {
+			"command": [
+				"vscode-json-language-server",
+				"--stdio"
+			],
+			"extensions": [
+				".json",
+				".jsonc"
+			]
+		},
+		"tailwindcss": {
+			"command": [
+				"tailwindcss-language-server",
+				"--stdio"
+			],
+			"extensions": [
+				".css",
+				".scss",
+				".sass",
+				".less",
+				".html",
+				".htm",
+				".vue",
+				".jsx",
+				".tsx",
+				".astro",
+				".svelte"
+			]
+		},
+		"astro": {
+			"command": [
+				"astro-ls",
+				"--stdio"
+			],
+			"extensions": [
+				".astro"
+			]
+		},
+		// Dockerfile has no extension; opencode matches by extension only, so
+		// only `.dockerfile`-suffixed files are routed here.
+		"dockerls": {
+			"command": [
+				"docker-langserver",
+				"--stdio"
+			],
+			"extensions": [
+				".dockerfile"
+			]
+		},
+		// Compose service claims all YAML because no generic YAML server is
+		// installed; it may report false positives on plain YAML files.
+		"docker_compose_language_service": {
+			"command": [
+				"docker-compose-langserver",
+				"--stdio"
+			],
+			"extensions": [
+				".yaml",
+				".yml"
+			]
+		},
+		"markdown_oxide": {
+			"command": [
+				"markdown-oxide"
+			],
+			"extensions": [
+				".md",
+				".markdown"
+			]
+		},
 		"texlab": {
 			"command": [
 				"texlab"
@@ -425,31 +653,39 @@
 				".bib"
 			]
 		},
-		"tailwind": {
+		// Mirrors the neovim override, which restricts emmet to HTML.
+		"emmet_language_server": {
 			"command": [
-				"npx",
-				"-p",
-				"@tailwindcss/language-server",
-				"-y",
-				"tailwindcss-language-server",
+				"emmet-language-server",
 				"--stdio"
 			],
 			"extensions": [
-				".css",
-				".htmx",
-				".vue",
-				".jsx",
-				".tsx"
+				".html",
+				".htm"
 			]
 		},
-		"quickshell": {
+		"nu-lsp": {
 			"command": [
-				"qmlls",
-				"-E"
+				"nu",
+				"--lsp"
 			],
 			"extensions": [
-				".qml",
-				".qmljs"
+				".nu"
+			]
+		},
+		// mojo-lsp-server is not packaged in nixpkgs and is not installed.
+		// This runs it from an ephemeral `max[all]` environment; the neovim
+		// workflow expects `uv add "max[all]"` inside a project instead.
+		"mojo": {
+			"command": [
+				"uvx",
+				"--from",
+				"max[all]",
+				"mojo-lsp-server"
+			],
+			"extensions": [
+				".mojo",
+				".🔥"
 			]
 		}
 	},
