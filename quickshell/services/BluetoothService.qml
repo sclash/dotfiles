@@ -365,6 +365,8 @@ QtObject {
     property Timer scanTimer: Timer { interval: 12000; running: false; repeat: false; onTriggered: root.stopScan() }
     property Timer pollTimer: Timer { interval: 5000; running: true; repeat: true; onTriggered: root.pollProc.running = true }
 
-    // Bluetooth powered off by default at session start
-    Component.onCompleted: Qt.callLater(() => { root.btPowerOff.running = true })
+    // Do not force the adapter off at startup: this runs on every QML reload and
+    // was power-cycling Bluetooth mid-session, dropping paired devices (AirPods
+    // would connect, then get disconnected a few seconds later). BlueZ's
+    // AutoEnable=true already handles the desired session default.
 }
