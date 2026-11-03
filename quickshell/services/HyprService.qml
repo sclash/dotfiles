@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 
 QtObject {
     id: root
-    property string layoutName: "US"
+    property string layoutName: ""
     property bool available: true
     property var monitors: []
     property var allMonitors: []
@@ -33,18 +33,35 @@ QtObject {
         root.monProc.running = true
     }
 
+    // Main keyboard is discovered from Hyprland itself (no hard-coded device
+    // name, no python). The badge shows the active layout code from the
+    // configured layout list, so it works for any keymap, not just IT/US.
     property Process kbProc: Process {
-        command: ["sh", "-c", "hyprctl devices -j 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); kbs=d.get('keyboards',[]); k=next((k for k in kbs if k.get('main')), kbs[0] if kbs else None); print(k.get('active_keymap','US') if k else 'US')\" 2>/dev/null || echo US"]
+        command: ["hyprctl", "devices", "-j"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const txt = this.text ? this.text.trim() : "US"
-                if (txt.toLowerCase().indexOf("italian") !== -1 || txt.toLowerCase().indexOf("it") === 0) root.layoutName = "IT"
-                else root.layoutName = "US"
+                let k = null
+                try {
+                    const kbs = JSON.parse(String(this.text || "{}")).keyboards || []
+                    k = kbs.find(kb => kb.main) || kbs[0] || null
+                } catch (e) { k = null }
+                if (!k) { root.layoutName = ""; return }
+
+                const layouts = String(k.layout || "").split(",").map(s => s.trim()).filter(Boolean)
+                const rawIdx = Number(k.active_layout_index)
+                const idx = (rawIdx >= 0 && rawIdx < layouts.length) ? rawIdx : -1
+                const code = idx >= 0 ? layouts[idx] : ""
+                if (code) { root.layoutName = code.toUpperCase(); return }
+
+                // Older Hyprland without active_layout_index: best effort.
+                const km = String(k.active_keymap || "").toLowerCase()
+                root.layoutName = (km.indexOf("italian") !== -1 || km.indexOf("it") === 0) ? "IT" : "US"
             }
         }
     }
     property Process switchProc: Process {
-        command: ["hyprctl", "switchxkblayout", "at-translated-set-2-keyboard", "next"]
+        // `current` is Hyprland's main keyboard on every machine.
+        command: ["hyprctl", "switchxkblayout", "current", "next"]
         stdout: StdioCollector { onStreamFinished: root.kbProc.running = true }
     }
 
