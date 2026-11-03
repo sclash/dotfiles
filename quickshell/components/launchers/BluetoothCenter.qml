@@ -182,13 +182,14 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view ? ListView.view.width : 0
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "nearby" && it.idx === index }
                     color: isSel ? Theme.bgSelected : (ma2.containsMouse ? Theme.bgHover : "transparent")
                     border.color: isSel ? Theme.borderSelected : "transparent"
                     border.width: 1
+                    readonly property bool isPairing: BluetoothService.pairingAddress === modelData.address
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.padM
@@ -211,8 +212,8 @@ WlrLayershell {
                             color: Theme.bgActive
                             border.color: Theme.borderActive
                             border.width: 1
-                            Text { anchors.centerIn: parent; text: modelData.paired ? "Connect" : "Pair"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.connectNearby(modelData) }
+                            Text { anchors.centerIn: parent; text: isPairing ? "Pairing…" : (modelData.paired ? "Connect" : "Pair"); font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
+                            MouseArea { anchors.fill: parent; enabled: !isPairing; cursorShape: Qt.PointingHandCursor; onClicked: root.connectNearby(modelData) }
                         }
                     }
                     MouseArea { id: ma2; anchors.fill: parent; hoverEnabled: true; onClicked: root.connectNearby(modelData) }
@@ -232,7 +233,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view ? ListView.view.width : 0
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "known" && it.idx === index }
@@ -338,7 +339,7 @@ WlrLayershell {
         if (!d) return
         const dev = deviceByAddress(d.address)
         if (dev && dev.paired) BluetoothService.connect(d.address)
-        else BluetoothService.pairAndConnect(d.address)
+        else BluetoothService.pairAndConnect(d.address, d.alias)
     }
     function requestForget(d){ confirmText = "Forget \"" + (d.alias || d.address) + "\"?  y / n"; pendingAction = {type:"forget", address:d.address} }
     function requestForgetFocused(){
@@ -379,13 +380,14 @@ WlrLayershell {
             .map(d=> { const dev = deviceByAddress(d.address); return { address: d.address, alias: d.alias, rssi: d.rssi || 0, paired: !!(dev && dev.paired) } })
         if(q) nb = nb.filter(d=> (d.alias && d.alias.toLowerCase().indexOf(q)!==-1) || d.address.toLowerCase().indexOf(q)!==-1)
         nb.sort((a,b)=> b.rssi - a.rssi)
-        filteredNearby = nb.slice(0, 30)
+        nb = nb.slice(0, 30)
+        if (JSON.stringify(nb) !== JSON.stringify(filteredNearby)) filteredNearby = nb
         // Known = every paired device, connected ones included so a fresh
         // connection never disappears from this list.
         let kn = BluetoothService.devices.filter(d=> d.paired)
         if(q) kn = kn.filter(d=> (d.alias && d.alias.toLowerCase().indexOf(q)!==-1) || d.address.toLowerCase().indexOf(q)!==-1)
         kn.sort((a,b)=> (b.connected?1:0) - (a.connected?1:0) || String(a.alias||"").localeCompare(String(b.alias||"")))
-        filteredKnown = kn
+        if (JSON.stringify(kn) !== JSON.stringify(filteredKnown)) filteredKnown = kn
         const items=[]
         items.push({kind:"current"})
         items.push({kind:"power"})
