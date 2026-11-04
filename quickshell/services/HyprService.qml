@@ -100,6 +100,157 @@ QtObject {
         }
     }
 
+    // ---- Monitor rules -----------------------------------------------------
+    // Every compositor mutation goes through these helpers so the launchers
+    // never build lua by hand.
+
+    function luaQuote(s) {
+        return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\""
+    }
+
+    // Current compositor value for an optional rule field, or undefined when
+    // the field is absent (older Hyprland) or not meaningful for this output.
+    function currentRuleValue(m, key) {
+        if (!m) return undefined
+        switch (key) {
+        case "transform":
+            return (m.transform !== undefined && m.transform !== null) ? m.transform : undefined
+        case "vrr":
+            return m.vrrCapable ? (m.vrrActive ? 1 : 0) : undefined
+        case "bitdepth":
+            return m.currentFormat ? m.bitDepth : undefined
+        case "cm":
+            return m.cm ? m.cm : undefined
+        case "sdrbrightness":
+            return (m.sdrBrightness !== undefined && m.sdrBrightness !== null) ? m.sdrBrightness : undefined
+        case "sdrsaturation":
+            return (m.sdrSaturation !== undefined && m.sdrSaturation !== null) ? m.sdrSaturation : undefined
+        }
+        return undefined
+    }
+
+    // Builds one `hl.monitor` rule. `m` is a mapped monitor or a synthetic
+    // {name, mode, position, scale, mirror} object for outputs that are not
+    // in `monitors` yet (connect). Overrides win; otherwise the current value
+    // is re-asserted so the rule is idempotent.
+    function monitorRule(m, overrides) {
+        if (!m) return ""
+        const o = overrides || {}
+        if (o.disabled === true)
+            return "hl.monitor({output=" + root.luaQuote(m.name) + ", disabled=true})"
+
+        const mirror = (o.mirror !== undefined) ? String(o.mirror)
+            : (m.mirror !== undefined ? String(m.mirror) : root.mirrorName(m))
+        const mode = (o.mode !== undefined) ? o.mode : (m.mode !== undefined ? m.mode : "preferred")
+        const position = (o.position !== undefined) ? o.position
+            : (m.position !== undefined ? m.position : (m.x + "x" + m.y))
+        const scale = (o.scale !== undefined) ? o.scale : (m.scale !== undefined ? m.scale : 1)
+
+        let lua = "hl.monitor({output=" + root.luaQuote(m.name)
+            + ", disabled=false"
+            + ", mirror=" + root.luaQuote(mirror)
+            + ", mode=" + root.luaQuote(mode)
+            + ", position=" + root.luaQuote(position)
+            + ", scale=" + Number(scale)
+
+        const optional = ["transform", "vrr", "bitdepth", "cm", "sdrbrightness", "sdrsaturation"]
+        for (const key of optional) {
+            const v = (o[key] !== undefined && o[key] !== null)
+                ? o[key]
+                : root.currentRuleValue(m, key)
+            if (v === undefined || v === null) continue
+            lua += ", " + key + "=" + (key === "cm" ? root.luaQuote(v) : Number(v))
+        }
+        return lua + "})"
+    }
+
+    // Full rule for every other active, non-mirrored output so a mutation
+    // never disturbs the rest of the layout.
+    function preserveRules(exceptIdx) {
+        let lua = ""
+        for (let i = 0; i < root.monitors.length; i++) {
+            if (i === exceptIdx) continue
+            const m = root.monitors[i]
+            if (root.mirrorName(m)) continue
+            lua += root.monitorRule(m, {}) + "; "
+        }
+        return lua
+    }
+
+    function applyLua(lua) {
+        root.evalProc.command = ["hyprctl", "eval", String(lua)]
+        root.evalProc.running = true
+    }
+
+    function applyMonitor(name, overrides) {
+        const idx = root.monitors.findIndex(x => x.name === name)
+        if (idx < 0) return
+        root.applyLua(root.monitorRule(root.monitors[idx], overrides || {}) + "; " + root.preserveRules(idx))
+    }
+
+    // ---- Monitor geometry --------------------------------------------------
+
+    function logicalSize(m) {
+        const sw = (m.transform % 2 === 1) ? m.h : m.w
+        const sh = (m.transform % 2 === 1) ? m.w : m.h
+        return { w: Math.round(sw / m.scale), h: Math.round(sh / m.scale) }
+    }
+
+    function mirrorName(m) {
+        if (!m || !m.mirrorOf || m.mirrorOf === "none") return ""
+        const target = root.monitors.find(x => String(x.id) === String(m.mirrorOf))
+        return target ? target.name : ""
+    }
+
+    function anchorFor(m) {
+        if (!m) return null
+        if (root.refMonitorName && m.name !== root.refMonitorName) {
+            const ref = root.monitors.find(x => x.name === root.refMonitorName)
+            if (ref) return ref
+        }
+        return root.monitors.find(x => x.name !== m.name) || null
+    }
+
+    function monitorRelation(idx) {
+        const m = root.monitors[idx]
+        if (!m) return null
+        const s = root.logicalSize(m)
+        const near = (p, q) => Math.abs(p - q) <= 2
+        for (const o of root.monitors) {
+            if (o.name === m.name) continue
+            const os = root.logicalSize(o)
+            if (near(m.y, o.y) && near(m.x + s.w, o.x)) return { dir: "left", name: o.name }
+            if (near(m.y, o.y) && near(m.x, o.x + os.w)) return { dir: "right", name: o.name }
+            if (near(m.x, o.x) && near(m.y + s.h, o.y)) return { dir: "top", name: o.name }
+            if (near(m.x, o.x) && near(m.y, o.y + os.h)) return { dir: "bottom", name: o.name }
+        }
+        return null
+    }
+
+    // Collision-free position for monitor `idx` placed towards `dir`,
+    // using `size` as its hypothetical logical size.
+    function positionFor(idx, dir, size) {
+        const m = root.monitors[idx]
+        if (!m) return null
+        const a = root.anchorFor(m)
+        if (!a) return null
+        let x = a.x
+        let y = a.y
+        for (const o of root.monitors) {
+            if (o.name === m.name) continue
+            const os = root.logicalSize(o)
+            if (dir === "left") x = Math.min(x, o.x - size.w)
+            else if (dir === "right") x = Math.max(x, o.x + os.w)
+            else if (dir === "top") y = Math.min(y, o.y - size.h)
+            else if (dir === "bottom") y = Math.max(y, o.y + os.h)
+        }
+        return { x: x, y: y }
+    }
+
+    property Process evalProc: Process {
+        stdout: StdioCollector { onStreamFinished: root.refreshMonitors() }
+    }
+
     property Process monProc: Process {
         command: ["sh", "-c", "hyprctl monitors -j; printf '\\n---SPLIT---\\n'; hyprctl monitors all -j 2>/dev/null || hyprctl monitors -j"]
         stdout: StdioCollector {

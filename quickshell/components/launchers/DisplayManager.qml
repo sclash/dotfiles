@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import "../../theme"
 import "../../services"
@@ -241,81 +240,16 @@ WlrLayershell {
         else if(it.kind==="available" && availableList) availableList.positionViewAtIndex(it.idx, ListView.Contain)
         Qt.callLater(()=> mainCol.forceActiveFocus())
     }
-    function logicalSize(m){
-        const sw = (m.transform % 2 === 1) ? m.h : m.w
-        const sh = (m.transform % 2 === 1) ? m.w : m.h
-        return { w: Math.round(sw / m.scale), h: Math.round(sh / m.scale) }
-    }
-    function anchorFor(m){
-        if(!m) return null
-        if(HyprService.refMonitorName && m.name !== HyprService.refMonitorName){
-            const ref = monitors.find(x => x.name === HyprService.refMonitorName)
-            if(ref) return ref
-        }
-        return monitors.find(x => x.name !== m.name) || null
-    }
-    function monitorRelation(idx){
-        const m = monitors[idx]
-        if(!m) return null
-        const s = logicalSize(m)
-        const near = (p,q)=> Math.abs(p-q) <= 2
-        for(const o of monitors){
-            if(o.name === m.name) continue
-            const os = logicalSize(o)
-            if(near(m.y, o.y) && near(m.x + s.w, o.x)) return { dir: "left", name: o.name }
-            if(near(m.y, o.y) && near(m.x, o.x + os.w)) return { dir: "right", name: o.name }
-            if(near(m.x, o.x) && near(m.y + s.h, o.y)) return { dir: "top", name: o.name }
-            if(near(m.x, o.x) && near(m.y, o.y + os.h)) return { dir: "bottom", name: o.name }
-        }
-        return null
-    }
-    function luaQuote(s){
-        return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\""
-    }
-    function luaRule(name, mode, position, scale, mirror){
-        return "hl.monitor({output=" + luaQuote(name)
-            + ", disabled=false, mirror=" + luaQuote(mirror || "")
-            + ", mode=" + luaQuote(mode)
-            + ", position=" + luaQuote(position)
-            + ", scale=" + scale + "})"
-    }
-    function mirrorName(m){
-        if(!m || !m.mirrorOf || m.mirrorOf === "none") return ""
-        const target = monitors.find(x => String(x.id) === String(m.mirrorOf))
-        return target ? target.name : ""
-    }
-    function preserveRules(exceptIdx){
-        let lua = ""
-        for(let i=0;i<monitors.length;i++){
-            if(i===exceptIdx) continue
-            const m = monitors[i]
-            if(mirrorName(m)) continue
-            lua += luaRule(m.name, m.mode, m.x + "x" + m.y, m.scale, "") + "; "
-        }
-        return lua
-    }
-    function runLua(lua){
-        evalProc.command = ["hyprctl","eval",lua]
-        evalProc.running = true
-    }
+    // Thin wrappers: QML bindings reference these names directly.
+    function monitorRelation(idx){ return HyprService.monitorRelation(idx) }
+    function mirrorName(m){ return HyprService.mirrorName(m) }
     function placeMonitor(idx, dir){
         const m = monitors[idx]
         if(!m || monitors.length < 2) return
-        const a = anchorFor(m)
-        if(!a) return
-        const s = logicalSize(m)
-        let x = a.x
-        let y = a.y
-        for(const o of monitors){
-            if(o.name === m.name) continue
-            const os = logicalSize(o)
-            if(dir==="left") x = Math.min(x, o.x - s.w)
-            else if(dir==="right") x = Math.max(x, o.x + os.w)
-            else if(dir==="top") y = Math.min(y, o.y - s.h)
-            else if(dir==="bottom") y = Math.max(y, o.y + os.h)
-        }
+        const p = HyprService.positionFor(idx, dir, HyprService.logicalSize(m))
+        if(!p) return
         transientError = ""
-        runLua(luaRule(m.name, m.mode, x + "x" + y, m.scale, "") + "; " + preserveRules(idx))
+        HyprService.applyMonitor(m.name, { mode: m.mode, position: p.x + "x" + p.y, scale: m.scale, mirror: "" })
     }
     function placeFocused(dir){
         const it = navItems[selIndex]
@@ -325,23 +259,23 @@ WlrLayershell {
     function toggleMirror(idx){
         const m = monitors[idx]
         if(!m || monitors.length < 2) return
-        const mirrored = mirrorName(m) !== ""
+        const mirrored = HyprService.mirrorName(m) !== ""
         let target = ""
         if(!mirrored){
             target = (HyprService.refMonitorName && m.name !== HyprService.refMonitorName)
                 ? HyprService.refMonitorName
-                : (anchorFor(m) ? anchorFor(m).name : "")
+                : (HyprService.anchorFor(m) ? HyprService.anchorFor(m).name : "")
             if(!target) return
         }
         transientError = ""
-        runLua(luaRule(m.name, "preferred", "auto", 1, target) + "; " + preserveRules(idx))
+        HyprService.applyMonitor(m.name, { mode: "preferred", position: "auto", scale: 1, mirror: target })
     }
     function disconnectIndex(idx){
         const m = monitors[idx]
         if(!m) return
         if(monitors.length<2){ transientError="Cannot disable the only monitor"; return }
         transientError = ""
-        runLua("hl.monitor({output=" + luaQuote(m.name) + ", disabled=true}); " + preserveRules(idx))
+        HyprService.applyMonitor(m.name, { disabled: true })
     }
     function disconnectFocused(){
         const it = navItems[selIndex]
@@ -367,12 +301,11 @@ WlrLayershell {
     function connectProc(mode, name){
         transientError = ""
         let lua = ""
-        if(mode==="extend") lua = luaRule(name, "preferred", "auto", 1, "")
+        if(mode==="extend") lua = HyprService.monitorRule({ name: name, mode: "preferred", position: "auto", scale: 1, mirror: "" }, {})
         else if(mode==="duplicate") {
             const primary = HyprService.refMonitorName || (monitors.length>0 ? monitors[0].name : name)
-            lua = luaRule(name, "preferred", "auto", 1, primary)
+            lua = HyprService.monitorRule({ name: name, mode: "preferred", position: "auto", scale: 1, mirror: primary }, {})
         }
-        runLua(lua + "; " + preserveRules(-1))
+        HyprService.applyLua(lua + "; " + HyprService.preserveRules(-1))
     }
-    property Process evalProc: Process { stdout: StdioCollector { onStreamFinished: refresh() } }
 }
