@@ -66,6 +66,8 @@ QtObject {
     }
 
     function mapMonitor(m) {
+        // Older Hyprland builds omit hardwareDetails; treat as no capabilities.
+        const hardwareDetails = m.hardwareDetails || {}
         return {
             name: m.name,
             id: m.id,
@@ -78,7 +80,23 @@ QtObject {
             y: m.y,
             w: m.width,
             h: m.height,
-            transform: m.transform || 0
+            transform: m.transform || 0,
+            description: m.description || "",
+            make: m.make || "",
+            model: m.model || "",
+            serial: m.serial || "",
+            refreshRate: m.refreshRate || 0,
+            availableModes: m.availableModes || [],
+            dpmsStatus: !!m.dpmsStatus,
+            vrrActive: !!m.vrr,
+            vrrCapable: !!hardwareDetails.vrrCapable,
+            hdrCapable: !!hardwareDetails.hdr,
+            wideColor: !!hardwareDetails.bt2020,
+            cm: m.colorManagementPreset || "srgb",
+            sdrBrightness: m.sdrBrightness !== undefined ? m.sdrBrightness : 1,
+            sdrSaturation: m.sdrSaturation !== undefined ? m.sdrSaturation : 1,
+            currentFormat: m.currentFormat || "",
+            bitDepth: /2101010/.test(m.currentFormat || "") ? 10 : 8
         }
     }
 
