@@ -75,7 +75,7 @@ Capability gates:
 
 **Runtime-only:** settings are never persisted. There is no state file, `hyprland.lua` is never written, and nothing is reapplied when an output reconnects or Hyprland restarts. Compositor rows apply immediately through `hl.monitor` via `hyprctl eval` and re-assert every other active non-mirrored output's rule. A size-changing row (mode / scale / rotation) also re-places the output on its current side of its neighbour using the new logical size; with no neighbour its position is preserved. The anchored placement is kept only while the resized rectangle is collision-free: if it would overlap a farther output (e.g. the middle output of a three-output chain), the output is moved to the collision-free whole-layout slot instead. It may therefore lose adjacency rather than overlap another output; no other output is moved. Persistence remains a manual edit of `hyprland.lua`.
 
-**`Esc` stack:** picker → settings → main → close. `Esc` dismisses the picker first, then returns to the main view, then closes the launcher. `s` also returns from settings to main; `r` re-probes the hardware and refreshes `hyprctl monitors`.
+**`Esc` stack:** picker → settings → main → close. `Esc` dismisses the picker first, then returns to the main view, then closes the launcher. `h` cancels the picker, `l` applies the highlighted option, and `s` also returns from settings to main; `r` re-probes the hardware and refreshes `hyprctl monitors`.
 
 ## 4. Interaction
 
@@ -84,12 +84,12 @@ Capability gates:
 * `H/J/K/L` place the selected monitor on the left/bottom/top/right edge of the layout (vim 2×2 picker).
 * `/` filter by monitor name substring.
 * `r` refreshes monitors (`hyprctl monitors -j` / `monitors all -j`); in settings it also re-probes the hardware backends.
-* Settings view: `j/k` moves between rows; `Enter` opens the picker for enumerated rows (no-op on range rows); `h/l` adjusts range rows and cycles enumerated rows; picker `j/k` moves and `Enter` applies; `s` returns to main.
+* Settings view: `j/k` moves between rows; `l` opens the picker for enumerated rows; `h` is a no-op on an enumerated row and backs out of an open picker; `h/l` adjusts range rows; picker `j/k` moves, `l` applies, `h`/`Esc` cancels; `Enter`/`Esc` remain fallbacks; `s` returns to main.
 * Mouse: a settings row click selects it; on enumerated rows a value click opens the picker, while on range rows it steps the value; the `−`/`+` arrows adjust; a picker option click applies it.
 * Footers are view-specific and exact:
   * main: `main:     j/k move · s settings · H/J/K/L position · Enter act · r refresh · Esc close`
-  * settings: `settings: j/k row · Enter choose · h/l adjust · Esc back`
-  * picker: `picker:   j/k option · Enter apply · Esc back`
+  * settings: `settings: j/k row · l open · h/l adjust · Esc back`
+  * picker: `picker:   j/k option · l apply · h/Esc back`
 * `Esc` backs out one level at a time: picker → settings → main → close.
 
 ## 5. Backend Notes

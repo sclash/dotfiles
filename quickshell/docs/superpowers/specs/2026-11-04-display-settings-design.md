@@ -135,9 +135,9 @@ Main view:
 Settings view:
 
 - `j/k` moves between rows.
-- `Enter` opens the picker for enumerated rows; no-op for range rows.
-- `h/l` adjusts range rows and cycles enumerated rows as a fast path.
-- Picker: `j/k` moves, `Enter` applies, `Esc` closes the picker.
+- `l` opens the picker for enumerated rows; `h` is a no-op on an enumerated row. `Enter` remains a fallback.
+- `h/l` adjusts range rows.
+- Picker: `j/k` moves, `l` applies, `h`/`Esc` closes the picker; `Enter` remains a fallback.
 - `Esc` stack: picker → settings → main → close.
 - `s` also returns from settings to main.
 - `r` re-probes hardware and refreshes monitors.

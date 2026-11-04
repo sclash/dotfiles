@@ -342,7 +342,9 @@ Item {
         const kind = root.currentKind()
         if (kind === "" || !root.rowEnabled(kind)) return
         if (root.isEnumerated(kind)) {
-            root.cycle(kind, delta)
+            // l enters the option list; h is a no-op on a row (h backs out
+            // once the picker is open), matching the app-tray flow.
+            if (delta > 0) root.openPicker(kind)
             return
         }
         const v = root.stepValue(kind, delta)
@@ -350,14 +352,6 @@ Item {
         else if (kind === "temperature") root.setTemperature(v)
         else if (kind === "sdrbrightness") root.applyCompositor("sdrbrightness", v)
         else if (kind === "sdrsaturation") root.applyCompositor("sdrsaturation", v)
-    }
-
-    function cycle(kind, delta) {
-        const opts = root.optionsFor(kind)
-        if (opts.length === 0) return
-        let i = root.currentOptionIndex(kind)
-        i = i < 0 ? 0 : (i + delta + opts.length) % opts.length
-        root.applyCompositor(kind, opts[i].value)
     }
 
     // Long mode lists scroll under the highlight, so every picker index change
@@ -428,6 +422,14 @@ Item {
             if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
                 root.pickerIndex = Math.max(0, root.pickerIndex - 1)
                 root.ensurePickerVisible()
+                return true
+            }
+            if (event.key === Qt.Key_L || event.key === Qt.Key_Right) {
+                root.commitPicker()
+                return true
+            }
+            if (event.key === Qt.Key_H || event.key === Qt.Key_Left) {
+                root.pickerOpen = false
                 return true
             }
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -695,7 +697,7 @@ Item {
 
             Text {
                 visible: !root.pickerOpen
-                text: "settings: j/k row · Enter choose · h/l adjust · Esc back"
+                text: "settings: j/k row · l open · h/l adjust · Esc back"
                 font.family: Theme.fontFamily
                 font.pixelSize: 10
                 color: Theme.fgDim
@@ -803,7 +805,7 @@ Item {
                     }
 
                     Text {
-                        text: "picker:   j/k option · Enter apply · Esc back"
+                        text: "picker:   j/k option · l apply · h/Esc back"
                         font.family: Theme.fontFamily
                         font.pixelSize: 10
                         color: Theme.fgDim
