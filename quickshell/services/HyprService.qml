@@ -110,13 +110,17 @@ QtObject {
 
     // Current compositor value for an optional rule field, or undefined when
     // the field is absent (older Hyprland) or not meaningful for this output.
+    // `vrr` always returns undefined: hyprctl's `vrr` field is the *active*
+    // state, which Hyprland drops while no VRR-eligible surface is visible, so
+    // it must never be written back from state. It is emitted only when an
+    // override supplies it explicitly.
     function currentRuleValue(m, key) {
         if (!m) return undefined
         switch (key) {
         case "transform":
             return (m.transform !== undefined && m.transform !== null) ? m.transform : undefined
         case "vrr":
-            return m.vrrCapable ? (m.vrrActive ? 1 : 0) : undefined
+            return undefined
         case "bitdepth":
             return m.currentFormat ? m.bitDepth : undefined
         case "cm":
