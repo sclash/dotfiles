@@ -184,6 +184,8 @@
     # opengl.enable = true;
     graphics.enable = true;
     nvidia.modesetting.enable = true;
+    # /dev/i2c-* for ddcutil (external monitor brightness); grants seated users access
+    i2c.enable = true;
   };
 
   # Configure keymap in X11
@@ -227,6 +229,7 @@
       "docker"
       "wireshark"
       "networkmanager"
+      "i2c"
     ]; # Enable ‘sudo’ for the user.
     # shell = pkgs.zsh;
     # packages = with pkgs; [ tree ];

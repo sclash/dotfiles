@@ -46,6 +46,7 @@ hl.on("hyprland.start", function ()
 		hl.exec_cmd("elephant")
 		hl.exec_cmd("walker --gapplication-service")
 		hl.exec_cmd("hyprpolkitagent")
+		hl.exec_cmd("pkill wl-gammarelay-rs || wl-gammarelay-rs")
 		-- hl.exec_cmd("swaync")
 		-- hl.exec_cmd("swaync-client --daemon")
 		hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'") --# for GTK4 apps

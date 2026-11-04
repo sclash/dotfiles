@@ -31,6 +31,9 @@
     upower
     udisks2             # udisksctl for UsbService (USB-Manager)
     usbutils            # lsusb for UsbService
+    brightnessctl      # internal panel backlight via logind
+    ddcutil            # external monitor brightness (VCP 0x10)
+    wl-gammarelay-rs   # per-output gamma brightness and color temperature
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
