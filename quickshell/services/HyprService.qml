@@ -232,10 +232,25 @@ QtObject {
     }
 
     // Collision-free position for monitor `idx` placed towards `dir`,
-    // using `size` as its hypothetical logical size.
-    function positionFor(idx, dir, size) {
+    // using `size` as its hypothetical logical size. `anchorName` pins the
+    // result to one neighbour (settings re-placement); omitting it keeps the
+    // whole-set scan used by the main-view placement controls.
+    function positionFor(idx, dir, size, anchorName) {
         const m = root.monitors[idx]
         if (!m) return null
+        const named = anchorName
+            ? root.monitors.find(o => o.name === anchorName && o.name !== m.name)
+            : null
+        if (named) {
+            const ns = root.logicalSize(named)
+            let x = named.x
+            let y = named.y
+            if (dir === "left") x = named.x - size.w
+            else if (dir === "right") x = named.x + ns.w
+            else if (dir === "top") y = named.y - size.h
+            else if (dir === "bottom") y = named.y + ns.h
+            return { x: x, y: y }
+        }
         const a = root.anchorFor(m)
         if (!a) return null
         let x = a.x

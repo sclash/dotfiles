@@ -309,7 +309,7 @@ WlrLayershell {
     function repositionMonitor(idx, size) {
         const rel = HyprService.monitorRelation(idx)
         if (!rel) return null
-        return HyprService.positionFor(idx, rel.dir, size)
+        return HyprService.positionFor(idx, rel.dir, size, rel.name)
     }
     function applyCompositor(key, value) {
         const idx = root.monitors.findIndex(x => x.name === root.settingsName)
