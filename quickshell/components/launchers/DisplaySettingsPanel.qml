@@ -89,9 +89,11 @@ Item {
         return kind === "mode" || kind === "scale" || kind === "rotation"
             || kind === "bitdepth" || kind === "vrr" || kind === "cm"
     }
+    // Every row that writes a monitor rule is a compositor row; brightness and
+    // temperature are hardware backends. Keep this broader than the enumerated
+    // set (sdrbrightness/sdrsaturation are compositor rows too).
     function isCompositorRow(kind) {
-        return kind === "mode" || kind === "scale" || kind === "rotation"
-            || kind === "bitdepth" || kind === "vrr" || kind === "cm"
+        return kind !== "brightness" && kind !== "temperature"
     }
     // A non-empty reason disables the row and is rendered under its label.
     function rowReason(kind) {
