@@ -14,6 +14,9 @@ WlrLayershell {
     property string view: "main"        // "main" | "settings"
     property string settingsName: ""
     property string hardwareNames: ""   // sorted output set the hardware cache was probed for
+    // VRR mode per output name. hyprctl only reports runtime activation, so the
+    // chosen 0/1/2 has to be remembered here for the settings row.
+    property var vrrOverrides: ({})
     function open(){ isOpen=true }
     function close(){ isOpen=false }
     function toggle(){ if(isOpen) close(); else open() }
@@ -224,9 +227,11 @@ WlrLayershell {
             visible: root.view === "settings"
             monitor: root.settingsMonitor
             hardware: root.settingsHardware
+            vrrOverride: root.settingsVrrOverride
             onCloseRequested: root.showMain()
             onSetBrightness: (percent) => DisplaySettingsService.setBrightness(root.settingsName, percent)
             onSetTemperature: (kelvin) => DisplaySettingsService.setTemperature(root.settingsName, kelvin)
+            onApplyCompositor: (key, value) => root.applyCompositor(key, value)
         }
     }
 
@@ -293,6 +298,76 @@ WlrLayershell {
         if(!it || it.kind!=="monitor") return
         disconnectIndex(it.idx)
     }
+
+    function parseMode(raw) {
+        const match = /^(\d+)x(\d+)@([0-9.]+)/.exec(String(raw || ""))
+        if (!match) return null
+        return { w: Number(match[1]), h: Number(match[2]), r: Number(match[3]) }
+    }
+    // Keeps the output edge-adjacent to its current neighbour after a size
+    // change; null means "no neighbour, preserve the current position".
+    function repositionMonitor(idx, size) {
+        const rel = HyprService.monitorRelation(idx)
+        if (!rel) return null
+        return HyprService.positionFor(idx, rel.dir, size)
+    }
+    function applyCompositor(key, value) {
+        const idx = root.monitors.findIndex(x => x.name === root.settingsName)
+        if (idx < 0) return
+        const m = root.monitors[idx]
+        const overrides = {}
+        let sized = false
+        let position = null
+
+        if (key === "mode") {
+            const mode = String(value)
+            overrides.mode = mode
+            const p = root.parseMode(mode)
+            if (p) {
+                sized = true
+                position = root.repositionMonitor(idx, HyprService.logicalSize({
+                    w: p.w, h: p.h, scale: Number(m.scale), transform: Number(m.transform || 0)
+                }))
+            }
+        } else if (key === "scale") {
+            overrides.scale = Number(value)
+            sized = true
+            position = root.repositionMonitor(idx, HyprService.logicalSize({
+                w: m.w, h: m.h, scale: Number(value), transform: Number(m.transform || 0)
+            }))
+        } else if (key === "rotation") {
+            overrides.transform = Number(value)
+            sized = true
+            position = root.repositionMonitor(idx, HyprService.logicalSize({
+                w: m.w, h: m.h, scale: Number(m.scale), transform: Number(value)
+            }))
+        } else if (key === "bitdepth") {
+            overrides.bitdepth = Number(value)
+        } else if (key === "vrr") {
+            const v = Number(value)
+            // -1 is the panel's "unknown" sentinel and must never reach Hyprland.
+            if (v !== 0 && v !== 1 && v !== 2) return
+            overrides.vrr = v
+            const next = Object.assign({}, root.vrrOverrides)
+            next[root.settingsName] = v
+            root.vrrOverrides = next
+        } else if (key === "cm") {
+            const preset = String(value)
+            overrides.cm = preset
+            if (preset === "hdr" || preset === "hdredid") overrides.bitdepth = 10
+        } else if (key === "sdrbrightness") {
+            overrides.sdrbrightness = Number(value)
+        } else if (key === "sdrsaturation") {
+            overrides.sdrsaturation = Number(value)
+        } else {
+            return
+        }
+
+        if (sized && position)
+            overrides.position = position.x + "x" + position.y
+        transientError = ""
+        HyprService.applyMonitor(root.settingsName, overrides)
+    }
     function activate(){
         const it = navItems[selIndex]
         if(!it) return
@@ -309,6 +384,10 @@ WlrLayershell {
         return ({})
     }
     readonly property var settingsHardware: DisplaySettingsService.hardware[root.settingsName] || ({})
+    readonly property int settingsVrrOverride: {
+        const v = root.vrrOverrides[root.settingsName]
+        return (v === undefined || v === null) ? -1 : Number(v)
+    }
     readonly property string hyprError: (monitors.length === 0 && HyprService.available) ? "hyprctl failed" : ""
     property string transientError: ""
     onMonitorsChanged: {
