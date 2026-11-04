@@ -200,7 +200,7 @@ WlrLayershell {
                         Layout.preferredHeight: 40
                         radius: Theme.roundingItem
                         color: selected ? Theme.bgSelected : (dayMA.containsMouse ? Theme.bgHover : "transparent")
-                        border.width: selected ? 2 : 1
+                        border.width: 1
                         border.color: selected ? Theme.borderSelected : (today ? Theme.accent : Theme.border)
                         Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
                         Text {

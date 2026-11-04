@@ -55,7 +55,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: root.currentIndex===0 ? Theme.bgSelected : (sleepMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===0 ? Theme.borderSelected : "transparent"
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.sleep; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Sleep"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -69,7 +69,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: root.currentIndex===1 ? Theme.bgSelected : (rebootMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===1 ? Theme.warning : "transparent"
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.reboot; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Reboot"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -83,7 +83,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: root.currentIndex===2 ? Theme.bgSelected : (shutdownMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===2 ? Theme.critical : "transparent"
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.power; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.critical; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Shutdown"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -97,7 +97,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: planeActive ? Theme.bgSelected : (root.currentIndex===3 ? Theme.bgSelected : (planeMA.containsMouse ? Theme.bgHover : "transparent"))
                     border.color: planeActive ? Theme.borderSelected : (root.currentIndex===3 ? Theme.borderSelected : "transparent")
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: planeActive ? Icons.planeOn : Icons.planeOff; font.family: Theme.fontFamily; font.pixelSize: 26; color: planeActive ? Theme.accent : Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: planeActive ? "Plane ON" : "Plane"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -110,7 +110,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: root.currentIndex===4 ? Theme.bgSelected : (lockMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===4 ? Theme.borderSelected : "transparent"
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.lock; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Lock"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }
@@ -123,7 +123,7 @@ WlrLayershell {
                     radius: Theme.roundingItem
                     color: root.currentIndex===5 ? Theme.bgSelected : (logoutMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: root.currentIndex===5 ? Theme.warning : "transparent"
-                    border.width: 2
+                    border.width: 1
                     ColumnLayout { anchors.centerIn: parent; spacing: 8
                         Text { text: Icons.logout; font.family: Theme.fontFamily; font.pixelSize: 26; color: Theme.warning; Layout.alignment: Qt.AlignHCenter }
                         Text { text: "Logout"; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Theme.fontWeightMedium; color: Theme.fg; Layout.alignment: Qt.AlignHCenter }

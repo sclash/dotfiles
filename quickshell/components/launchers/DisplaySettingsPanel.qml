@@ -541,8 +541,8 @@ Item {
                     height: (isEnum && reason === "") ? 46 : 68
                     radius: Theme.roundingItem
                     color: isSel ? Theme.bgSelected : Theme.bgActive
-                    border.color: isSel ? Theme.accent : Theme.border
-                    border.width: isSel ? 2 : 1
+                    border.color: isSel ? Theme.borderSelected : Theme.border
+                    border.width: 1
 
                     MouseArea {
                         anchors.fill: parent
@@ -769,7 +769,7 @@ Item {
                             height: 34
                             radius: Theme.roundingItem
                             color: isSel ? Theme.bgSelected : (pickerMouse.containsMouse ? Theme.bgHover : "transparent")
-                            border.color: isSel ? Theme.accent : "transparent"
+                            border.color: isSel ? Theme.borderSelected : "transparent"
                             border.width: 1
 
                             Text {

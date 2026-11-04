@@ -21,6 +21,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 * Source: `hyprctl monitors -j` JSON array, exposed as `HyprService.monitors`.
 * Each row: `name` (e.g., `eDP-1`, `HDMI-A-1`) + `resolution@refresh` (e.g., `1920x1080@60.05`) + `scale` + `position` (`0x0`) + `focused` badge if `focused === true`.
+* Selection uses the shared `1 px` `Theme.borderSelected` ring — same as Network Center / Audio Center / Bluetooth Center rows. The Hyprland-focused output keeps the `focused` text badge.
 * No action here beyond info; disconnect lives in 3.3.
 
 ### 3.2 Available Monitors to Connect
@@ -44,7 +45,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 ### 3.4 Per-Monitor Settings (`s`)
 
-`s` on the selected monitor row opens a settings view for that output. Rows come from the output's reported capabilities (`HyprService.mapMonitor` fields) plus the hardware descriptor owned by `DisplaySettingsService`. Baseline compositor rows (mode, scale, rotation, color preset) always render; optional capability rows and hardware rows appear only when the underlying capability or backend exists.
+`s` on the selected monitor row opens a settings view for that output. Rows come from the output's reported capabilities (`HyprService.mapMonitor` fields) plus the hardware descriptor owned by `DisplaySettingsService`. Baseline compositor rows (mode, scale, rotation, color preset) always render; optional capability rows and hardware rows appear only when the underlying capability or backend exists. The selected settings row and picker option use the shared `1 px` `Theme.borderSelected` ring; action buttons use the shared `1 px` `Theme.accent` ring.
 
 | Row | Control | Visible when | Behavior |
 |---|---|---|---|
@@ -119,6 +120,7 @@ Capability gates:
 ## 7. Acceptance
 
 * [ ] Current monitors show name, mode, scale, position, focused badge.
+* [ ] Selected rows and picker options use the shared `1 px` `Theme.borderSelected` ring; action buttons use the shared `1 px` `Theme.accent` ring — matching Network Center / Audio Center / Bluetooth Center / Control Center / Calendar.
 * [ ] Available outputs offer Extend / Duplicate; Extend is default.
 * [ ] Per-monitor `[L][R][T][B]` picker / `H/J/K/L` places that output at the corresponding layout edge without shuffling other outputs; the assigned side is filled and captioned (`bottom of HDMI-A-1`).
 * [ ] `j/k` reaches both Extend and Duplicate options for an available output; `Enter` activates the focused option.

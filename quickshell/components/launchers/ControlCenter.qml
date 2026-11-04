@@ -107,7 +107,7 @@ WlrLayershell {
                         radius: Theme.roundingItem
                         color: index === gridView.currentIndex ? Theme.bgSelected : (ma.containsMouse ? Theme.bgHover : "transparent")
                         border.color: index === gridView.currentIndex ? Theme.borderSelected : Theme.border
-                        border.width: index === gridView.currentIndex ? 2 : 1
+                        border.width: 1
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: Theme.padM

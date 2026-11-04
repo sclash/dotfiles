@@ -55,7 +55,7 @@ property color overlay:         "#00000099"    // full-screen dim behind launche
 **State is conveyed by borders, not backgrounds.** `bgHover`/`bgActive`/`bgSelected`
 all equal `bgLauncher` (`#000000`), so rows render `transparent` and switch border:
 
-* selected → `borderSelected`, 2 px
+* selected → `borderSelected`, 1 px
 * hover → `border`, 1 px
 * idle → `border`, 1 px
 
@@ -284,7 +284,7 @@ property string calendar:         ""
 ### 5.3 Rows & tiles
 
 * **List row / tile:** `radius: Theme.roundingItem`, bg `transparent` (all bg tokens
-  are `#000000`), `border.width: 2` + `border.color: Theme.borderSelected` when selected,
+  are `#000000`), `border.width: 1` + `border.color: Theme.borderSelected` when selected,
   else `border.width: 1` + `Theme.border`.
 * **Row layout:** left Nerd glyph + label; right-aligned status/meta in `Theme.fgMuted`.
 * **Shutdown tiles:** 26 px glyph, state-coloured — `warning` (reboot, logout),
@@ -358,7 +358,7 @@ a recurring defect; treat it as an acceptance blocker for every component.
 |---|---|---|---|
 | Idle | `fg` | `border` 1 px | default — bg is always `bgLauncher` (`#000000`) |
 | Hover | `fg` | `border` 1 px | pointer cursor; bg unchanged |
-| Selected | `fg` | `borderSelected` 2 px | vim cursor row |
+| Selected | `fg` | `borderSelected` 1 px | vim cursor row |
 | Good (<30% load) | `fg` | — | no tint |
 | Warning (30–80%) | `warning` | — | e.g., signal < 30% |
 | Critical (>80%, battery<20%) | `critical` | — | `bgCritical` wash on affected rows |

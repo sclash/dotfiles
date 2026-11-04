@@ -73,8 +73,8 @@ WlrLayershell {
                         radius: Theme.roundingItem
                         readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "monitor" && it.idx === index }
                         color: modelData.focused ? Theme.bgSelected : Theme.bgActive
-                        border.color: isSel ? Theme.accent : (modelData.focused ? Theme.borderSelected : Theme.border)
-                        border.width: isSel ? 2 : (modelData.focused ? 2 : 1)
+                        border.color: (isSel || modelData.focused) ? Theme.borderSelected : Theme.border
+                        border.width: 1
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: Theme.padM
@@ -167,8 +167,8 @@ WlrLayershell {
                         readonly property bool rowSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "available" && it.idx === index }
                         readonly property string selMode: { const it = root.navItems[root.selIndex]; return (it !== undefined && it.kind === "available" && it.idx === index) ? it.mode : "" }
                         color: rowSel ? Theme.bgActive : Theme.bgHover
-                        border.color: rowSel ? Theme.accent : Theme.border
-                        border.width: rowSel ? 2 : 1
+                        border.color: rowSel ? Theme.borderSelected : Theme.border
+                        border.width: 1
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: Theme.padM
@@ -182,7 +182,7 @@ WlrLayershell {
                                 radius: Theme.roundingItem
                                 color: Theme.bgActive
                                 border.color: selMode === "extend" ? Theme.accent : Theme.borderActive
-                                border.width: selMode === "extend" ? 2 : 1
+                                border.width: 1
                                 Text { anchors.centerIn: parent; text: "Extend"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.connectProc("extend", modelData.name) }
                             }
@@ -192,7 +192,7 @@ WlrLayershell {
                                 radius: Theme.roundingItem
                                 color: Theme.bgActive
                                 border.color: selMode === "duplicate" ? Theme.accent : Theme.borderActive
-                                border.width: selMode === "duplicate" ? 2 : 1
+                                border.width: 1
                                 Text { anchors.centerIn: parent; text: "Duplicate"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.connectProc("duplicate", modelData.name) }
                             }
@@ -211,7 +211,7 @@ WlrLayershell {
                         readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "refresh"
                         color: isSel ? Theme.bgActive : Theme.bgHover
                         border.color: isSel ? Theme.accent : Theme.border
-                        border.width: isSel ? 2 : 1
+                        border.width: 1
                         Text { anchors.centerIn: parent; text: "Refresh"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: refresh() }
                     }

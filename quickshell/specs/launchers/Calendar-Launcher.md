@@ -81,7 +81,7 @@ pure QML `Date` math. The only process spawned is `wl-copy` on `Enter`.
 * Header `Text { text: "Calendar"; … }` uppercase + `Theme.border` divider
   (standard card anatomy, `STYLE.md` §5.2).
 * Cells `40px` high, `radius: Theme.roundingItem`, bg `transparent`
-  (all bg tokens are `#000000`): selected → `borderSelected` 2 px;
+  (all bg tokens are `#000000`): selected → `borderSelected` 1 px;
   today (not selected) → `border.color: Theme.accent` 1 px + `Theme.accent`
   bold numerals; out-of-month → `Theme.fgDim`.
 * Footer hints 10 px `Theme.fgDim`, copy confirmation in `Theme.accent`.

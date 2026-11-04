@@ -128,7 +128,7 @@ WlrLayershell {
                                 radius: 9
                                 color: muteSwitch.checked ? Theme.bgSelected : Theme.bgBar
                                 border.color: muteSwitch.isSel ? Theme.borderSelected : (muteSwitch.checked ? Theme.borderSelected : Theme.border)
-                                border.width: muteSwitch.isSel ? 2 : 1
+                                border.width: 1
                                 Rectangle {
                                     width: 12; height: 12; radius: 6
                                     x: muteSwitch.checked ? parent.width - width - 3 : 3
@@ -261,7 +261,7 @@ WlrLayershell {
                                 radius: 9
                                 color: micSwitch.checked ? Theme.bgSelected : Theme.bgBar
                                 border.color: micSwitch.isSel ? Theme.borderSelected : (micSwitch.checked ? Theme.borderSelected : Theme.border)
-                                border.width: micSwitch.isSel ? 2 : 1
+                                border.width: 1
                                 Rectangle {
                                     width: 12; height: 12; radius: 6
                                     x: micSwitch.checked ? parent.width - width - 3 : 3
