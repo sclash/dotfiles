@@ -11,6 +11,12 @@ Item {
 
     property var monitor: ({})
     property var hardware: ({})
+    // Passed in by DisplayManager: the selected output is duplicating another
+    // one, so only the hardware backends remain meaningful here.
+    property bool mirrored: false
+    // True while the gamma daemon looks reachable on any probed output; used
+    // to keep the "not running" hint from firing on outputs without a leaf.
+    property bool gammaReachable: true
     property int selIndex: 0
     property bool pickerOpen: false
     property int pickerIndex: 0
@@ -58,13 +64,12 @@ Item {
         return root.brightness.backend === "gamma" ? "software" : root.brightness.backend
     }
     readonly property string unavailableHint: {
-        if (!root.brightness.available && !root.temperature.available)
-            return "No brightness or color temperature backend detected"
-        if (!root.temperature.available)
-            return "Color temperature unavailable — wl-gammarelay-rs not running"
+        const lines = []
+        if (!root.temperature.available && !root.gammaReachable)
+            lines.push("wl-gammarelay-rs not running — color temperature unavailable")
         if (!root.brightness.available)
-            return "Brightness unavailable — no backlight or DDC/CI"
-        return ""
+            lines.push("Brightness unavailable — no backlight or DDC/CI")
+        return lines.join("\n")
     }
 
     function currentKind() {
@@ -84,7 +89,24 @@ Item {
         return kind === "mode" || kind === "scale" || kind === "rotation"
             || kind === "bitdepth" || kind === "vrr" || kind === "cm"
     }
+    function isCompositorRow(kind) {
+        return kind === "mode" || kind === "scale" || kind === "rotation"
+            || kind === "bitdepth" || kind === "vrr" || kind === "cm"
+    }
+    // A non-empty reason disables the row and is rendered under its label.
+    function rowReason(kind) {
+        if (root.mirrored && root.isCompositorRow(kind))
+            return "mirrored — extend to configure"
+        if (root.hdrActive) {
+            if (kind === "temperature")
+                return "unavailable in HDR mode"
+            if (kind === "brightness" && root.brightness.backend === "gamma")
+                return "unavailable in HDR mode"
+        }
+        return ""
+    }
     function rowEnabled(kind) {
+        if (root.rowReason(kind) !== "") return false
         // HDR owns the output format: bit depth is forced to 10 and locked.
         if (kind === "bitdepth" && root.hdrActive) return false
         return true
@@ -332,6 +354,7 @@ Item {
     }
 
     function openPicker(kind) {
+        if (!root.rowEnabled(kind)) return
         const opts = root.optionsFor(kind)
         if (opts.length === 0) return
         root.pickerRow = kind
@@ -348,7 +371,9 @@ Item {
         const idx = Math.max(0, Math.min(opts.length - 1, root.pickerIndex))
         const value = opts.length > 0 ? opts[idx].value : undefined
         root.pickerOpen = false
-        if (kind !== "" && value !== undefined)
+        // The output may have become mirrored or entered HDR while the picker
+        // was open; never write through a now-disabled row.
+        if (kind !== "" && value !== undefined && root.rowEnabled(kind))
             root.applyCompositor(kind, value)
     }
 
@@ -491,8 +516,9 @@ Item {
                     readonly property bool isSel: index === root.selIndex
                     readonly property bool isEnum: root.isEnumerated(modelData)
                     readonly property bool rowOn: root.rowEnabled(modelData)
+                    readonly property string reason: root.rowReason(modelData)
                     width: rowsList.width
-                    height: isEnum ? 46 : 68
+                    height: (isEnum && reason === "") ? 46 : 68
                     radius: Theme.roundingItem
                     color: isSel ? Theme.bgSelected : Theme.bgActive
                     border.color: isSel ? Theme.accent : Theme.border
@@ -538,6 +564,16 @@ Item {
                                 font.pixelSize: 12
                                 font.weight: Theme.fontWeightMedium
                                 color: row.rowOn ? Theme.fgBright : Theme.fgDim
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: row.rowOn ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: (m) => {
+                                        root.selIndex = row.index
+                                        if (!row.rowOn) return
+                                        if (row.isEnum) root.activate()
+                                        else root.adjust(m.x < width / 2 ? -1 : 1)
+                                    }
+                                }
                             }
                             Text {
                                 visible: row.isEnum && row.rowOn
@@ -548,8 +584,18 @@ Item {
                             }
                         }
 
+                        Text {
+                            visible: row.reason.length > 0
+                            text: row.reason
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                            color: Theme.fgDim
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
                         RowLayout {
-                            visible: !row.isEnum
+                            visible: !row.isEnum && row.reason.length === 0
                             Layout.fillWidth: true
                             spacing: Theme.gapS
 
@@ -630,7 +676,8 @@ Item {
             }
 
             Text {
-                text: "j/k move · h/l change · r re-probe · s/Esc back"
+                visible: !root.pickerOpen
+                text: "settings: j/k row · Enter choose · h/l adjust · Esc back"
                 font.family: Theme.fontFamily
                 font.pixelSize: 10
                 color: Theme.fgDim
@@ -726,6 +773,14 @@ Item {
                                 }
                             }
                         }
+                    }
+
+                    Text {
+                        text: "picker:   j/k option · Enter apply · Esc back"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                        color: Theme.fgDim
+                        Layout.alignment: Qt.AlignHCenter
                     }
                 }
             }

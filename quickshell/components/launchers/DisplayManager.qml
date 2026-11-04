@@ -216,7 +216,14 @@ WlrLayershell {
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: refresh() }
                     }
                     Item { Layout.fillWidth: true }
-                    Text { text: "j/k move · H/J/K/L position · Enter act · d disconnect · r refresh · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim }
+                }
+                Text {
+                    text: "main:     j/k move · s settings · H/J/K/L position · Enter act · r refresh · Esc close"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    color: Theme.fgDim
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.fillWidth: true
                 }
             }
         }
@@ -227,6 +234,8 @@ WlrLayershell {
             visible: root.view === "settings"
             monitor: root.settingsMonitor
             hardware: root.settingsHardware
+            mirrored: root.settingsMirrored
+            gammaReachable: root.settingsGammaReachable
             vrrOverride: root.settingsVrrOverride
             onCloseRequested: root.showMain()
             onSetBrightness: (percent) => DisplaySettingsService.setBrightness(root.settingsName, percent)
@@ -384,6 +393,21 @@ WlrLayershell {
         return ({})
     }
     readonly property var settingsHardware: DisplaySettingsService.hardware[root.settingsName] || ({})
+    readonly property bool settingsMirrored: root.settingsName !== ""
+        && HyprService.mirrorName(root.settingsMonitor) !== ""
+    readonly property bool settingsGammaReachable: {
+        // While a probe is in flight, or before any descriptor exists, do not
+        // claim the daemon is down: the hint would flash on every open.
+        if (DisplaySettingsService.probing) return true
+        const hw = DisplaySettingsService.hardware
+        const names = Object.keys(hw)
+        if (names.length === 0) return true
+        for (const name of names) {
+            const t = hw[name] ? hw[name].temperature : null
+            if (t && t.available) return true
+        }
+        return false
+    }
     readonly property int settingsVrrOverride: {
         const v = root.vrrOverrides[root.settingsName]
         return (v === undefined || v === null) ? -1 : Number(v)
@@ -400,6 +424,22 @@ WlrLayershell {
             DisplaySettingsService.invalidate()
             if (root.view === "settings") DisplaySettingsService.probe(root.monitors)
         }
+        if (root.view !== "settings") return
+        // A detached output must not leave the settings view pointing at an
+        // empty descriptor; fall back to the list instead of rendering blank.
+        if (!root.monitors.some(m => m.name === root.settingsName)) {
+            root.view = "main"
+            root.settingsName = ""
+            root.transientError = ""
+            settingsPanel.selIndex = 0
+            settingsPanel.pickerOpen = false
+            settingsPanel.pickerIndex = 0
+            Qt.callLater(() => mainCol.forceActiveFocus())
+            return
+        }
+        settingsPanel.selIndex = Math.max(0, Math.min(settingsPanel.selIndex, settingsPanel.rows.length - 1))
+        if (settingsPanel.pickerOpen)
+            settingsPanel.pickerIndex = Math.max(0, Math.min(settingsPanel.pickerIndex, settingsPanel.pickerOptions.length - 1))
     }
     onAvailableMonitorsChanged: updateNav()
 
