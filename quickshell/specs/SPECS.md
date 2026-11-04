@@ -67,13 +67,19 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `lm_sensors` / `sysstat` | Temperature / CPU | **yes** for perf widgets | `pkgs.lm_sensors` |
 | `udisks2` | USB storage mount/unmount via `udisksctl` | **yes** for USB-Manager | `pkgs.udisks2` + `services.udisks2.enable` |
 | `usbutils` | USB device listing (`lsusb`) | **yes** for USB-Manager | `pkgs.usbutils` |
+| `brightnessctl` | Internal-panel brightness via logind | **yes** for Display-Manager | `pkgs.brightnessctl` |
+| `ddcutil` | External-display brightness (DDC/CI VCP 10) | **yes** for Display-Manager | `pkgs.ddcutil` |
+| i2c access | `/dev/i2c-*` devices for `ddcutil` | **yes** for DDC brightness | `hardware.i2c.enable = true;` + `extraGroups = [ "i2c" ]` |
+| `wl-gammarelay-rs` | Per-output software brightness and color temperature | **yes** for Display-Manager | `pkgs.wl-gammarelay-rs` |
 | `noto-fonts` + `nerd-fonts.jetbrains-mono` | Icons / typography | **yes** | ensure in `fonts.packages` |
 | `quickshell` needs `qt6.qtdeclarative` | Already in `home.packages` | **yes** | present |
 | `herdr` | Agentic orchestration | **yes** for build phase | `pkgs-unstable.herdr` — already enabled |
 
-> No new system service is required. The shell is a single user process
+> No new system service is required: `wl-gammarelay-rs` is a session daemon
+> started from the Hyprland autostart block. The shell is a single user process
 > started via `programs.quickshell.systemd.enable = true` (already set) or
-> `exec-once = quickshell` in Hyprland.
+> `exec-once = quickshell` in Hyprland. Enabling i2c and the `i2c` group needs
+> `nixos-rebuild switch` plus a re-login.
 
 ### 2.3 Cost (CPU / memory)
 
@@ -112,7 +118,8 @@ quickshell/
 │   ├── BatteryService.qml    # Singleton — sysfs BAT* status/capacity/energy/power + time-left estimate
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
-│   └── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
+│   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
+│   └── DisplaySettingsService.qml # Singleton — per-output brightness (backlight/DDC/gamma) + color temperature
 ├── components/
 │   ├── bar/
 │   │   ├── Workspaces.qml
@@ -137,6 +144,7 @@ quickshell/
 │       ├── PowerCenter.qml
 │       ├── KeyLauncher.qml
 │       ├── DisplayManager.qml
+│       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
 │       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/
@@ -144,6 +152,8 @@ quickshell/
 │   └── Icons.qml             # Singleton — nerd-font glyph map
 └── specs/                    # This directory — normative
 ```
+
+Display-Manager composes monitor rules at runtime through `hyprctl eval`. Its per-output settings view (`DisplaySettingsPanel.qml` + `DisplaySettingsService.qml`) is **runtime-only**: it writes no state file, never mutates `hyprland.lua`, and reapplies nothing when an output reconnects or Hyprland restarts. Persistence stays a manual `hl.monitor(...)` edit in `hyprland.lua`.
 
 ### 3.2 Modularity
 
@@ -236,6 +246,8 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Key-Launcher | `SUPER+/` | `Key-Launcher.md` |
 
 All launchers share `LauncherBase.qml` (centered card, 560–640 px wide, `rounding: Theme.roundingLauncher` (= hyprland rounding 7), `focusable: true`, Esc/vim nav).
+
+Display-Manager additionally exposes a per-output settings sub-view on `s` (`Display-manager.md` §3.4): mode/refresh, scale, rotation, bit depth, VRR, color preset, HDR brightness/saturation, hardware brightness, and color temperature. It is runtime-only and uses `DisplaySettingsService` for all hardware probes and writes.
 
 ---
 
