@@ -48,7 +48,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 | Row | Control | Visible when | Behavior |
 |---|---|---|---|
-| Mode / refresh | picker | always | Options from `availableModes`, labelled `1920×1080 @ 60 Hz`; the current mode is prepended when absent, and `preferred` is used when nothing is reported. |
+| Mode / refresh | picker | always; disabled with `no modes reported` when `availableModes` is missing or empty | Options from `availableModes`, labelled `1920×1080 @ 60 Hz`; the current mode is prepended when absent. |
 | Scale | picker | always | `0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3`; a non-standard current value is inserted and sorted. |
 | Rotation | picker | always | Normal / 90° / 180° / 270°. |
 | Bit depth | picker | `hdrCapable \|\| wideColor \|\| bitDepth === 10` | 8-bit / 10-bit; selecting an HDR preset forces 10-bit, and the row is locked while HDR is active. |
@@ -112,7 +112,7 @@ Capability gates:
 * HDR active → color temperature and gamma-backed brightness are disabled with `unavailable in HDR mode`; backlight/DDC brightness and the HDR rows remain usable.
 * `wl-gammarelay-rs` unreachable (no probed output exposes a temperature leaf) → the color-temperature row is hidden and a muted line reads `wl-gammarelay-rs not running — color temperature unavailable`; `r` retries.
 * No brightness backend → the brightness row is hidden and a muted line reads `Brightness unavailable — no backlight or DDC/CI`. A `brightnessctl` or `ddcutil` failure degrades silently (next backend, then hidden row) — no error dialog.
-* `availableModes` empty → the mode row keeps the current mode (or `preferred`) as its only option.
+* `availableModes` missing or empty → the mode row is rendered disabled with `no modes reported`; it cannot open the picker or write a rule.
 * Settings output removed while open (including a `hyprctl` failure that empties the list) → the view returns to main, selection and picker state reset, and no stale descriptor is rendered.
 
 ## 7. Acceptance

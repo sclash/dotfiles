@@ -99,6 +99,11 @@ Item {
     function rowReason(kind) {
         if (root.mirrored && root.isCompositorRow(kind))
             return "mirrored — extend to configure"
+        // No reported mode list means the picker could only echo the current
+        // mode, so the row is informational and non-actionable.
+        if (kind === "mode" && (!root.monitor.availableModes
+            || root.monitor.availableModes.length === 0))
+            return "no modes reported"
         if (root.hdrActive) {
             if (kind === "temperature")
                 return "unavailable in HDR mode"
