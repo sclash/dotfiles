@@ -44,7 +44,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 
 ### 3.4 Per-Monitor Settings (`s`)
 
-`s` on the selected monitor row opens a settings view for that output. Rows come from the output's reported capabilities (`HyprService.mapMonitor` fields) plus the hardware descriptor owned by `DisplaySettingsService`; a row is rendered only when its capability or backend exists.
+`s` on the selected monitor row opens a settings view for that output. Rows come from the output's reported capabilities (`HyprService.mapMonitor` fields) plus the hardware descriptor owned by `DisplaySettingsService`. Baseline compositor rows (mode, scale, rotation, color preset) always render; optional capability rows and hardware rows appear only when the underlying capability or backend exists.
 
 | Row | Control | Visible when | Behavior |
 |---|---|---|---|
@@ -52,7 +52,7 @@ A **bar icon** in the right group next to the USB indicator (inline in `Bar.qml`
 | Scale | picker | always | `0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3`; a non-standard current value is inserted and sorted. |
 | Rotation | picker | always | Normal / 90° / 180° / 270°. |
 | Bit depth | picker | `hdrCapable \|\| wideColor \|\| bitDepth === 10` | 8-bit / 10-bit; selecting an HDR preset forces 10-bit, and the row is locked while HDR is active. |
-| VRR | picker | `vrrCapable` | Off / On / Fullscreen only. `hyprctl` reports runtime activation only, so the chosen value is kept session-local and re-asserted only when explicitly changed. |
+| VRR | picker | `vrrCapable` | Off / On / Fullscreen only. `hyprctl` reports runtime activation only, so the chosen value is session-local for display, applied only on an explicit VRR change, and not re-asserted by unrelated rules. |
 | Color preset | picker | always | Auto / sRGB / DCI-P3 / Display P3 / Adobe RGB / EDID; `wide` only with `wideColor`; `HDR` and `HDR (EDID)` only with `hdrCapable`. |
 | HDR brightness | range 1.0–2.0, step 0.05 | color preset is `hdr` / `hdredid` | Writes `sdrbrightness`. |
 | HDR saturation | range 0.8–1.2, step 0.02 | color preset is `hdr` / `hdredid` | Writes `sdrsaturation`. |
@@ -63,7 +63,7 @@ Capability gates:
 
 * **Mirrored output** (its `mirrorOf` resolves to another output): every compositor row — mode, scale, rotation, bit depth, VRR, color preset, HDR brightness, HDR saturation — is disabled with `mirrored — extend to configure`. Brightness and color temperature stay usable.
 * **HDR active** (`cm` is `hdr` / `hdredid`): color temperature and a gamma-backed brightness row are disabled with `unavailable in HDR mode`; backlight and DDC brightness stay usable, and the two HDR rows appear. Bit depth is locked at 10-bit while HDR is active (no subline).
-* Rows whose capability or backend is absent are not rendered; no placeholder rows are shown.
+* Optional capability rows (bit depth, VRR, HDR brightness/saturation) and hardware rows are omitted when their capability or backend is absent; baseline compositor rows (mode, scale, rotation, color preset) always render and may be disabled with a reason such as `no modes reported`.
 
 **Brightness precedence (per output):** kernel backlight → DDC/CI → gamma.
 
@@ -71,9 +71,9 @@ Capability gates:
 2. **`ddc`** — `ddcutil detect` maps `Display N` to its DRM connector; VCP 10 is read with `getvcp 10 --terse` and written with `setvcp 10 <value>`. Failures are silent and fall through to gamma.
 3. **`gamma`** — the per-output `wl-gammarelay-rs` `Brightness` property (`d`, 0–1), written as a percentage; the row labels this backend `software`.
 
-**Color temperature:** the per-output `wl-gammarelay-rs` object at `/outputs/<output name with non-alphanumerics replaced by `_`>` (e.g. `/outputs/eDP_1`), property `Temperature` (`q`, Kelvin), read and written over `busctl`. Only the selected output's leaf is written. The well-known bus name is `rs.wl-gammarelay` (hyphen); the D-Bus interface is `rs.wl.gammarelay` (dot).
+**Color temperature:** the per-output `wl-gammarelay-rs` object at `/outputs/<normalized name>`, where non-alphanumerics in the output name become `_` (e.g. `/outputs/eDP_1`), property `Temperature` (`q`, Kelvin), read and written over `busctl`. Only the selected output's leaf is written. The well-known bus name is `rs.wl-gammarelay` (hyphen); the D-Bus interface is `rs.wl.gammarelay` (dot).
 
-**Runtime-only:** settings are never persisted. There is no state file, `hyprland.lua` is never written, and nothing is reapplied when an output reconnects or Hyprland restarts. Compositor rows apply immediately through `hl.monitor` via `hyprctl eval` and re-assert every other active non-mirrored output's rule. A size-changing row (mode / scale / rotation) also re-places the output on its current side of its neighbour using the new logical size; with no neighbour its position is preserved. Persistence remains a manual edit of `hyprland.lua`.
+**Runtime-only:** settings are never persisted. There is no state file, `hyprland.lua` is never written, and nothing is reapplied when an output reconnects or Hyprland restarts. Compositor rows apply immediately through `hl.monitor` via `hyprctl eval` and re-assert every other active non-mirrored output's rule. A size-changing row (mode / scale / rotation) also re-places the output on its current side of its neighbour using the new logical size; with no neighbour its position is preserved. The anchored placement is kept only while the resized rectangle is collision-free: if it would overlap a farther output (e.g. the middle output of a three-output chain), the output is moved to the collision-free whole-layout slot instead. It may therefore lose adjacency rather than overlap another output; no other output is moved. Persistence remains a manual edit of `hyprland.lua`.
 
 **`Esc` stack:** picker → settings → main → close. `Esc` dismisses the picker first, then returns to the main view, then closes the launcher. `s` also returns from settings to main; `r` re-probes the hardware and refreshes `hyprctl monitors`.
 
@@ -85,7 +85,7 @@ Capability gates:
 * `/` filter by monitor name substring.
 * `r` refreshes monitors (`hyprctl monitors -j` / `monitors all -j`); in settings it also re-probes the hardware backends.
 * Settings view: `j/k` moves between rows; `Enter` opens the picker for enumerated rows (no-op on range rows); `h/l` adjusts range rows and cycles enumerated rows; picker `j/k` moves and `Enter` applies; `s` returns to main.
-* Mouse: a settings row click selects it, value/arrow clicks change it, and a picker option click applies it.
+* Mouse: a settings row click selects it; on enumerated rows a value click opens the picker, while on range rows it steps the value; the `−`/`+` arrows adjust; a picker option click applies it.
 * Footers are view-specific and exact:
   * main: `main:     j/k move · s settings · H/J/K/L position · Enter act · r refresh · Esc close`
   * settings: `settings: j/k row · Enter choose · h/l adjust · Esc back`
@@ -107,7 +107,8 @@ Capability gates:
 
 * Single monitor only → 3.2 shows `"No additional outputs detected"` at `Theme.fgMuted`; position pickers hidden and `Disconnect` shown disabled with the last-monitor guard.
 * `hyprctl` failure → inline error at `Theme.critical`; retry on `r`.
-* Settings rows are omitted when their capability or backend is absent; no placeholder row is rendered.
+* Optional capability rows and hardware rows are omitted when their capability or backend is absent. Baseline compositor rows (mode, scale, rotation, color preset) always render and may be disabled with a reason (e.g. `no modes reported`).
+* Resized output whose anchored placement would overlap a farther output → the output is moved to the collision-free whole-layout slot instead, so it may lose adjacency; other outputs are never moved or overlapped.
 * Mirrored output → every compositor row is disabled with `mirrored — extend to configure`; brightness and color temperature remain usable.
 * HDR active → color temperature and gamma-backed brightness are disabled with `unavailable in HDR mode`; backlight/DDC brightness and the HDR rows remain usable.
 * `wl-gammarelay-rs` unreachable (no probed output exposes a temperature leaf) → the color-temperature row is hidden and a muted line reads `wl-gammarelay-rs not running — color temperature unavailable`; `r` retries.

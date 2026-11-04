@@ -284,3 +284,4 @@ Enabling i2c and the group requires `nixos-rebuild switch` and a re-login so the
 - DDC cannot be tested without an external display. The gamma fallback covers that path.
 - Gamma changes may be reset by DPMS cycles or a daemon restart.
 - Runtime compositor settings reset on Hyprland restart; runtime gamma settings reset on daemon restart.
+- A size change keeps the output beside its resolved neighbour only while that anchored rectangle stays collision-free. If it would overlap a farther output (e.g. the middle output of a three-output chain), the output is moved to the collision-free whole-layout slot instead; it may lose adjacency rather than overlap another output.

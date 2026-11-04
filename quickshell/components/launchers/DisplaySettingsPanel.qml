@@ -360,6 +360,14 @@ Item {
         root.applyCompositor(kind, opts[i].value)
     }
 
+    // Long mode lists scroll under the highlight, so every picker index change
+    // must bring the selected option back into view once the delegate exists.
+    function ensurePickerVisible() {
+        Qt.callLater(() => {
+            if (pickerList) pickerList.positionViewAtIndex(root.pickerIndex, ListView.Contain)
+        })
+    }
+
     function openPicker(kind) {
         if (!root.rowEnabled(kind)) return
         const opts = root.optionsFor(kind)
@@ -369,6 +377,7 @@ Item {
         const cur = root.currentOptionIndex(kind)
         root.pickerIndex = cur >= 0 ? cur : 0
         root.pickerOpen = true
+        root.ensurePickerVisible()
     }
 
     function commitPicker() {
@@ -413,10 +422,12 @@ Item {
             }
             if (event.key === Qt.Key_J || event.key === Qt.Key_Down) {
                 root.pickerIndex = Math.min(root.pickerOptions.length - 1, root.pickerIndex + 1)
+                root.ensurePickerVisible()
                 return true
             }
             if (event.key === Qt.Key_K || event.key === Qt.Key_Up) {
                 root.pickerIndex = Math.max(0, root.pickerIndex - 1)
+                root.ensurePickerVisible()
                 return true
             }
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
@@ -708,7 +719,11 @@ Item {
 
             Rectangle {
                 width: 380
-                height: Math.min(360, pickerCol.implicitHeight + Theme.padL * 2)
+                // The settings card can be shorter than the picker's natural
+                // height (e.g. no hardware rows), so never exceed its inner
+                // box: the card clips, and a taller picker would lose its
+                // title or footer.
+                height: Math.max(0, Math.min(360, pickerCol.implicitHeight + Theme.padL * 2, card.height - Theme.padL * 2))
                 anchors.centerIn: parent
                 radius: Theme.roundingLauncher
                 color: Theme.bgLauncher
@@ -735,6 +750,11 @@ Item {
                         id: pickerList
                         Layout.fillWidth: true
                         Layout.preferredHeight: Math.min(260, contentHeight)
+                        // The capped picker height can be shorter than the
+                        // options: let the list shrink instead of overflowing
+                        // the card and pushing the footer out of view.
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 0
                         clip: true
                         spacing: 2
                         model: root.pickerOptions

@@ -231,10 +231,23 @@ QtObject {
         return null
     }
 
-    // Collision-free position for monitor `idx` placed towards `dir`,
-    // using `size` as its hypothetical logical size. `anchorName` pins the
-    // result to one neighbour (settings re-placement); omitting it keeps the
-    // whole-set scan used by the main-view placement controls.
+    // Strict rectangle intersection against every other active output.
+    function overlapsAny(m, x, y, size) {
+        for (const o of root.monitors) {
+            if (o.name === m.name) continue
+            const os = root.logicalSize(o)
+            if (x < o.x + os.w && x + size.w > o.x
+                && y < o.y + os.h && y + size.h > o.y) return true
+        }
+        return false
+    }
+
+    // Position for monitor `idx` placed towards `dir`, using `size` as its
+    // hypothetical logical size. `anchorName` pins the result to one
+    // neighbour (settings re-placement) while the anchored rectangle stays
+    // collision-free; if it would overlap a farther output the whole-set scan
+    // below runs instead, trading adjacency for a non-overlapping slot.
+    // Omitting `anchorName` always uses the scan (main-view placement).
     function positionFor(idx, dir, size, anchorName) {
         const m = root.monitors[idx]
         if (!m) return null
@@ -249,7 +262,7 @@ QtObject {
             else if (dir === "right") x = named.x + ns.w
             else if (dir === "top") y = named.y - size.h
             else if (dir === "bottom") y = named.y + ns.h
-            return { x: x, y: y }
+            if (!root.overlapsAny(m, x, y, size)) return { x: x, y: y }
         }
         const a = root.anchorFor(m)
         if (!a) return null
