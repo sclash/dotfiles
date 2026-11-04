@@ -351,7 +351,9 @@ WlrLayershell {
         if(!m) return false
         settingsName = m.name
         view = "settings"
-        DisplaySettingsService.probe(root.monitors)
+        // Always re-probe on entry: a cached gamma/DDC descriptor can go stale
+        // while the launcher is closed (e.g. the daemon was stopped).
+        DisplaySettingsService.probe(root.monitors, true)
         Qt.callLater(()=> settingsPanel.forceActiveFocus())
         return true
     }
