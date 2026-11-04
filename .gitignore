@@ -4,3 +4,4 @@ __pycache__/
 .claude/
 *prompt.md
 release-notes.json
+.superpowers/
