@@ -60,7 +60,7 @@
 						}
 					}
 				},
-				"deepseek/deepseek-v4.1-flash-1017": {
+				"deepseek/deepseek-flash-latest": {
 					"settings": {
 						"provider": {
 							"order": [
@@ -73,7 +73,7 @@
 						}
 					}
 				},
-				"deepseek/deepseek-v4-pro-0813": {
+				"deepseek/deepseek-v4-pro-latest": {
 					"settings": {
 						"provider": {
 							"order": [
