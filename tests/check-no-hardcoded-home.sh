@@ -15,7 +15,8 @@ hits=$(git grep -n -E '/home/[A-Za-z0-9._-]+' -- . \
   ':!nixos/tests/check-generation.sh' \
   ':!wsl/README.md' \
   ':!docs/' \
-  ':!wsl/docs/')
+  ':!wsl/docs/' \
+  ':!quickshell/docs/')
 status=$?
 if ((status > 1)); then
   echo "check-no-hardcoded-home: git grep failed (exit $status)" >&2

@@ -7,4 +7,6 @@
   };
   dontUnpack = false;
   installPhase = ''install -Dm755 orx $out/bin/orx'';
+  # The release tarball above is an x86_64 binary.
+  meta.platforms = [ "x86_64-linux" ];
 }

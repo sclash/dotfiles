@@ -18,11 +18,8 @@
     "services/misc/elephant.nix"
   ];
   imports = [
-    # Include the results of the hardware scan.
-    # ./hardware-configuration.nix
-
-    # builtins.readFile "/etc/nixos/hardware-configuration.nix"
-    ./hardware-configuration.nix
+    # The machine layer (hardware scan, bootloader, hostname, ...) is added by
+    # flake.nix from /etc/nixos.
     # ./tmux.nix
     ./sops.nix
     ./hardware-devices/printers.nix
@@ -50,11 +47,7 @@
     enable = true;
   };
   nixpkgs.config.allowUnfree = true;
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.graceful = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
   boot.tmp.cleanOnBoot = true;
 
   programs.wshowkeys.enable = true;
@@ -65,7 +58,6 @@
     nssmdns4 = true;      # Allows resolving .local hostnames
     openFirewall = true;  # Opens UDP port 5353 for mDNS discovery
   };
-  networking.hostName = "nixos-os"; # Define your hostname.
   # networking.wireless is left unset: with the default wpa_supplicant backend
   # the NetworkManager module enables wpa_supplicant itself (dbusControlled).
   # networking.wireless.iwd.enable = true; # Enables wireless support via wpa_supplicant.
@@ -78,16 +70,10 @@
   networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
   services.strongswan.enable = true;
 
-  # Set your time zone.
-  time.timeZone = "Europe/Amsterdam";
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
   ];
-  # Cap build parallelism to avoid OOM on 7.6GB RAM.
-  # max-jobs = concurrent derivations; cores = threads per derivation.
-  nix.settings.max-jobs = 2;
-  nix.settings.cores = 4;
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -183,7 +169,6 @@
 
     # opengl.enable = true;
     graphics.enable = true;
-    nvidia.modesetting.enable = true;
     # /dev/i2c-* for ddcutil (external monitor brightness); grants seated users access
     i2c.enable = true;
   };
@@ -210,6 +195,7 @@
   };
   services.blueman.enable = false;
   services.upower.enable = true;
+  services.fwupd.enable = true; # firmware updates, on any machine with LVFS support
   services.udisks2.enable = true;   # udisksctl backend for UsbService (quickshell USB-Manager)
 
   # Enable touchpad support (enabled default in most desktopManager).
@@ -329,12 +315,19 @@
       bat
       zip
       unzip
+    ])
+
+    ++
 
       ## scanner utility (printer drivers live under services.printing.drivers).
       ## withNonFreePlugins provides the network scanning module; without it
       ## the GUI cannot discover network scanners.
-      (epsonscan2.override { withNonFreePlugins = true; })
+      lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.epsonscan2)
+        (pkgs.epsonscan2.override { withNonFreePlugins = true; })
 
+    ++
+
+    (with pkgs; [
       chromium
       chromedriver
       undetected-chromedriver
@@ -486,23 +479,5 @@
   # accidentally delete configuration.nix.
   system.copySystemConfiguration = false;
 
-  # This option defines the first version of NixOS you have installed on this particular machine,
-  # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
-  #
-  # Most users should NEVER change this value after the initial install, for any reason,
-  # even if you've upgraded your system to a new NixOS release.
-  #
-  # This value does NOT affect the Nixpkgs version your packages and OS are pulled from,
-  # so changing it will NOT upgrade your system - see https://nixos.org/manual/nixos/stable/#sec-upgrading for how
-  # to actually do that.
-  #
-  # This value being lower than the current NixOS release does NOT mean your system is
-  # out of date, out of support, or vulnerable.
-  #
-  # Do NOT change this value unless you have manually inspected all the changes it would make to your configuration,
-  # and migrated your data accordingly.
-  #
-  # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-
-  system.stateVersion = "25.05"; # Did you read the comment?
+  # system.stateVersion is per machine: it lives in /etc/nixos/machine.nix.
 }

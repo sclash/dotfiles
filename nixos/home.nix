@@ -28,6 +28,7 @@
 # in
 let
   link = config.lib.file.mkOutOfStoreSymlink;
+  openResearch = import ./programs/open-research.nix { inherit pkgs; };
 in
 {
 
@@ -80,8 +81,8 @@ in
   # --- Packages ---
   # Install user-specific packages
   home.packages =
-    (with pkgs; [
-      (import ./programs/open-research.nix { inherit pkgs; })
+    lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform openResearch) openResearch
+    ++ (with pkgs; [
       man-pages
       man-pages-posix
       gh

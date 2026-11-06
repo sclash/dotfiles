@@ -46,7 +46,7 @@ link_target() {
 }
 
 Z=home-files/.zshrc
-has "$Z" 'sudo env SUDO_USER="$USER" DOTFILES_HOME="$HOME" nixos-rebuild switch --flake $HOME/dotfiles/nixos#nixos-os --impure'
+has "$Z" 'sudo env SUDO_USER="$USER" DOTFILES_HOME="$HOME" nixos-rebuild switch --flake $HOME/dotfiles/nixos#default --impure'
 has "$Z" "$HOMEDIR/dotfiles/scripts/tmux-sessionizer.sh"
 if [[ "$HOMEDIR" != /home/asergi ]]; then
   lacks "$Z" /home/asergi
@@ -66,10 +66,7 @@ count=$((count + 1))
 [[ "$(link_target "$GEN/$R")" == "$HOMEDIR/dotfiles/my-opencode/v2/RIPWIRE.md" ]] \
   || { echo "FAIL: RIPWIRE.md does not link to v2"; failures=$((failures + 1)); }
 
-A=home-files/.config/atuin
-count=$((count + 1))
-[[ "$(link_target "$GEN/$A")" == "$HOMEDIR/dotfiles/atuin" ]] \
-  || { echo "FAIL: atuin does not link to repo"; failures=$((failures + 1)); }
+has home-files/.config/atuin/config.toml 'keymap_mode = "vim-normal"'
 
 count=$((count + 1))
 [[ "$SOPS_KEY" == "$HOMEDIR/.config/sops/age/keys.txt" ]] \

@@ -93,13 +93,12 @@
       pkgs = nixpkgs.legacyPackages.${system};
       # pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       # pkgs-master = nixpkgs-master.legacyPackages.${system};
-      pkgs-unstable = import nixpkgs-unstable {
-        # <-- changed
-        inherit system;
+      mkPkgsUnstable = hostSystem: import nixpkgs-unstable {
+        system = hostSystem;
         config.allowUnfree = true;
       };
-      pkgs-master = import nixpkgs-master {
-        inherit system;
+      mkPkgsMaster = hostSystem: import nixpkgs-master {
+        system = hostSystem;
         config.allowUnfree = true;
         overlays = [
           (final: prev: {
@@ -126,8 +125,30 @@
           })
         ];
       };
+      # `system` only serves the standalone homeConfigurations and flake checks.
+      # The NixOS system takes its architecture from the machine's hardware config.
+      pkgs-unstable = mkPkgsUnstable system;
+      pkgs-master = mkPkgsMaster system;
       user = import ../lib/user.nix;
       inherit (user) username homeDirectory dotfiles;
+
+      # The machine layer (disks, bootloader, hostname, ...) lives outside this
+      # repo. Rebuilds use --impure and read it from /etc/nixos. Pure evaluation
+      # such as `nix flake check` cannot, so it uses a stub. DOTFILES_MACHINE_DIR
+      # points at another directory for testing.
+      machineDir =
+        let
+          override = builtins.getEnv "DOTFILES_MACHINE_DIR";
+        in
+        if override != "" then override else "/etc/nixos";
+      machineModules =
+        if builtins ? currentSystem then
+          map (file: /. + "${machineDir}/${file}") [
+            "hardware-configuration.nix"
+            "machine.nix"
+          ]
+        else
+          [ ./tests/stub-machine.nix ];
 
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
@@ -138,9 +159,9 @@
         {
           checks.generation = pkgs.runCommand "nixos-generation-check" { } ''
             bash ${./tests/check-generation.sh} \
-              ${pkgs.lib.escapeShellArg self.nixosConfigurations.nixos-os.config.home-manager.users.${username}.home.activationPackage} \
+              ${pkgs.lib.escapeShellArg self.nixosConfigurations.default.config.home-manager.users.${username}.home.activationPackage} \
               ${pkgs.lib.escapeShellArg self.homeConfigurations.default.config.home.homeDirectory} \
-              ${pkgs.lib.escapeShellArg self.nixosConfigurations.nixos-os.config.sops.age.keyFile} \
+              ${pkgs.lib.escapeShellArg self.nixosConfigurations.default.config.sops.age.keyFile} \
               ${../my-opencode/v2/opencode.jsonc}
             touch $out
           '';
@@ -155,19 +176,18 @@
           '';
 
           checks.identity =
-            assert self.nixosConfigurations.nixos-os.config.users.users.${username}.home == homeDirectory;
-            assert self.nixosConfigurations.nixos-os.config.services.greetd.settings.initial_session.user == username;
-            assert self.nixosConfigurations.nixos-os.config.sops.secrets.github_pat.owner == username;
-            assert builtins.hasAttr username self.nixosConfigurations.nixos-os.config.home-manager.users;
+            assert self.nixosConfigurations.default.config.users.users.${username}.home == homeDirectory;
+            assert self.nixosConfigurations.default.config.services.greetd.settings.initial_session.user == username;
+            assert self.nixosConfigurations.default.config.sops.secrets.github_pat.owner == username;
+            assert builtins.hasAttr username self.nixosConfigurations.default.config.home-manager.users;
             pkgs.runCommand "nixos-identity-check" { } "touch $out";
         };
 
       flake = {
 
         nixosConfigurations = {
-          nixos-os = inputs.nixpkgs.lib.nixosSystem {
-            modules = [
-              ./configuration.nix
+          default = inputs.nixpkgs.lib.nixosSystem {
+            modules = [ ./configuration.nix ] ++ machineModules ++ [
               inputs.sops-nix.nixosModules.sops
 
               {
@@ -177,29 +197,37 @@
               }
 
               home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.${username} = ./home.nix;
-                home-manager.extraSpecialArgs = {
-                  inherit my-dotfiles;
-                  # inherit neovimrc;
-                  inherit pkgs-unstable;
-                  inherit pkgs-master;
-                  inherit (user) username homeDirectory dotfiles;
-                };
-                # home-manager.backupCommand = "mv $source $target";
-                # home-manager.backupCommand = "false";
-                # home-manager.backupFileExtension = "hm-backup";
-                # home-manager.overwriteBackup = true;
+              (
+                { pkgs, ... }:
+                let
+                  hostPkgsUnstable = mkPkgsUnstable pkgs.stdenv.hostPlatform.system;
+                  hostPkgsMaster = mkPkgsMaster pkgs.stdenv.hostPlatform.system;
+                in
+                {
+                  _module.args.pkgs-unstable = hostPkgsUnstable;
 
-                # Optionally, use home-manager.extraSpecialArgs to pass
-                # arguments to home.nix
-              }
+                  home-manager.useGlobalPkgs = true;
+                  home-manager.useUserPackages = true;
+                  home-manager.users.${username} = ./home.nix;
+                  home-manager.extraSpecialArgs = {
+                    inherit my-dotfiles;
+                    # inherit neovimrc;
+                    pkgs-unstable = hostPkgsUnstable;
+                    pkgs-master = hostPkgsMaster;
+                    inherit (user) username homeDirectory dotfiles;
+                  };
+                  # home-manager.backupCommand = "mv $source $target";
+                  # home-manager.backupCommand = "false";
+                  # home-manager.backupFileExtension = "hm-backup";
+                  # home-manager.overwriteBackup = true;
+
+                  # Optionally, use home-manager.extraSpecialArgs to pass
+                  # arguments to home.nix
+                }
+              )
             ];
             specialArgs = {
               inherit (user) username homeDirectory dotfiles;
-              inherit pkgs-unstable;
               inherit inputs;
             };
           };
