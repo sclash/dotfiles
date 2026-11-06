@@ -27,7 +27,7 @@
     shellAliases = {
       ll = "ls -l";
       edit = "sudo -e";
-      update = "sudo env SUDO_USER=\"$USER\" DOTFILES_HOME=\"$HOME\" nixos-rebuild switch --flake $HOME/dotfiles/nixos#nixos-os --impure";
+      update = "sudo env SUDO_USER=\"$USER\" DOTFILES_HOME=\"$HOME\" nixos-rebuild switch --flake $HOME/dotfiles/nixos#nixos-os --impure --show-trace 2>&1 | tee /tmp/nixos-rebuild.log";
       ftm = "${config.home.homeDirectory}/dotfiles/scripts/tmux-sessionizer.sh";
     };
 
