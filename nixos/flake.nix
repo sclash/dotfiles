@@ -193,7 +193,6 @@
               {
                 nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
                 nixpkgs.overlays = [ nixd.overlays.default ];
-                environment.systemPackages = with pkgs; [ nixd ];
               }
 
               home-manager.nixosModules.home-manager
