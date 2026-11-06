@@ -456,13 +456,13 @@
 				},
 				"options": {
 					"nixos": {
-						"expr": "(builtins.getFlake (builtins.getEnv \"HOME\" + \"/dotfiles/nixos\")).nixosConfigurations.default.options"
+						"expr": "(builtins.getFlake (\"git+file://\" + builtins.getEnv \"HOME\" + \"/dotfiles?dir=nixos\")).nixosConfigurations.default.options"
 					},
 					"home_manager": {
-						"expr": "(builtins.getFlake (builtins.getEnv \"HOME\" + \"/dotfiles/nixos\")).homeConfigurations.default.options"
+						"expr": "(builtins.getFlake (\"git+file://\" + builtins.getEnv \"HOME\" + \"/dotfiles?dir=nixos\")).homeConfigurations.default.options"
 					},
 					"flake_parts": {
-						"expr": "let flake = builtins.getFlake (builtins.getEnv \"HOME\" + \"/dotfiles/nixos\"); in flake.debug.options // flake.currentSystem.options"
+						"expr": "let flake = builtins.getFlake (\"git+file://\" + builtins.getEnv \"HOME\" + \"/dotfiles?dir=nixos\"); in flake.debug.options // flake.currentSystem.options"
 					}
 				}
 			}
