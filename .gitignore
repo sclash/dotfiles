@@ -5,3 +5,7 @@ __pycache__/
 *prompt.md
 release-notes.json
 .superpowers/
+
+herdr/*.log
+herdr/session-snapshots/
+herdr/session.json
