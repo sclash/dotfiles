@@ -48,18 +48,20 @@ which is included as a submodule
 Inside the `nixos` directory there are the `configuration.nix` and `flake.nix` files.
 
 ### Installation
-To install NixOs refer to the [ official guide ](https://nixos.org/manual/nixos/stable/#ch-installation) then cd inside the `~/dotfiles/nixos` directory and run 
+This flake holds the personal layer and works on any machine. The machine layer (disks, bootloader, hostname, timezone, `stateVersion`) lives in `/etc/nixos/hardware-configuration.nix` and `/etc/nixos/machine.nix`, outside this repo.
+
+**New machine:** build the separate `nixos-installer` ISO, boot it, and answer its questions. After the first login it clones this repo to `~/dotfiles` and runs `nixos/bootstrap.sh`, which sets up the age key and installs the system for the next boot. If that fails, the machine stays a working plain NixOS. Fix the problem, then run `bash /etc/nixos/first-boot.sh`.
+
+**Machine installed another way:** create the two files above yourself, clone this repo to `~/dotfiles`, and run:
 ```bash
-sudo nixos-generate-config
-cd /mnt/nixos
-### This line is not needed if /etc/nixos/hardware-configuration.nix
-### is imported in configuration.nix
-sudo nix flake update
-sudo cp hardware-configuration.nix ~/dotfiles/nixos 
-cd ~/dotfiles/nixos
-sudo nixos-install --flake .#nixos-os --root
-reboot
+bash ~/dotfiles/nixos/bootstrap.sh
 ```
+
+**Secrets on a new machine:** each machine has its own age key. Bootstrap prints the key's public half if it can't decrypt yet. On a machine that can decrypt, run the following, then commit and push:
+```bash
+bash ~/dotfiles/nixos/bootstrap.sh --add-recipient <public-key>
+```
+Then on the new machine, run `git pull && update`.
 
 ### Network
 Use `nmcli`
@@ -72,10 +74,9 @@ To update the NixOS configuration we can work in the directory in which this rep
 The `flake.nix` and `home.nix` files tracks the `master` branch of this repo
 After having made changes to the repo staged and commited them, To update the system
 ```bash
-cd ~/dotfiles/nixos #provided this repo has been cloned in ~/
-sudo nixos-rebuild switch --flake .#nixos-os --impure
+update # alias for: sudo nixos-rebuild switch --flake ~/dotfiles/nixos#default --impure, keeping your user
 ```
-if you encounter any problem copy the `hardware-configuration.nix` and `flake.nix` from `/etx/nixos` to `~/dotfiles/nixos` and try again
+`default` is only the flake's name for the config. A machine's hostname comes from its `/etc/nixos/machine.nix`.
 
 ## Alacritty
 

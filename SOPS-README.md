@@ -64,7 +64,7 @@ Backup `~/.config/sops/age/keys.txt` somewhere safe (password manager, offline c
 ```bash
 sops edit nixos/secrets/secrets.yaml   # $EDITOR opens decrypted view — edit github_pat: <new>, save → auto re-encrypts
 git add nixos/secrets/secrets.yaml
-update                            # alias → sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#nixos-os
+update                            # alias → sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#default
 # new shells pick it up automatically; restart opencode
 ```
 
@@ -128,7 +128,7 @@ sops edit nixos/secrets/secrets.yaml
 # edit:  github_pat: <new-value>
 # :wq  → sops re-encrypts automatically with the key in .sops.yaml
 git add nixos/secrets/secrets.yaml
-update   # sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#nixos-os
+update   # sudo nixos-rebuild switch --impure --flake ~/dotfiles/nixos#default
 ```
 
 No regex or flag needed — editing the key in place is the update.
