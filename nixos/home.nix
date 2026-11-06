@@ -78,6 +78,19 @@ in
     "/run/current-system/sw/share/nix-ld/lib"
   ];
 
+  # --- GTK / libadwaita theming ---
+  # Hyprland's `gsettings` calls (hypr/hyprland.lua) fail with "No schemas
+  # installed" because the compositor's spawn environment lacks the GSettings
+  # schema path. That left color-scheme=default and gtk-theme=Adwaita, so
+  # libadwaita apps (Nautilus) rendered light. Writing the same values through
+  # dconf at activation time does not depend on that environment.
+  dconf.enable = true;
+  dconf.settings."org/gnome/desktop/interface" = {
+    color-scheme = "prefer-dark";  # GTK4 / libadwaita apps
+    gtk-theme = "adw-gtk3-dark";   # GTK3 apps
+    cursor-blink = false;          # was the third failing gsettings call
+  };
+
   # --- Packages ---
   # Install user-specific packages
   home.packages =

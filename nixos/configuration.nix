@@ -139,6 +139,10 @@
       };
     };
   };
+  # Provides the system dconf profile so GTK/libadwaita apps read the user
+  # database written by home-manager's dconf.settings (home.nix).
+  programs.dconf.enable = true;
+
   # services.wayland.windowManager.hyprland.systemd.enable = true;
   # wayland.windowManager.hyprland.systemd.enable = true;
   programs.hyprland = {
@@ -153,10 +157,10 @@
   };
   security.pam.services.hyprlock.enable = true;
 
-  # Optional: set GTK theme globally via environment variables
+  # GTK theming is set declaratively via dconf in home.nix. Do NOT set
+  # GTK_THEME here: it takes precedence over the gtk-theme GSettings key and
+  # would override adw-gtk3-dark for GTK3 apps.
   environment.variables = {
-    GTK_THEME = "Adwaita-dark";
-    # GTK_THEME = "Materia-dark";
     XCURSOR_THEME = "Adwaita";
     XDG_CURRENT_DESKTOP = "Hyprland";
     GTK_APPLICATION_PREFER_DARK_THEME = "1";
