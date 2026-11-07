@@ -1,7 +1,9 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Services.UPower
 import "../../theme"
 import "../../services"
 
@@ -47,6 +49,37 @@ WlrLayershell {
         return "Unknown"
     }
 
+    // --- Power profile switcher ---
+    property int profileSel: 0
+    readonly property var profileRows: {
+        const rows = [{ key: "auto", label: "Auto", glyph: Icons.profileAuto }]
+        if (PowerProfileService.hasPerformance) rows.push({ key: "performance", label: "Performance", glyph: Icons.profilePerformance })
+        rows.push({ key: "balanced",    label: "Balanced",    glyph: Icons.profileBalanced })
+        rows.push({ key: "powerSaver",  label: "Power Saver", glyph: Icons.profilePowerSaver })
+        return rows
+    }
+    function applyRow(i) {
+        const r = profileRows[i]
+        if (!r) return
+        if (r.key === "auto") PowerProfileService.setAuto()
+        else if (r.key === "performance") PowerProfileService.setProfile(PowerProfile.Performance)
+        else if (r.key === "balanced")    PowerProfileService.setProfile(PowerProfile.Balanced)
+        else                              PowerProfileService.setProfile(PowerProfile.PowerSaver)
+    }
+    function engaged(r) {
+        if (r.key === "auto") return PowerProfileService.auto
+        if (PowerProfileService.auto) return false
+        if (r.key === "performance") return PowerProfileService.current === PowerProfile.Performance
+        if (r.key === "balanced")    return PowerProfileService.current === PowerProfile.Balanced
+        return PowerProfileService.current === PowerProfile.PowerSaver
+    }
+    function targetLabel() {
+        const p = PowerProfileService.autoTarget
+        if (p === PowerProfile.Performance) return "Performance"
+        if (p === PowerProfile.Balanced) return "Balanced"
+        return "Power Saver"
+    }
+
     function formatMinutes(m) {
         if (m === undefined || m === null || m < 0) return "—"
         if (m < 1) return "<1m"
@@ -67,7 +100,7 @@ WlrLayershell {
     Rectangle {
         id: card
         width: 620
-        height: Math.min(560, mainCol.implicitHeight + Theme.padL * 2)
+        height: Math.min(620, mainCol.implicitHeight + Theme.padL * 2)
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
@@ -75,12 +108,25 @@ WlrLayershell {
         border.color: Theme.borderActive
         clip: true
 
-        ColumnLayout {
-            id: mainCol
+        Flickable {
+            id: scrollFlick
             anchors.fill: parent
             anchors.margins: Theme.padL
-            spacing: Theme.gapM
-            focus: true
+            clip: true
+            contentWidth: width
+            contentHeight: mainCol.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+                width: 4
+                background: Rectangle { color: "transparent" }
+                contentItem: Rectangle { color: Theme.borderActive; radius: 2 }
+            }
+            ColumnLayout {
+                id: mainCol
+                width: scrollFlick.width
+                spacing: Theme.gapM
+                focus: true
 
             Text { text: "Power"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; color: Theme.fgMuted; font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2 }
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
@@ -167,6 +213,83 @@ WlrLayershell {
                 }
             }
 
+            // Power profile switcher — auto (follows AC) + manual hold.
+            Text {
+                visible: PowerProfileService.available
+                text: "Power profile"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.fgMuted
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: 1.2
+            }
+            ColumnLayout {
+                visible: PowerProfileService.available
+                Layout.fillWidth: true
+                spacing: Theme.gapS
+                Repeater {
+                    model: root.profileRows
+                    delegate: Rectangle {
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 34
+                        radius: Theme.roundingItem
+                        color: "transparent"
+                        border.width: 1
+                        border.color: root.profileSel === index ? Theme.borderSelected : Theme.border
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.padM
+                            anchors.rightMargin: Theme.padM
+                            spacing: Theme.gapM
+                            Text {
+                                text: modelData.glyph
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeLauncher
+                                color: Theme.fgMuted
+                            }
+                            Text {
+                                text: modelData.label
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeLauncher
+                                color: Theme.fg
+                                Layout.fillWidth: true
+                            }
+                            Text {
+                                visible: root.engaged(modelData)
+                                text: Icons.check
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeLauncher
+                                color: Theme.success
+                            }
+                            Text {
+                                visible: !root.engaged(modelData) && modelData.key === "auto"
+                                text: "→ " + root.targetLabel()
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgMuted
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: { root.profileSel = index; root.applyRow(index) }
+                        }
+                    }
+                }
+                Text {
+                    visible: PowerProfileService.degraded
+                    text: Icons.warning + " performance degraded: " +
+                          (PowerProfileService.degradation === PerformanceDegradationReason.LapDetected ? "lap detected" : "high temperature")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.warning
+                    Layout.fillWidth: true
+                }
+            }
+
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
 
             // Detail rows — label left, value right-aligned.
@@ -240,13 +363,19 @@ WlrLayershell {
                 }
             }
 
-            Text { text: "Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text { text: "j/k select · Enter apply · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
 
             Keys.onPressed: (e) => {
                 if (e.key === Qt.Key_Escape) { root.close(); e.accepted = true }
+                else if (e.key === Qt.Key_J || e.key === Qt.Key_Down) { root.profileSel = Math.min(root.profileRows.length - 1, root.profileSel + 1); e.accepted = true }
+                else if (e.key === Qt.Key_K || e.key === Qt.Key_Up) { root.profileSel = Math.max(0, root.profileSel - 1); e.accepted = true }
+                else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { root.applyRow(root.profileSel); e.accepted = true }
+                else if (e.key >= Qt.Key_1 && e.key <= Qt.Key_4) { root.applyRow(e.key - Qt.Key_1); e.accepted = true }
             }
             Component.onCompleted: forceActiveFocus()
         }
+        }
+
         Keys.onEscapePressed: root.close()
         onVisibleChanged: if (visible) mainCol.forceActiveFocus()
     }

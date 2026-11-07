@@ -8,8 +8,9 @@
 
 Center-screen battery status card. Shows charge percentage and a **live estimate of
 time left unplugged** when the machine runs on battery, with state colours that
-match the bar battery icon. Display-only — no power-profile mutation; power
-actions (suspend/reboot/poweroff) stay in `Shutdown-Launcher.md`.
+match the bar battery icon. Also hosts the **power-profile switcher** (Automatic
+plus manual picks) backed by `PowerProfileService.qml`; power actions
+(suspend/reboot/poweroff) stay in `Shutdown-Launcher.md`.
 
 A **bar icon** in the right group (`components/bar/BatteryIcon.qml`, between VPN
 and Keyboard in `Bar.qml`) mirrors charge state read-only from `BatteryService`:
@@ -25,6 +26,8 @@ battery is present. Click toggles this launcher (`power`).
   `width: 620`, `radius: Theme.roundingLauncher`, `Esc` closes.
 * No filter field — fixed sections, filter is unnecessary.
 * Refreshes `BatteryService` on open so the first paint is current.
+* Body scrolls (`Flickable` + thin `ScrollBar`) so the battery + profile content can
+  never overflow the card (`STYLE.md` §5.7); card height caps at 620.
 
 ## 3. Sections (top → bottom)
 
@@ -48,7 +51,30 @@ battery is present. Click toggles this launcher (`power`).
   `Theme.durationFast`).
 * Hidden when plugged or when capacity is unknown.
 
-### 3.3 Detail rows
+### 3.3 Power profile
+
+Visible only when `PowerProfileService.available` (PPD reachable). Uppercase
+`"Power profile"` sub-header, then four rows in `j/k` order:
+
+| Row | Meaning |
+|---|---|
+| **Auto** | Follow the power source (rule below). Right-aligned `→ <target>` shows the profile the rule is driving. |
+| **Performance** | Manual — hidden when `!PowerProfileService.hasPerformance`. |
+| **Balanced** | Manual. |
+| **Power Saver** | Manual. |
+
+* Row chrome per `STYLE.md` §5.3: `radius: Theme.roundingItem`, `Layout.preferredHeight: 34`,
+  `border.color: Theme.borderSelected` when selected else `Theme.border`.
+* Leading `Icons.profile*` glyph (`Theme.fgMuted`) + label (`Theme.fg`).
+* **One** check indicator (`Icons.check`, `Theme.success`): on the **Auto** row while
+  auto mode is engaged, otherwise on the row matching `PowerProfileService.current`.
+* **Degraded note** below the rows when `PowerProfileService.degraded`:
+  `Icons.warning` + `" performance degraded: lap detected"` / `"…: high temperature"`
+  in `Theme.warning`.
+* Interaction: `j`/`k` (or arrows) move the selection; `Enter` applies the selected row
+  (`Auto` → re-enable auto; a profile → manual hold); `1`–`4` select directly.
+
+### 3.4 Detail rows
 
 Label left (`Theme.fgMuted`), value right-aligned:
 
@@ -93,10 +119,46 @@ property string model: ""           // battery device model
   a value `≤ 0` or NaN → `-1` (unknown, never infinite).
 * **No `refresh()`:** UPower pushes updates, so there is no manual poll or key.
 
+### Service contract — `PowerProfileService.qml`
+
+Backed by Quickshell's native `Quickshell.Services.UPower.PowerProfiles`; no
+`Process` polling (one one-shot `powerprofilesctl` probe for availability). It
+reads `BatteryService` (`available`, `plugged`, `charging`, `capacity`) and is the
+only writer of `PowerProfiles.profile`.
+
+```qml
+property bool available            // PPD reachable (one-shot powerprofilesctl probe)
+property bool hasPerformance       // PowerProfiles.hasPerformanceProfile
+property int  current              // PowerProfiles.profile (PowerProfile.* enum)
+property bool degraded             // degradationReason !== None
+property bool auto                 // true = follow the rule; false = manual hold
+property int  autoTarget           // the PowerProfile.* the rule wants now
+function setProfile(p: int): void  // manual pick; sets auto = false
+function setAuto(): void           // re-enable auto and apply
+```
+
+Auto rule (AC = `plugged || charging`; `capacity` is `-1` when unknown):
+
+| Condition | Target |
+|---|---|
+| no battery present, or on AC | Performance (Balanced if `!hasPerformance`) |
+| on battery, `capacity ≤ 20` | Power-saver (latches low) |
+| on battery, latched & `0 ≤ capacity < 25` | Power-saver |
+| on battery, otherwise | Balanced |
+
+Hysteresis: drop at `≤ 20`, recover at `≥ 25`; AC clears the latch. Unknown
+capacity (`-1`) is never treated as low. The rule is a dependency-free module,
+`services/powerProfileRule.js`, unit-tested by `tests/tst_power_profile_rule.qml`.
+`auto` is the default at startup; a manual pick holds until the **Auto** row is
+re-selected.
+
 ## 5. Interaction
 
 * `Esc` closes. No refresh key — UPower is live.
-* Display-only: no `Enter` action, no `j/k` cursor. Footer hint: `"Esc close"`.
+* Battery rows are display-only. The **profile section** (visible when
+  `PowerProfileService.available`) is interactive: `j/k` or arrows move the selection,
+  `Enter` applies it, `1`–`4` select directly. Footer hint:
+  `"j/k select · Enter apply · Esc close"`.
 * Replaces any open launcher (shell `IpcHandler` `closeAllExcept("power")`).
 
 ## 6. Styling
@@ -132,5 +194,10 @@ property string model: ""           // battery device model
   `"Full in …"` only while charging with known rate.
 * [ ] `SUPER+p` toggles; `SUPER+SHIFT+p` toggles perf; bar battery click opens the launcher.
 * [ ] No-battery machine: degraded hero, bar icon hidden, no QML errors.
-* [ ] Estimate never shows infinite/negative; `r` refreshes; `Esc` closes.
+* [ ] Estimate never shows infinite/negative; `Esc` closes.
 * [ ] Uses `Theme.*` tokens; all glyphs via `Icons.*`.
+* [ ] On AC (including while charging): Auto drives Performance; unplug → Balanced;
+  `≤ 20%` → Power Saver; hovering the 20–25% band does not flap.
+* [ ] A manual pick holds across plug/unplug until the Auto row is re-selected.
+* [ ] Degraded note shows on lap-detected / high-temperature; profile section hidden
+  when PPD is unreachable; Performance row hidden when unsupported.
