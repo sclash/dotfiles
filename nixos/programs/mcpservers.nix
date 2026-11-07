@@ -68,7 +68,7 @@
           "@modelcontextprotocol/server-github"
         ];
         environment = {
-          GITHUB_PERSONAL_ACCESS_TOKEN = "{env:GITHUB_TOKEN}";
+          GITHUB_PERSONAL_ACCESS_TOKEN = "{env:GITHUB_PERSONAL_ACCESS_TOKEN}";
         };
       };
 
