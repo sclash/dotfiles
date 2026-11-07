@@ -61,6 +61,11 @@ in
   # home.sessionVariables = {
   #   PATH = "${my-dotfiles}/bin:${config.home.sessionVariables.PATH or ""}";
   # };
+  home.sessionVariables = {
+  GITHUB_PERSONAL_ACCESS_TOKEN = "$(cat /run/secrets/github_pat 2>/dev/null)";
+  GH_TOKEN                     = "$(cat /run/secrets/github_pat 2>/dev/null)";
+  OPENROUTER_API               = "$(cat /run/secrets/openrouter 2>/dev/null)";
+};
   home.sessionPath = [
     "$HOME/.local/bin"
   ];

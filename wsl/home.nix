@@ -66,7 +66,12 @@ in
     EDITOR = "nvim";
     VISUAL = "nvim";
     SUDO_EDITOR = "nvim";
+
+    GITHUB_PERSONAL_ACCESS_TOKEN = "$(cat /run/secrets/github_pat 2>/dev/null)";
+    GH_TOKEN                     = "$(cat /run/secrets/github_pat 2>/dev/null)";
+    OPENROUTER_API               = "$(cat /run/secrets/openrouter 2>/dev/null)";
   };
+
 
   programs.git = {
     enable = true;
