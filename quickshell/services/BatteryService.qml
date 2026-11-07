@@ -9,7 +9,11 @@ QtObject {
     property bool plugged: false
     property bool discharging: false
     property int capacity: -1
-    // Raw sysfs readings (µWh / µW). -1 when unreadable.
+    // Raw readings normalized to µWh / µW. -1 when unreadable.
+    // The kernel exposes one of two schemes per battery:
+    //   energy: energy_now/energy_full/power_now (already µWh/µW)
+    //   charge: charge_now/charge_full/current_now/voltage_now (µAh/µA/µV)
+    // Both are normalized here so the rest of the shell sees one shape.
     property double energyNow: -1
     property double energyFull: -1
     property double powerNow: -1
@@ -20,7 +24,9 @@ QtObject {
     function refresh(): void { poll.running = true }
 
     property Process poll: Process {
-        command: ["sh", "-c", "b=$(ls /sys/class/power_supply/ 2>/dev/null | grep -E '^BAT' | head -n1); if [ -z \"$b\" ]; then echo NONE; else echo \"$(cat /sys/class/power_supply/$b/status 2>/dev/null)|$(cat /sys/class/power_supply/$b/capacity 2>/dev/null)|$(cat /sys/class/power_supply/$b/energy_now 2>/dev/null)|$(cat /sys/class/power_supply/$b/energy_full 2>/dev/null)|$(cat /sys/class/power_supply/$b/power_now 2>/dev/null)\"; fi"]
+        // One-shot read of the first BAT* supply. Emits every field we might need
+        // from both schemes; normalization happens in JS below.
+        command: ["sh", "-c", "b=$(ls /sys/class/power_supply/ 2>/dev/null | grep -E '^BAT' | head -n1); if [ -z \"$b\" ]; then echo NONE; else d=/sys/class/power_supply/$b; echo \"$(cat $d/status 2>/dev/null)|$(cat $d/capacity 2>/dev/null)|$(cat $d/energy_now 2>/dev/null)|$(cat $d/energy_full 2>/dev/null)|$(cat $d/power_now 2>/dev/null)|$(cat $d/charge_now 2>/dev/null)|$(cat $d/charge_full 2>/dev/null)|$(cat $d/current_now 2>/dev/null)|$(cat $d/voltage_now 2>/dev/null)|$(cat $d/voltage_min_design 2>/dev/null)|$(cat $d/power 2>/dev/null)\"; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = String(this.text).trim()
@@ -36,23 +42,51 @@ QtObject {
                     root.timeLeftMinutes = -1
                     return
                 }
+                const num = (s) => { const v = parseFloat((s || "").trim()); return isNaN(v) ? -1 : v }
+                // Presence, not sign: some drivers report negative current_now,
+                // so "-1" must stay reserved for "node missing/unreadable".
+                const has = (s) => (s || "").trim() !== ""
                 const parts = txt.split("|")
                 const status = (parts[0] || "").trim()
                 const cap = parseInt((parts[1] || "").trim(), 10)
-                const eNow = parseFloat((parts[2] || "").trim())
-                const eFull = parseFloat((parts[3] || "").trim())
-                const pNow = parseFloat((parts[4] || "").trim())
+
+                // Energy-based scheme (µWh / µW) — preferred when present.
+                let eNow = has(parts[2]) ? num(parts[2]) : -1
+                let eFull = has(parts[3]) ? num(parts[3]) : -1
+                let pNow = has(parts[4]) ? Math.abs(num(parts[4])) : -1
+                // Charge-based scheme (µAh / µA / µV).
+                const cNow = num(parts[5])
+                const cFull = num(parts[6])
+                const iNow = num(parts[7])
+                const vNow = num(parts[8])
+                const vMin = num(parts[9])
+                const power = num(parts[10])
+
+                // Prefer the live voltage; fall back to the design voltage (V).
+                const volt = vNow > 0 ? vNow / 1000000 : (vMin > 0 ? vMin / 1000000 : -1)
+
+                // Normalize charge scheme → energy scheme (consumers read µWh/µW):
+                //   energy[µWh] = charge[µAh] * voltage[V]
+                //   power[µW]   = current[µA] * voltage[V]
+                if (eNow < 0 && has(parts[5]) && volt > 0) eNow = cNow * volt
+                if (eFull < 0 && has(parts[6]) && volt > 0) eFull = cFull * volt
+                // power_now wins; then current*voltage; then the `power` node.
+                // Magnitude only — direction is carried by `status` (the sign
+                // convention of these nodes differs per driver).
+                if (pNow < 0 && has(parts[7]) && volt > 0) pNow = Math.abs(iNow) * volt
+                if (pNow < 0 && has(parts[10])) pNow = Math.abs(power)
+
                 root.capacity = isNaN(cap) ? -1 : Math.max(0, Math.min(100, cap))
-                root.energyNow = isNaN(eNow) ? -1 : eNow
-                root.energyFull = isNaN(eFull) ? -1 : eFull
-                root.powerNow = isNaN(pNow) ? -1 : pNow
+                root.energyNow = eNow
+                root.energyFull = eFull
+                root.powerNow = pNow
                 root.charging = status === "Charging"
                 root.plugged = status === "Full" || status === "Not charging"
                 root.discharging = status === "Discharging"
                 root.available = true
                 // Live estimate — only when unplugged and actually drawing power,
                 // or charging towards full. Power draw of 0 (idle on AC, or
-                // sysfs without power_now) means unknown, not infinite.
+                // sysfs without current/power data) means unknown, not infinite.
                 let mins = -1
                 if (root.discharging && root.energyNow > 0 && root.powerNow > 0) {
                     mins = Math.round(root.energyNow / root.powerNow * 60)

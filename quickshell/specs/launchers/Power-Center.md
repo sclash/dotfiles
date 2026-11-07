@@ -72,12 +72,19 @@ property int timeLeftMinutes: -1   // live estimate, -1 = unknown
 function refresh(): void           // force one poll tick (called on launcher open, key `r`)
 ```
 
-* **One-shot read:** a single shell invocation emits
-  `status|capacity|energy_now|energy_full|power_now` for the first `BAT*` supply;
+* **One-shot read:** a single shell invocation reads the first `BAT*` supply and
+  emits `status|capacity|energy_now|energy_full|power_now|charge_now|charge_full|current_now|voltage_now|voltage_min_design|power`;
   `NONE` when no battery exists. No `upower` dependency.
+* **Scheme normalization:** kernels expose either the *energy* scheme
+  (`energy_now`/`energy_full`/`power_now`, µWh/µW) or the *charge* scheme
+  (`charge_now`/`charge_full`/`current_now`/`voltage_now`, µAh/µA/µV). The service
+  normalizes the charge scheme into the same public µWh/µW shape:
+  `energy[µWh] = charge[µAh] × voltage[V]`, `power[µW] = |current[µA]| × voltage[V]`
+  (live `voltage_now`, else `voltage_min_design`; `power_now`, then the `power`
+  node, take precedence). Consumers always read `energyNow`/`energyFull`/`powerNow`.
 * **Estimate:** discharging with `powerNow > 0` → `energyNow / powerNow * 60`;
   charging towards full → `(energyFull - energyNow) / powerNow * 60`;
-  otherwise `-1` (on AC, idle draw `0`, or missing sysfs nodes — unknown, never infinite).
+  otherwise `-1` (on AC, idle draw `0`, or no readable energy/charge data — unknown, never infinite).
 * **Polling:** `Timer { interval: 15000; repeat: true }` — sysfs reads are cheap;
   no DBus/event source exists for this. `refresh()` for on-demand ticks.
 
@@ -101,8 +108,8 @@ function refresh(): void           // force one poll tick (called on launcher op
   `"No battery"` + `"No battery detected"`; bar icon hidden; detail rows collapse
   to `Charge: —` + `Status: No battery`.
 * Unknown estimate (`timeLeftMinutes === -1`) → `"—"`, never `0m` or infinity.
-* Missing `power_now`/`energy_*` nodes → power/energy rows hidden, percent + status
-  still render.
+* Missing `energy_*`/`power_now` **and** `charge_*`/`current_now` nodes → power/energy
+  rows hidden, percent + status still render.
 
 ## 8. Keybinding (moved perf drawer)
 
