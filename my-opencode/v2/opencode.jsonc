@@ -96,6 +96,17 @@
 						}
 					}
 				},
+				"minimax/minimax-m3.1-flash": {
+					"settings": {
+						"provider": {
+							"order": [
+								"minimax",
+								"digitalocean",
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
 				"z-ai/glm-5.3": {
 					"settings": {
 						"provider": {
@@ -141,6 +152,45 @@
 				"apiKey": "{file:/run/secrets/cheaper_inference}"
 			},
 			"models": {
+				"minimax-m3.1-flash": {
+					"name": "minimax-m3.1-flash",
+					"limit": {
+						"context": 1048576,
+						"output": 131072
+					},
+					"variants": [
+						{
+							"id": "low",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "medium",
+							"settings": {
+								"reasoningEffort": "low"
+							}
+						},
+						{
+							"id": "high",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "high"
+							}
+						},
+						{
+							"id": "max",
+							"settings": {
+								"reasoningEffort": "max"
+							}
+						}
+					]
+				},
 				"glm-5.3": {
 					"name": "glm-5.3",
 					"limit": {
