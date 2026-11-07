@@ -58,40 +58,46 @@ Label left (`Theme.fgMuted`), value right-aligned:
 | Time left unplugged | formatted `timeLeftMinutes` (`"2h 15m"`, `"45m"`, `"—"` when unknown) | `discharging` only |
 | Power draw / Charge rate | `{powerNow} W` (1 decimal) | discharging or charging, when `powerNow >= 0` |
 | Energy | `{energyNow} / {energyFull} Wh` (1 decimal) | when both known |
+| Health | `{health}%` (0 decimals) | `healthSupported` |
+| Model | `model` | when non-empty |
 | Status | state label | always |
 
-## 4. Service Contract — `BatteryService.qml` (extended)
+## 4. Service Contract — `BatteryService.qml`
+
+Backed by Quickshell's native `Quickshell.Services.UPower` — no sysfs parsing,
+no `Process`, no `Timer`, no polling. State is push-based over DBus.
 
 ```qml
-// BatteryService.qml — additions over capacity/status polling
-property bool discharging: false   // status === "Discharging"
-property double energyNow: -1      // µWh from energy_now, -1 when unreadable
-property double energyFull: -1     // µWh from energy_full
-property double powerNow: -1       // µW from power_now
-property int timeLeftMinutes: -1   // live estimate, -1 = unknown
-function refresh(): void           // force one poll tick (called on launcher open, key `r`)
+// BatteryService.qml — properties bound over UPower
+property bool available: false      // displayDevice.ready && isPresent
+property bool charging: false       // state === Charging
+property bool discharging: false    // state === Discharging || Empty
+property bool plugged: false        // !UPower.onBattery && !charging
+property int capacity: -1           // round(displayDevice.percentage * 100), 0..100
+property double energyNow: -1       // µWh = displayDevice.energy (Wh) × 1e6
+property double energyFull: -1      // µWh = displayDevice.energyCapacity (Wh) × 1e6
+property double powerNow: -1        // µW = displayDevice.changeRate (W) × 1e6
+property int timeLeftMinutes: -1    // timeToEmpty/timeToFull ÷ 60; -1 = unknown
+property bool healthSupported: false
+property double health: -1          // battery device healthPercentage (0..100)
+property string model: ""           // battery device model
 ```
 
-* **One-shot read:** a single shell invocation reads the first `BAT*` supply and
-  emits `status|capacity|energy_now|energy_full|power_now|charge_now|charge_full|current_now|voltage_now|voltage_min_design|power`;
-  `NONE` when no battery exists. No `upower` dependency.
-* **Scheme normalization:** kernels expose either the *energy* scheme
-  (`energy_now`/`energy_full`/`power_now`, µWh/µW) or the *charge* scheme
-  (`charge_now`/`charge_full`/`current_now`/`voltage_now`, µAh/µA/µV). The service
-  normalizes the charge scheme into the same public µWh/µW shape:
-  `energy[µWh] = charge[µAh] × voltage[V]`, `power[µW] = |current[µA]| × voltage[V]`
-  (live `voltage_now`, else `voltage_min_design`; `power_now`, then the `power`
-  node, take precedence). Consumers always read `energyNow`/`energyFull`/`powerNow`.
-* **Estimate:** discharging with `powerNow > 0` → `energyNow / powerNow * 60`;
-  charging towards full → `(energyFull - energyNow) / powerNow * 60`;
-  otherwise `-1` (on AC, idle draw `0`, or no readable energy/charge data — unknown, never infinite).
-* **Polling:** `Timer { interval: 15000; repeat: true }` — sysfs reads are cheap;
-  no DBus/event source exists for this. `refresh()` for on-demand ticks.
+* **Source:** `UPower.displayDevice` (the aggregate over all batteries — handles
+  multi-battery machines and any sysfs naming) for state / percentage / energy /
+  rate / time; the `UPower.devices` entry with `isLaptopBattery` (else the first
+  `Battery`) for `health` / `model`.
+* **Units:** UPower reports Wh / W / seconds; the public contract stays µWh / µW /
+  minutes. `capacity` scales `percentage` by 100 (Quickshell exposes it as a
+  `0..1` fraction, unlike `healthPercentage`).
+* **Estimate:** `discharging` → `timeToEmpty`; `charging` → `timeToFull`;
+  a value `≤ 0` or NaN → `-1` (unknown, never infinite).
+* **No `refresh()`:** UPower pushes updates, so there is no manual poll or key.
 
 ## 5. Interaction
 
-* `Esc` closes. `r` forces `BatteryService.refresh()`.
-* Display-only: no `Enter` action, no `j/k` cursor. Footer hint: `"r refresh · Esc close"`.
+* `Esc` closes. No refresh key — UPower is live.
+* Display-only: no `Enter` action, no `j/k` cursor. Footer hint: `"Esc close"`.
 * Replaces any open launcher (shell `IpcHandler` `closeAllExcept("power")`).
 
 ## 6. Styling
@@ -104,12 +110,12 @@ function refresh(): void           // force one poll tick (called on launcher op
 
 ## 7. Empty / Degraded States
 
-* No battery (`available === false`) → hero shows plug glyph at `Theme.fgDim`,
+* No present battery (`available === false`) → hero shows plug glyph at `Theme.fgDim`,
   `"No battery"` + `"No battery detected"`; bar icon hidden; detail rows collapse
   to `Charge: —` + `Status: No battery`.
 * Unknown estimate (`timeLeftMinutes === -1`) → `"—"`, never `0m` or infinity.
-* Missing `energy_*`/`power_now` **and** `charge_*`/`current_now` nodes → power/energy
-  rows hidden, percent + status still render.
+* `healthSupported === false` → Health row hidden; empty `model` → Model row hidden.
+  A machine without `upowerd` yields `available === false` (degraded, not an error).
 
 ## 8. Keybinding (moved perf drawer)
 

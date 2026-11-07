@@ -40,7 +40,7 @@ We are **not building generic DE scaffolding** — only the shell surface descri
 | Date / time | `Process { command: ["date"] }` + `Timer` | `Bar.qml:27-50` already does this; refine to `Qt.formatDateTime` |
 | Launchers (center overlay) | `PanelWindow { anchors.centerIn }` or `PopupWindow` + Hyprland `layerrule` | Standard Quickshell launcher pattern |
 | Notifications | `Quickshell.Services.Notifications` | Replaces `swaync` daemon |
-| Battery | `services/BatteryService.qml` (sysfs `BAT*`, no UPower dep) | `Power-Center.md` — bar icon + `SUPER+p` launcher |
+| Battery | `services/BatteryService.qml` (`Quickshell.Services.UPower`) | `Power-Center.md` — bar icon + `SUPER+p` launcher |
 | Keybinding dispatch | Hyprland `bind = SUPER, <key>, exec, quickshell ipc call ...` | Quickshell `IpcHandler` |
 | App launcher backend | `elephant` / `walker` already in autostart (`hyprland.lua:38`) | Reuse verbatim; QML just renders results |
 | Multi-monitor | `Variants { model: Quickshell.screens }` | Each screen gets its own `PanelWindow` |
@@ -63,7 +63,7 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `wireplumber` + `pipewire` + `wpctl` | Audio graph | **yes** | `pkgs.wireplumber` |
 | `bluez` + `bluez-tools` | Bluetooth | **yes** | `pkgs.bluez` |
 | `elephant` (or `walker`) | App index for App-Launcher | **yes** | already in autostart (`hyprland.lua:38`) — ensure packaged |
-| `upower` | Battery (if kept) | optional | `pkgs.upower` |
+| `upower` | Battery via `Quickshell.Services.UPower` | **yes** | `pkgs.upower` + `services.upower.enable` |
 | `lm_sensors` / `sysstat` | Temperature / CPU | **yes** for perf widgets | `pkgs.lm_sensors` |
 | `udisks2` | USB storage mount/unmount via `udisksctl` | **yes** for USB-Manager | `pkgs.udisks2` + `services.udisks2.enable` |
 | `usbutils` | USB device listing (`lsusb`) | **yes** for USB-Manager | `pkgs.usbutils` |
@@ -115,7 +115,7 @@ quickshell/
 │   ├── BluetoothService.qml  # Singleton — BlueZ DBus wrapper
 │   ├── AudioService.qml      # Thin wrapper over Quickshell.Services.Pipewire
 │   ├── PerfService.qml       # CPU/RAM/Disk/Temp polling (pause when hidden)
-│   ├── BatteryService.qml    # Singleton — sysfs BAT* status/capacity/energy/power + time-left estimate
+│   ├── BatteryService.qml    # Singleton — UPower-backed status/capacity/energy/power/health + time-left estimate
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
