@@ -39,8 +39,15 @@ QtObject {
 
     readonly property int autoTarget: _target()
 
-    // Manual pick — holds until setAuto().
-    function setProfile(p) { auto = false; PowerProfiles.profile = p }
+    // Manual pick — holds until setAuto(). Guarded at the writer so no caller
+    // (the card, or a future IPC/bar hook) can request a profile PPD does not
+    // offer, or write while PPD is unreachable.
+    function setProfile(p) {
+        if (!available) return
+        if (p === PowerProfile.Performance && !hasPerformance) return
+        auto = false
+        PowerProfiles.profile = p
+    }
     // Re-enable auto and apply immediately.
     function setAuto()     { auto = true; _apply() }
 

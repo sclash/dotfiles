@@ -59,6 +59,7 @@ WlrLayershell {
         return rows
     }
     function applyRow(i) {
+        if (!PowerProfileService.available) return
         const r = profileRows[i]
         if (!r) return
         if (r.key === "auto") PowerProfileService.setAuto()
@@ -264,7 +265,7 @@ WlrLayershell {
                                 color: Theme.success
                             }
                             Text {
-                                visible: !root.engaged(modelData) && modelData.key === "auto"
+                                visible: modelData.key === "auto"
                                 text: "→ " + root.targetLabel()
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
