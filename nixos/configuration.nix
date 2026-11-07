@@ -199,6 +199,9 @@
   };
   services.blueman.enable = false;
   services.upower.enable = true;
+  # Power saver, balanced and performance modes: `powerprofilesctl set <mode>`.
+  # Don't add TLP or auto-cpufreq alongside it, because they conflict.
+  services.power-profiles-daemon.enable = true;
   services.fwupd.enable = true; # firmware updates, on any machine with LVFS support
   services.udisks2.enable = true;   # udisksctl backend for UsbService (quickshell USB-Manager)
 
