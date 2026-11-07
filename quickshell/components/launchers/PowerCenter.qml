@@ -132,12 +132,12 @@ WlrLayershell {
             Text { text: "Power"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; color: Theme.fgMuted; font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2 }
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
 
-            // Hero — glyph + state + percent, critical wash per STYLE §6.
+            // Hero — glyph + state + percent. Only the glyph goes critical.
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 84
                 radius: Theme.roundingItem
-                color: (BatteryService.available && !BatteryService.plugged && BatteryService.capacity >= 0 && BatteryService.capacity <= 20) ? Theme.bgCritical : "transparent"
+                color: "transparent"
                 border.width: 1
                 border.color: Theme.border
                 RowLayout {
