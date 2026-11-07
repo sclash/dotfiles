@@ -64,6 +64,7 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `bluez` + `bluez-tools` | Bluetooth | **yes** | `pkgs.bluez` |
 | `elephant` (or `walker`) | App index for App-Launcher | **yes** | already in autostart (`hyprland.lua:38`) — ensure packaged |
 | `upower` | Battery via `Quickshell.Services.UPower` | **yes** | `pkgs.upower` + `services.upower.enable` |
+| `power-profiles-daemon` | CPU/platform power profiles (performance/balanced/power-saver) | **yes** | `services.power-profiles-daemon.enable` (`configuration.nix`) |
 | `lm_sensors` / `sysstat` | Temperature / CPU | **yes** for perf widgets | `pkgs.lm_sensors` |
 | `udisks2` | USB storage mount/unmount via `udisksctl` | **yes** for USB-Manager | `pkgs.udisks2` + `services.udisks2.enable` |
 | `usbutils` | USB device listing (`lsusb`) | **yes** for USB-Manager | `pkgs.usbutils` |
@@ -116,6 +117,7 @@ quickshell/
 │   ├── AudioService.qml      # Thin wrapper over Quickshell.Services.Pipewire
 │   ├── PerfService.qml       # CPU/RAM/Disk/Temp polling (pause when hidden)
 │   ├── BatteryService.qml    # Singleton — UPower-backed status/capacity/energy/power/health + time-left estimate
+│   ├── PowerProfileService.qml # Singleton — PPD profile read/write + auto rule (hysteresis, powerProfileRule.js)
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
@@ -222,7 +224,7 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 | Display indicator (next to USB) | Right | `launchers/Display-manager.md` | `HyprService` |
 | Wifi | Right | `bar/Wifi.md` | `NetworkService` |
 | Audio | Right | `bar/Audio.md` | `AudioService` (PipeWire) |
-| Battery | Right | `launchers/Power-Center.md` (§1 bar icon) | `BatteryService` |
+| Battery | Right | `launchers/Power-Center.md` (§1 bar icon) | `BatteryService` + `PowerProfileService` (profile switcher in the card) |
 | Perf drawer (CPU/RAM/Disk/Temp) | Right (collapsible) | `bar/Bar-performance.md` | `PerfService` |
 | Notification bell (next to Date) | Center | `bar/Date.md` | `NotifService` |
 
