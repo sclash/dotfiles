@@ -219,6 +219,28 @@ WlrLayershell {
                     }
                 }
                 RowLayout {
+                    visible: BatteryService.available && BatteryService.healthSupported
+                    Layout.fillWidth: true
+                    Text { text: "Health"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLauncher; color: Theme.fgMuted; Layout.fillWidth: true }
+                    Text {
+                        text: Math.round(BatteryService.health) + "%"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeLauncher
+                        color: Theme.fg
+                    }
+                }
+                RowLayout {
+                    visible: BatteryService.available && BatteryService.model !== ""
+                    Layout.fillWidth: true
+                    Text { text: "Model"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLauncher; color: Theme.fgMuted; Layout.fillWidth: true }
+                    Text {
+                        text: BatteryService.model
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeLauncher
+                        color: Theme.fg
+                    }
+                }
+                RowLayout {
                     Layout.fillWidth: true
                     Text { text: "Status"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLauncher; color: Theme.fgMuted; Layout.fillWidth: true }
                     Text {
@@ -230,11 +252,10 @@ WlrLayershell {
                 }
             }
 
-            Text { text: "r refresh · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
+            Text { text: "Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
 
             Keys.onPressed: (e) => {
                 if (e.key === Qt.Key_Escape) { root.close(); e.accepted = true }
-                else if (e.text === "r" || e.text === "R") { BatteryService.refresh(); e.accepted = true }
             }
             Component.onCompleted: forceActiveFocus()
         }
@@ -243,6 +264,6 @@ WlrLayershell {
     }
 
     onIsOpenChanged: {
-        if (isOpen) { BatteryService.refresh(); Qt.callLater(() => mainCol.forceActiveFocus()) }
+        if (isOpen) { Qt.callLater(() => mainCol.forceActiveFocus()) }
     }
 }
