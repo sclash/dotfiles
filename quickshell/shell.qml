@@ -11,6 +11,10 @@ Scope {
     // Force NotifService singleton instantiation so its NotificationServer acquires DBus name early
     property var _ensureNotif: NotifService.history
 
+    // Force PowerProfileService singleton so the auto rule runs at startup
+    // (singletons are lazy; without a live reference it would never apply).
+    property var _ensurePowerProfile: PowerProfileService.auto
+
     // Bar
     Bar {
         id: bar

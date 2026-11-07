@@ -79,17 +79,23 @@ option B), and a little **hysteresis** so the 20% boundary doesn't flap.
 ### 1. Service — `services/PowerProfileService.qml` (new singleton)
 
 A `QtObject` wrapping the native `PowerProfiles` singleton; it references `BatteryService`
-(same module) for `available` / `plugged` / `charging` / `capacity`.
+(same module) for `available` / `plugged` / `charging` / `capacity`. The auto rule itself is
+a dependency-free `.pragma library` module, `services/powerProfileRule.js`, unit-tested by
+`tests/tst_power_profile_rule.qml` (run with `quickshell/tests/run.sh`).
 
 ```qml
 pragma Singleton
 import QtQuick
+import Quickshell.Io
 import Quickshell.Services.UPower
+import "powerProfileRule.js" as ProfileRule
 
 QtObject {
     id: root
 
-    readonly property bool available: true        // PPD reachable (see "left to the builder")
+    // PPD reachable — one-shot probe (see "left to the builder").
+    property bool _probed: false
+    readonly property bool available: _probed
     readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
     readonly property int  current: PowerProfiles.profile          // PowerProfile.* enum
     readonly property int  degradation: PowerProfiles.degradationReason
@@ -98,15 +104,22 @@ QtObject {
     property bool auto: true                       // auto mode vs manual hold
     property bool _low: false                      // hysteresis latch: dropped to <=20 on battery
 
-    // Profile the auto rule wants right now (no side effects).
-    // NB: capacity is -1 when unknown, so the low test must check >= 0.
-    function _target() {
-        if (!BatteryService.available || BatteryService.plugged)
-            return hasPerformance ? PowerProfile.Performance : PowerProfile.Balanced
-        if (BatteryService.capacity >= 0 && BatteryService.capacity <= 20) return PowerProfile.PowerSaver
-        if (_low && BatteryService.capacity < 25) return PowerProfile.PowerSaver
+    // Input snapshot for the pure rule (services/powerProfileRule.js).
+    // `plugged` is false while charging, so onAC = plugged || charging.
+    function _inputs() {
+        return {
+            available: BatteryService.available,
+            onAc: BatteryService.plugged || BatteryService.charging,
+            capacity: BatteryService.capacity,
+            hasPerformance: hasPerformance
+        }
+    }
+    function _toEnum(name) {
+        if (name === "performance") return PowerProfile.Performance
+        if (name === "power-saver") return PowerProfile.PowerSaver
         return PowerProfile.Balanced
     }
+    function _target() { return _toEnum(ProfileRule.target(_inputs(), _low)) }
     readonly property int autoTarget: _target()
 
     // Manual pick — holds until setAuto() (option B).
@@ -115,9 +128,8 @@ QtObject {
     function setAuto()     { auto = true; _apply() }
 
     function _apply() {
-        if (!BatteryService.available || BatteryService.plugged) _low = false
-        else if (BatteryService.capacity >= 0 && BatteryService.capacity <= 20) _low = true
-        if (auto) PowerProfiles.profile = _target()
+        _low = ProfileRule.latch(_inputs(), _low)
+        if (auto && available) PowerProfiles.profile = _target()
     }
 
     property Connections _battery: Connections {
@@ -125,6 +137,18 @@ QtObject {
         function onCapacityChanged() { root._apply() }
         function onPluggedChanged()  { root._apply() }
         function onChargingChanged() { root._apply() }
+    }
+    // Quickshell populates PowerProfiles asynchronously (hasPerformanceProfile
+    // is false for the first ~0.5s); re-apply when the real value lands, else
+    // the initial AC->performance write is silently skipped.
+    property Connections _pp: Connections {
+        target: PowerProfiles
+        function onHasPerformanceProfileChanged() { root._apply() }
+    }
+    property Process _probe: Process {
+        command: ["powerprofilesctl", "list"]
+        running: true
+        onExited: (code) => { root._probed = (code === 0); root._apply() }
     }
     Component.onCompleted: _apply()
 }
@@ -134,9 +158,9 @@ QtObject {
 
 | Condition | Auto target |
 |---|---|
-| no battery present, or plugged (AC) | Performance (Balanced if `!hasPerformance`) |
+| no battery present, or on AC (plugged **or** charging) | Performance (Balanced if `!hasPerformance`) |
 | on battery, `capacity ≤ 20` | Power-saver (latches `_low = true`) |
-| on battery, `_low && capacity < 25` | Power-saver (stays until recovery) |
+| on battery, `_low && capacity >= 0 && capacity < 25` | Power-saver (stays until recovery) |
 | on battery, otherwise | Balanced |
 
 - **Hysteresis:** drop to power-saver at `≤ 20`, return to balanced at `≥ 25`; between
