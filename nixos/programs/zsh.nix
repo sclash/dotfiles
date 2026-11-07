@@ -38,6 +38,7 @@
 		if [ -f /run/secrets/github_pat ]; then
       			export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_pat)"
       			export GH_TOKEN="$(cat /run/secrets/github_pat)"
+      			export HF_TOKEN="$(cat /run/secrets/hf_token)"
     		fi
 		if [ -f /run/secrets/openrouter ]; then
       			export OPENROUTER_API="$(cat /run/secrets/openrouter)"

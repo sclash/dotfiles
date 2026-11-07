@@ -16,6 +16,7 @@
       "graphifyy"
       "graphifyy[mcp]"
       "skillevaluator[all] @ git+https://github.com/NVIDIA/SkillEvaluator.git"
+      "hf"
     ];
     tool.prune = true;
 
