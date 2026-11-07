@@ -73,6 +73,19 @@
 						}
 					}
 				},
+				"deepseek/deepseek-flash": {
+					"settings": {
+						"provider": {
+							"order": [
+								"morph/fp8",
+								"digitalocean",
+								"deepseek",
+								"inference-net/fp8",
+							],
+							"allow_fallbacks": false
+						}
+					}
+				},
 				"deepseek/deepseek-v4-pro-latest": {
 					"settings": {
 						"provider": {
