@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# The secrets template is public, so it may only list names. Checks what's staged,
+# not the working copy, and doesn't print the offending line.
 set -euo pipefail
 fail=0
-for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '^nixos/secrets/.*\.ya?ml$' || true); do
-  if [ -f "$f" ] && ! grep -q 'ENC\[' "$f"; then
-    echo "pre-commit: $f is not sops-encrypted (no ENC[ marker) — edit with: sops $f" >&2
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '^nixos/secrets/' || true); do
+  if git show ":$f" | grep -qvE '^([A-Za-z0-9_.-]+: null)?$'; then
+    echo "pre-commit: every line in $f must be 'name: null'. Real values belong in ~/.config/sops/secrets.yaml" >&2
     fail=1
   fi
 done

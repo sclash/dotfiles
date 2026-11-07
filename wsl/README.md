@@ -71,7 +71,7 @@ whole service if one is missing. Edit them with:
 cd ~/dotfiles/wsl && nix run .#sops -- --config .sops.yaml secrets/secrets.yaml
 ```
 
-Always pass `--config` (or run from `wsl/`): the repo-root `.sops.yaml` holds the NixOS rules.
+Always pass `--config` (or run from `wsl/`), so `sops` finds this config.
 
 On a **new instance**, bootstrap stops at step 6 and prints its public key. Grant it access from an instance that can
 already decrypt the file, then commit and bring the change over:

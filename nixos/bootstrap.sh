@@ -9,33 +9,24 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: bootstrap.sh [--dry-run] [--age-key FILE]
-       bootstrap.sh --add-recipient AGE_PUBKEY
+Usage: bootstrap.sh [--dry-run]
 
-  (no flags)       init submodules, set up this machine's age key, check access
-                   to secrets, dry-build, then install the system for next boot
-  --dry-run        print every mutating command as "DRY-RUN: <cmd>" instead of
-                   running it (read-only checks still run)
-  --age-key FILE   import this existing age key instead of generating one
-  --add-recipient AGE_PUBKEY
-                   on a machine that can decrypt the secrets: add another
-                   machine's public key and re-encrypt. Does not commit.
-  --help           show this help
+  (no flags)  init submodules, check this machine's secrets, dry-build, then
+              install the system for next boot
+  --dry-run   print every mutating command as "DRY-RUN: <cmd>" instead of
+              running it (read-only checks still run)
+  --help      show this help
 EOF
 }
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO=$(dirname "$SCRIPT_DIR")
 FLAKE="$REPO/nixos"
-SOPS_CONFIG="$REPO/.sops.yaml"
-SECRETS_FILE="$FLAKE/secrets/secrets.yaml"
+SECRETS_FILE="$HOME/.config/sops/secrets.yaml"
 AGE_KEY_FILE="${AGE_KEY_FILE:-$HOME/.config/sops/age/keys.txt}"
 MACHINE_DIR="${DOTFILES_MACHINE_DIR:-/etc/nixos}"
 HTTPS_REWRITE='url.https://github.com/.insteadOf=git@github.com:'
 DRY_RUN=0
-IMPORT_KEY=""
-ADD_RECIPIENT=""
-PUBKEY=""
 
 run() {
   if ((DRY_RUN)); then
@@ -64,23 +55,7 @@ with_tool() {
 }
 
 sops_cmd() {
-  SOPS_AGE_KEY_FILE="$AGE_KEY_FILE" with_tool sops sops --config "$SOPS_CONFIG" "$@"
-}
-
-# Append PUBKEY to the `age:` recipients in .sops.yaml, once.
-register_recipient() {
-  local pubkey=$1
-  grep -qF -- "$pubkey" "$SOPS_CONFIG" && return 0
-  grep -qE '^[[:space:]]*age:' "$SOPS_CONFIG" || fail "no 'age:' line in $SOPS_CONFIG"
-  sed -i -E "s|^([[:space:]]*age:[[:space:]]*.*[^[:space:]])[[:space:]]*\$|\\1,$pubkey|" "$SOPS_CONFIG"
-}
-
-add_recipient() {
-  [[ "$ADD_RECIPIENT" == age1* ]] || fail "not an age public key: $ADD_RECIPIENT"
-  run register_recipient "$ADD_RECIPIENT"
-  run sops_cmd updatekeys -y "$SECRETS_FILE"
-  echo "Added. Commit .sops.yaml and nixos/secrets/secrets.yaml, then push."
-  echo "On the other machine: git pull && update"
+  SOPS_AGE_KEY_FILE="$AGE_KEY_FILE" with_tool sops sops "$@"
 }
 
 check_preconditions() {
@@ -108,53 +83,18 @@ ensure_submodule() {
   run git -C "$REPO" -c "$HTTPS_REWRITE" submodule update --init neovimrc
 }
 
-# An imported key is checked before it replaces anything.
-import_age_key() {
-  local source=$1
-  [[ -f "$source" ]] || fail "age key not found: $source"
-  with_tool age age-keygen -y "$source" >/dev/null 2>&1 || fail "not a valid age key: $source"
-  run mkdir -p -m 700 "$(dirname "$AGE_KEY_FILE")"
-  run install -m 600 "$source" "$AGE_KEY_FILE"
-}
-
-ensure_age_key() {
-  if [[ -n "$IMPORT_KEY" ]]; then
-    import_age_key "$IMPORT_KEY"
-  elif [[ ! -f "$AGE_KEY_FILE" ]]; then
-    local answer=""
-    if [[ -t 0 ]] && ! ((DRY_RUN)); then
-      read -r -p "Path to an existing age key (Enter to generate a new one): " answer
-    fi
-    if [[ -n "$answer" ]]; then
-      import_age_key "$answer"
-    else
-      run mkdir -p -m 700 "$(dirname "$AGE_KEY_FILE")"
-      run with_tool age age-keygen -o "$AGE_KEY_FILE"
-      ((DRY_RUN)) || chmod 600 "$AGE_KEY_FILE"
-    fi
-  fi
-  [[ -f "$AGE_KEY_FILE" ]] || return 0
-  PUBKEY=$(with_tool age age-keygen -y "$AGE_KEY_FILE")
-}
-
-# A new machine's key can't decrypt until a trusted machine rekeys, so this
-# warns instead of stopping: you still get your desktop, without the secrets.
+# The installer creates this machine's age key and secrets file. If they're
+# missing this warns instead of stopping: you still get your desktop, without
+# the secrets.
 check_secrets() {
-  if ((DRY_RUN)) && [[ ! -f "$AGE_KEY_FILE" ]]; then
-    echo "DRY-RUN: would check that this machine can decrypt $SECRETS_FILE"
-    return 0
-  fi
-  if sops_cmd -d "$SECRETS_FILE" >/dev/null 2>&1; then
+  if [[ -f "$SECRETS_FILE" ]] && sops_cmd -d "$SECRETS_FILE" >/dev/null 2>&1; then
     return 0
   fi
   cat <<EOF
 
-WARNING: this machine's age key cannot decrypt the secrets yet, so /run/secrets
-will stay empty. To grant access, on a machine that can decrypt, run:
-
-  bash ~/dotfiles/nixos/bootstrap.sh --add-recipient $PUBKEY
-
-Commit and push there. Then here: git pull && update
+WARNING: this machine can't read $SECRETS_FILE
+with the age key $AGE_KEY_FILE, so /run/secrets will stay empty.
+The installer normally creates both. To create them by hand, see SOPS-README.md.
 
 EOF
 }
@@ -173,16 +113,6 @@ main() {
   while (($#)); do
     case "$1" in
       --dry-run) DRY_RUN=1 ;;
-      --age-key)
-        [[ $# -ge 2 ]] || fail "--age-key needs a file"
-        IMPORT_KEY=$2
-        shift
-        ;;
-      --add-recipient)
-        [[ $# -ge 2 ]] || fail "--add-recipient needs a public key"
-        ADD_RECIPIENT=$2
-        shift
-        ;;
       --help)
         usage
         exit 0
@@ -195,20 +125,22 @@ main() {
     shift
   done
 
-  if [[ -n "$ADD_RECIPIENT" ]]; then
-    add_recipient
-    exit 0
-  fi
-
   check_preconditions
   ensure_submodule
-  ensure_age_key
   check_secrets
   install_system
 
   ((DRY_RUN)) && exit 0
-  echo
-  echo "Done. Your system starts on the next boot."
+  cat <<'EOF'
+
+Done. Your system starts on the next boot.
+
+After that, enter this machine's credentials:
+
+  sops edit ~/.config/sops/secrets.yaml
+  update
+
+EOF
   if [[ -t 0 ]]; then
     local answer=""
     read -r -p "Reboot now? [Y/n] " answer

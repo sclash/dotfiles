@@ -43,10 +43,13 @@ trap 'rm -rf "$ROOT"' EXIT
 setup() {
   T=$(mktemp -d -p "$ROOT")
   H="$T/home"
-  mkdir -p "$H/dotfiles/nixos/secrets" "$T/bin" "$T/machine"
+  mkdir -p "$H/dotfiles/nixos" "$H/.config/sops/age" "$T/bin" "$T/machine"
   cp "$SCRIPT" "$H/dotfiles/nixos/bootstrap.sh"
-  printf 'creation_rules:\n  - path_regex: nixos/secrets/.*\n    age: age1existing\n' >"$H/dotfiles/.sops.yaml"
-  echo 'x: ENC' >"$H/dotfiles/nixos/secrets/secrets.yaml"
+  # What the installer leaves behind.
+  KEY="$H/.config/sops/age/keys.txt"
+  SECRETS="$H/.config/sops/secrets.yaml"
+  echo 'AGE-SECRET-KEY-CURRENT' >"$KEY"
+  echo 'github_pat: null' >"$SECRETS"
   touch "$T/machine/hardware-configuration.nix" "$T/machine/machine.nix"
   LOG="$T/calls.log"
   touch "$LOG"
@@ -58,15 +61,6 @@ echo "nix $*" >>"$CALLS"
 while (($#)) && [[ "$1" != -c ]]; do shift; done
 shift
 exec "$@"
-S
-  cat >"$T/bin/age-keygen" <<'S'
-#!/usr/bin/env bash
-echo "age-keygen $*" >>"$CALLS"
-if [[ "$1" == -o ]]; then echo 'AGE-SECRET-KEY-NEW' >"$2"; exit 0; fi
-if [[ "$1" == -y ]]; then
-  grep -q 'AGE-SECRET-KEY' "$2" || exit 1
-  echo age1thismachine
-fi
 S
   cat >"$T/bin/sops" <<'S'
 #!/usr/bin/env bash
@@ -108,8 +102,11 @@ contains "installs with boot" "$CALLS_TXT" "sudo env SUDO_USER=tester DOTFILES_H
 lacks "never switches a running session" "$CALLS_TXT" "nixos-rebuild switch"
 contains "submodule over https" "$CALLS_TXT" "url.https://github.com/.insteadOf=git@github.com: submodule update --init neovimrc"
 lacks "never a recursive submodule init" "$CALLS_TXT" "--recursive"
-check "generated key mode" "$(stat -c %a "$H/.config/sops/age/keys.txt")" 600
-contains "tools from the flake lock" "$CALLS_TXT" "--inputs-from $H/dotfiles/nixos nixpkgs#age"
+contains "tools from the flake lock" "$CALLS_TXT" "--inputs-from $H/dotfiles/nixos nixpkgs#sops"
+contains "checks the machine's own secrets" "$CALLS_TXT" "sops -d $SECRETS"
+contains "says how to enter credentials" "$OUT" "sops edit ~/.config/sops/secrets.yaml"
+check "keeps the key" "$(<"$KEY")" "AGE-SECRET-KEY-CURRENT"
+check "keeps the secrets" "$(<"$SECRETS")" "github_pat: null"
 
 # A broken flake stops before anything is installed.
 setup
@@ -118,12 +115,22 @@ check "failed dry-build exit" "$RC" 1
 contains "failed dry-build message" "$OUT" "nothing was changed"
 lacks "failed dry-build installs nothing" "$(<"$LOG")" "sudo"
 
-# Undecryptable secrets warn, print the fix, and still install.
+# Undecryptable secrets warn, and still install.
 setup
 SOPS_EXIT=1 run_bootstrap
 check "undecryptable secrets exit" "$RC" 0
-contains "prints rekey command" "$OUT" "--add-recipient age1thismachine"
+contains "warns about the file" "$OUT" "can't read $SECRETS"
 contains "still installs" "$(<"$LOG")" "nixos-rebuild boot"
+check "undecryptable file kept" "$(<"$SECRETS")" "github_pat: null"
+
+# Missing secrets warn too, and bootstrap doesn't create them: the installer does.
+setup
+rm "$SECRETS"
+run_bootstrap
+check "missing secrets exit" "$RC" 0
+contains "warns about the missing file" "$OUT" "can't read $SECRETS"
+contains "missing secrets still installs" "$(<"$LOG")" "nixos-rebuild boot"
+check "creates no secrets" "$([[ -e "$SECRETS" ]] && echo yes || echo no)" no
 
 # Missing machine layer: action needed, nothing done.
 setup
@@ -148,41 +155,13 @@ run_bootstrap --dry-run
 check "dry-run exit" "$RC" 0
 contains "dry-run prints install" "$OUT" "DRY-RUN: sudo env SUDO_USER=tester"
 lacks "dry-run runs no sudo" "$(<"$LOG")" "sudo"
-check "dry-run creates no key" "$([[ -e "$H/.config/sops/age/keys.txt" ]] && echo yes || echo no)" no
 
-# Imports a valid key, with the right mode.
-setup
-echo 'AGE-SECRET-KEY-IMPORTED' >"$T/existing.txt"
-run_bootstrap --age-key "$T/existing.txt"
-check "import exit" "$RC" 0
-check "imported content" "$(<"$H/.config/sops/age/keys.txt")" "AGE-SECRET-KEY-IMPORTED"
-check "imported mode" "$(stat -c %a "$H/.config/sops/age/keys.txt")" 600
-
-# Rejects an invalid key without replacing the current one.
-setup
-mkdir -p "$H/.config/sops/age"
-echo 'AGE-SECRET-KEY-CURRENT' >"$H/.config/sops/age/keys.txt"
-echo 'not a key' >"$T/bad.txt"
-run_bootstrap --age-key "$T/bad.txt"
-check "bad key exit" "$RC" 1
-check "bad key keeps current" "$(<"$H/.config/sops/age/keys.txt")" "AGE-SECRET-KEY-CURRENT"
-
-# Adding a recipient appends once, re-encrypts, and never commits.
+# The old shared-secrets flags are gone.
 setup
 run_bootstrap --add-recipient age1other
-check "add-recipient exit" "$RC" 0
-contains "appends recipient" "$(<"$H/dotfiles/.sops.yaml")" "age: age1existing,age1other"
-contains "re-encrypts" "$(<"$LOG")" "updatekeys -y $H/dotfiles/nixos/secrets/secrets.yaml"
-lacks "add-recipient never commits" "$(<"$LOG")" "commit"
-run_bootstrap --add-recipient age1other
-check "add-recipient once" "$(grep -c 'age1other' "$H/dotfiles/.sops.yaml")" 1
-check "add-recipient not doubled" "$(grep -o 'age1other' "$H/dotfiles/.sops.yaml" | wc -l)" 1
-
-# Rejects something that isn't a public key.
-setup
-run_bootstrap --add-recipient banana
-check "bad recipient exit" "$RC" 1
-contains "bad recipient unchanged" "$(<"$H/dotfiles/.sops.yaml")" "age: age1existing"
+check "add-recipient rejected" "$RC" 1
+run_bootstrap --age-key "$KEY"
+check "age-key rejected" "$RC" 1
 
 if ((FAIL)); then
   echo "FAILED: $FAIL failed, $PASS passed"

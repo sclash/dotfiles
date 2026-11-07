@@ -50,18 +50,19 @@ Inside the `nixos` directory there are the `configuration.nix` and `flake.nix` f
 ### Installation
 This flake holds the personal layer and works on any machine. The machine layer (disks, bootloader, hostname, timezone, `stateVersion`) lives in `/etc/nixos/hardware-configuration.nix` and `/etc/nixos/machine.nix`, outside this repo.
 
-**New machine:** build the separate `nixos-installer` ISO, boot it, and answer its questions. After the first login it clones this repo to `~/dotfiles` and runs `nixos/bootstrap.sh`, which sets up the age key and installs the system for the next boot. If that fails, the machine stays a working plain NixOS. Fix the problem, then run `bash /etc/nixos/first-boot.sh`.
+**New machine:** build the separate `nixos-installer` ISO, boot it, and answer its questions. After the first login it clones this repo to `~/dotfiles`, gives the machine its own age key and secrets file, and runs `nixos/bootstrap.sh`, which installs the system for the next boot. If that fails, the machine stays a working plain NixOS. Fix the problem, then run `bash /etc/nixos/first-boot.sh`.
 
 **Machine installed another way:** create the two files above yourself, clone this repo to `~/dotfiles`, and run:
 ```bash
 bash ~/dotfiles/nixos/bootstrap.sh
 ```
 
-**Secrets on a new machine:** each machine has its own age key. Bootstrap prints the key's public half if it can't decrypt yet. On a machine that can decrypt, run the following, then commit and push:
+**Secrets on a new machine:** each machine has its own age key and its own `~/.config/sops/secrets.yaml`, both outside this repo. The installer creates them from `nixos/secrets/template.yaml`, with every value `null`. Enter your values, then apply them:
 ```bash
-bash ~/dotfiles/nixos/bootstrap.sh --add-recipient <public-key>
+sops edit ~/.config/sops/secrets.yaml
+update
 ```
-Then on the new machine, run `git pull && update`.
+See [SOPS-README.md](SOPS-README.md) for more, including adding a credential and machines not set up by the installer.
 
 ### Network
 Use `nmcli`

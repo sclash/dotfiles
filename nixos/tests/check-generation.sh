@@ -46,7 +46,7 @@ link_target() {
 }
 
 Z=home-files/.zshrc
-has "$Z" 'sudo env SUDO_USER="$USER" DOTFILES_HOME="$HOME" nixos-rebuild switch --flake $HOME/dotfiles/nixos#default --impure'
+has "$Z" 'bash $HOME/dotfiles/nixos/sync-secrets.sh; sudo env SUDO_USER="$USER" DOTFILES_HOME="$HOME" nixos-rebuild switch --flake $HOME/dotfiles/nixos#default --impure'
 has "$Z" "$HOMEDIR/dotfiles/scripts/tmux-sessionizer.sh"
 if [[ "$HOMEDIR" != /home/asergi ]]; then
   lacks "$Z" /home/asergi
