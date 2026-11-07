@@ -151,6 +151,11 @@ QtObject {
     property string temp:             "󰔏"
     property string expand:           ""
     property string collapse:         ""
+    // Power profiles
+    property string profileAuto:        String.fromCodePoint(0xF0069)  // nf-md-autorenew
+    property string profilePerformance: String.fromCodePoint(0xF04C5)  // nf-md-speedometer
+    property string profileBalanced:    String.fromCodePoint(0xF05D1)  // nf-md-scale-balance
+    property string profilePowerSaver:  String.fromCodePoint(0xF032A)  // nf-md-leaf
     // VPN
     property string vpn:              "󰖂"
     // Network traffic

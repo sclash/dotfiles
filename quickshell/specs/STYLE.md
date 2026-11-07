@@ -195,6 +195,11 @@ property string usb:              String.fromCodePoint(0xF0553)   // nf-md-usb
 property string usbDrive:         String.fromCodePoint(0xF129E)   // nf-md-usb-flash-drive
 property string usbPort:          String.fromCodePoint(0xF11F0)   // nf-md-usb-port
 property string eject:            String.fromCodePoint(0xF01EA)   // nf-md-eject
+// Power profiles (codepoints verified against installed JetBrainsMono Nerd Font)
+property string profileAuto:        String.fromCodePoint(0xF0069)  // nf-md-autorenew
+property string profilePerformance: String.fromCodePoint(0xF04C5)  // nf-md-speedometer
+property string profileBalanced:    String.fromCodePoint(0xF05D1)  // nf-md-scale-balance
+property string profilePowerSaver:  String.fromCodePoint(0xF032A)  // nf-md-leaf
 // VPN / Common
 property string vpn:              "󰖂"
 property string search:           ""
