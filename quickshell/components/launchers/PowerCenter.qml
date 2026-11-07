@@ -185,18 +185,6 @@ WlrLayershell {
                     }
                 }
                 RowLayout {
-                    visible: BatteryService.available && BatteryService.discharging
-                    Layout.fillWidth: true
-                    Text { text: "Time left unplugged"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLauncher; color: Theme.fgMuted; Layout.fillWidth: true }
-                    Text {
-                        text: formatMinutes(BatteryService.timeLeftMinutes)
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeLauncher
-                        font.weight: Theme.fontWeightMedium
-                        color: root.stateColor
-                    }
-                }
-                RowLayout {
                     visible: BatteryService.available && (BatteryService.discharging || BatteryService.charging) && BatteryService.powerNow >= 0
                     Layout.fillWidth: true
                     Text { text: BatteryService.charging ? "Charge rate" : "Power draw"; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLauncher; color: Theme.fgMuted; Layout.fillWidth: true }

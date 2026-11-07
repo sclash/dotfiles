@@ -55,7 +55,6 @@ Label left (`Theme.fgMuted`), value right-aligned:
 | Row | Value | When |
 |---|---|---|
 | Charge | `{capacity}%` / `"Full / on AC"` / `"—"` | always |
-| Time left unplugged | formatted `timeLeftMinutes` (`"2h 15m"`, `"45m"`, `"—"` when unknown) | `discharging` only |
 | Power draw / Charge rate | `{powerNow} W` (1 decimal) | discharging or charging, when `powerNow >= 0` |
 | Energy | `{energyNow} / {energyFull} Wh` (1 decimal) | when both known |
 | Health | `{health}%` (0 decimals) | `healthSupported` |
