@@ -59,6 +59,21 @@ function parseUnitName(reply) {
     return m ? m[1] : ""
 }
 
+// True when a busctl failure means "the daemon is not up yet" rather than a real
+// configuration error. Those are worth a short retry: the unit is Type=dbus, so
+// `systemctl start` returns only after the name is owned, but a daemon that
+// crashes between `is-active` and `get-property` still races.
+function isTransientBusError(text) {
+    const s = String(text || "").toLowerCase()
+    if (s === "") return false
+    return s.indexOf("not activat") >= 0
+        || s.indexOf("not provided by any .service files") >= 0
+        || s.indexOf("no such name") >= 0
+        || s.indexOf("serviceunknown") >= 0
+        || s.indexOf("unknownservice") >= 0
+        || s.indexOf("could not activate") >= 0
+}
+
 function protocolLabel(protocol) {
     switch (Number(protocol)) {
     case 1: return "Wi-Fi Display"

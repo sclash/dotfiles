@@ -127,6 +127,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
   The service reads `Displays` with `busctl --user --json=short get-property` and parses it with `services/screenCastParse.js`.
 * **NixOS packaging.** GND 0.99.0 hardcodes `/usr/libexec/gnome-network-displays-stream`, which does not exist on NixOS. `nixos/programs/quickshell.nix` overrides the package and substitutes the store `libexec` path. The `wrapGAppsHook` already wraps that binary, so the transient unit gets `GST_PLUGIN_SYSTEM_PATH_1_0`, `GI_TYPELIB_PATH` and `XDG_DATA_DIRS`.
 * **Daemon lifecycle.** The service defines `gnome-network-displays-daemon.service` as a user unit, deliberately not enabled at login. `open()` starts it; `close()` stops it when no session is active. This avoids continuous Wi-Fi P2P discovery on machines that never cast.
+* **Startup race.** The unit is `Type=dbus` with `BusName=org.gnome.NetworkDisplays.Manager`. With the default `Type=simple`, `systemctl start` returns as soon as the process forks — before GApplication acquires the name — so the first `get-property` races and fails with *"The name is not activatable"*. `Type=dbus` blocks `start` until the name is owned. `TimeoutStartSec=15s` keeps a stuck daemon from holding the call for 90 s. The service also retries a transient "not activatable"/`ServiceUnknown` reply up to six times at 250 ms before setting `available = false`, covering a daemon that crashes between `is-active` and `get-property`.
 * **Stream tracking.** `StartStream` returns a transient unit named `gnome-network-displays-stream-<uuid>.service`. `sessionState` is derived from `systemctl --user is-active <unit>` (1.5 s timer while a session exists), **not** from the daemon's `state` field: the daemon only refreshes `Displays` on sink add/remove, so that field is stale during a stream.
 * **Disconnect.** Stops the transient unit with `systemctl --user stop` instead of `StopStream` — the unit outlives the daemon, and stopping it must work even if the daemon already exited. `StopStream` is equivalent while the daemon is running.
 * **Auto-cleanup.** If the unit reports `failed` or stays `inactive` for four polls (~6 s), the service clears the session, removes a `SCREENCAST` output it created, restores DPMS, and surfaces the error, so a dropped TV does not leave a phantom monitor or a dark panel behind.
@@ -146,7 +147,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 * `StartStream` failure, unit `failed`, or the unit stays inactive for four polls → red error line; the session is cleared and any headless output/DPMS change is undone, so the user can retry.
 * A connect is refused while another Process is busy (daemon start, scan, start, stop, headless create/remove) — the launcher simply does nothing.
 * Headless creation failure → `Could not create the virtual output`; no stream is started.
-* Daemon stops while the launcher is open → `available = false`; the list clears on the next refresh.
+* Daemon stops while the launcher is open → `available = false`; the list clears on the next refresh. A successful refresh clears the stale error and returns to the list; a session error stays until its stream is no longer active.
 
 ## 8. Acceptance
 

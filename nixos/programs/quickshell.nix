@@ -37,9 +37,18 @@ in
   systemd.user.services.gnome-network-displays-daemon = {
     Unit.Description = "GNOME Network Displays daemon";
     Service = {
+      # The daemon acquires org.gnome.NetworkDisplays.Manager from its GApplication
+      # startup. With the default Type=simple, `systemctl start` returns as soon as
+      # the process forks — before the name exists — so the first `busctl
+      # get-property` races and fails with "The name is not activatable".
+      # Type=dbus blocks `start` until the name is owned.
+      Type = "dbus";
+      BusName = "org.gnome.NetworkDisplays.Manager";
       ExecStart = "${gnome-network-displays}/bin/gnome-network-displays-daemon";
       Restart = "on-failure";
       RestartSec = 2;
+      # A stuck daemon should fail fast instead of holding `start` for 90 s.
+      TimeoutStartSec = "15s";
     };
   };
 

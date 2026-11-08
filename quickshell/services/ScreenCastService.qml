@@ -45,6 +45,7 @@ QtObject {
     property bool dpmsTargetState: true
     property bool closePending: false
     property int scanTicks: 0
+    property int displayRetries: 0
 
     function protocolLabel(p) { return Parse.protocolLabel(p) }
     function stateLabel(s) { return Parse.stateLabel(s) }
@@ -81,6 +82,7 @@ QtObject {
     function open() {
         root.closePending = false
         root.scanTicks = 0
+        root.displayRetries = 0
         root.scanTimer.restart()
         root.ensureDaemon()
     }
@@ -92,6 +94,7 @@ QtObject {
         root.pendingSink = null
         if (root.busy) { root.closePending = true; return }
         root.scanTimer.stop()
+        root.retryTimer.stop()
         root.daemonStopProc.running = true
     }
 
@@ -102,6 +105,7 @@ QtObject {
         if (!root.closePending || root.busy) return
         root.closePending = false
         root.scanTimer.stop()
+        root.retryTimer.stop()
         root.daemonStopProc.running = true
     }
 
@@ -296,7 +300,14 @@ QtObject {
                 root.sinks = Parse.parseDisplays(text)
                 if (root.sinks.length > 0) root.scanTimer.stop()
                 root.available = true
-                if (root.sessionState !== "error") root.lastError = ""
+                root.displayRetries = 0
+                // A successful reply proves the daemon is reachable, so drop a
+                // stale "unavailable" error and return to the list. A session
+                // error is only cleared once its stream is no longer active.
+                if (root.active === null && root.sessionState === "error") {
+                    root.sessionState = "idle"
+                    root.lastError = ""
+                }
                 root.dataUpdated()
                 root.discoverActiveUnit()
             }
@@ -304,6 +315,14 @@ QtObject {
         stderr: StdioCollector {
             onStreamFinished: {
                 const t = String(this.text || "").trim()
+                // Type=dbus makes the first call deterministic; a daemon that
+                // crashed between is-active and get-property still races. Retry
+                // briefly instead of declaring the whole feature unavailable.
+                if (t !== "" && Parse.isTransientBusError(t) && root.displayRetries < 6) {
+                    root.displayRetries++
+                    root.retryTimer.restart()
+                    return
+                }
                 root.available = false
                 root.lastError = t ? t.split("\n")[0] : "Network Displays daemon unavailable"
                 root.dataUpdated()
@@ -469,6 +488,19 @@ QtObject {
             root.scanTicks++
             if (root.scanTicks > 10) { root.scanTimer.stop(); return }
             root.refresh()
+        }
+    }
+
+    // Fast bounded retry for "the daemon is not up yet" failures. The unit is
+    // Type=dbus, so this should rarely fire; it covers a daemon crash between
+    // `is-active` and `get-property`.
+    property Timer retryTimer: Timer {
+        interval: 250
+        repeat: false
+        onTriggered: {
+            if (root.active || root.closePending) return
+            if (!root.daemonRunning) root.ensureDaemon()
+            else root.refresh()
         }
     }
 }

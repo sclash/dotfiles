@@ -81,6 +81,23 @@ TestCase {
         compare(Parse.parseUnitName("garbage"), "")
     }
 
+    // --- isTransientBusError() ---
+
+    function test_transient_bus_errors() {
+        verify(Parse.isTransientBusError(
+            "Failed to get property Displays on interface org.gnome.NetworkDisplays.Manager: The name is not activatable"))
+        verify(Parse.isTransientBusError(
+            "The name org.gnome.NetworkDisplays.Manager was not provided by any .service files"))
+        verify(Parse.isTransientBusError("org.freedesktop.DBus.Error.ServiceUnknown"))
+        verify(Parse.isTransientBusError("No such name"))
+    }
+
+    function test_non_transient_bus_errors() {
+        verify(!Parse.isTransientBusError(""))
+        verify(!Parse.isTransientBusError("Unknown interface org.gnome.NetworkDisplays.Manager"))
+        verify(!Parse.isTransientBusError("Access denied"))
+    }
+
     // --- labels ---
 
     function test_protocol_labels() {
