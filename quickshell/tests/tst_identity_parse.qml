@@ -178,6 +178,19 @@ TestCase {
         compare(Parse.passwordPolicy("old", "old"), "")                // same as current: passwd decides
     }
 
+    // --- pkexecMessage(): pkexec exits 126/127 when it never ran the command ---
+    function test_pkexec_message() {
+        compare(Parse.pkexecMessage(127, "Error executing command as another user: No authentication agent found.\n"),
+                "No password prompt available (polkit agent not running)")
+        compare(Parse.pkexecMessage(126, "Error executing command as another user: Request dismissed\n"),
+                "Authorization cancelled")
+        compare(Parse.pkexecMessage(127, "Error executing command as another user: Not authorized\n"),
+                "Authorization failed")
+        compare(Parse.pkexecMessage(127, "something else"), "Authorization cancelled or failed")
+        compare(Parse.pkexecMessage(1, "No face detected, aborting"), "")   // howdy's own failure
+        compare(Parse.pkexecMessage(0, ""), "")
+    }
+
     // --- passwdResult() ---
     function test_passwd_result() {
         compare(Parse.passwdResult("OK\n").ok, true)

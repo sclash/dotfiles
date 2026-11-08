@@ -129,6 +129,17 @@ function howdyMessage(text) {
     return { text: last, needsEmitter: /black frames|IR emitter/i.test(String(text || "")) }
 }
 
+// Why `pkexec howdy …` never ran (exit 126/127, polkit 127 messages);
+// "" when pkexec did run the command and any failure is Howdy's own.
+function pkexecMessage(code, text) {
+    if (code !== 126 && code !== 127) return ""
+    const t = String(text || "")
+    if (/no authentication agent/i.test(t)) return "No password prompt available (polkit agent not running)"
+    if (/dismissed/i.test(t)) return "Authorization cancelled"
+    if (/not authorized/i.test(t)) return "Authorization failed"
+    return "Authorization cancelled or failed"
+}
+
 // ---------- password (identity-passwd) ----------
 
 // One result line from quickshell/scripts/identity-passwd.py.

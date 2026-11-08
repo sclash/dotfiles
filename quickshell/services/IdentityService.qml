@@ -228,9 +228,9 @@ QtObject {
         if (code === 0) {
             root.faceMessage = root.faceAction === "add" ? "Face model added" : "Face model removed"
             root.faceMessageIsError = false
-        } else if (code === 126 || code === 127) {
-            // pkexec: authorization dismissed, failed or not allowed.
-            root.faceMessage = "Authorization cancelled or failed"
+        } else if (Parse.pkexecMessage(code, text) !== "") {
+            // pkexec never ran howdy: no agent, dismissed or not allowed.
+            root.faceMessage = Parse.pkexecMessage(code, text)
             root.faceMessageIsError = true
         } else {
             root.faceMessage = msg.text !== "" ? msg.text : "howdy " + root.faceAction + " failed (" + code + ")"
