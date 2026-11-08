@@ -1,5 +1,7 @@
 # AGENTS — Quickshell Desktop Environment
 
+> The repo-wide rules in [`../AGENTS.md`](../AGENTS.md) apply here too, especially: nothing machine-specific, and secrets only through the template.
+
 > Entry point for any new `opencode` session opened at `quickshell/`.
 > This file tells you **what to read, in what order, and what to do**.
 > All component specs are **refined and normative** — do not reinterpret them.

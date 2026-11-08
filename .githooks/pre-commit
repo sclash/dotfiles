@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
-# The secrets template is public, so it may only list names. Checks what's staged,
-# not the working copy, and doesn't print the offending line.
+# Refuses commits that break the repo's machine-agnostic rules. See AGENTS.md.
 set -euo pipefail
 fail=0
+
+# The secrets template is public, so it may only list names. Checks what's staged,
+# not the working copy, and doesn't print the offending line.
 for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '^nixos/secrets/' || true); do
   if git show ":$f" | grep -qvE '^([A-Za-z0-9_.-]+: null)?$'; then
     echo "pre-commit: every line in $f must be 'name: null'. Real values belong in ~/.config/sops/secrets.yaml" >&2
     fail=1
   fi
 done
+
+# No tracked file may hardcode a home directory.
+root=$(git rev-parse --show-toplevel)
+if ! bash "$root/tests/check-no-hardcoded-home.sh" >&2; then
+  echo "pre-commit: use lib/user.nix or config.home.homeDirectory instead of a fixed /home path" >&2
+  fail=1
+fi
+
 exit $fail

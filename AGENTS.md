@@ -94,7 +94,7 @@ Put first-install work in the installer. The dotfiles never generate keys, and n
 
 ## Checks before proposing a commit
 
-Run these from the repository root, or the worktree's root:
+The pre-commit hook runs `tests/check-no-hardcoded-home.sh` and the template check on every commit, and refuses the commit if either fails. Don't bypass it with `--no-verify`. Run the rest yourself, from the repository root or the worktree's root:
 
 ```bash
 nix flake check ./nixos --no-write-lock-file
