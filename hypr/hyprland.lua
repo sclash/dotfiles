@@ -667,5 +667,6 @@ hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("quickshell ipc call launcher toggle 
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("quickshell ipc call launcher toggle keys"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("quickshell ipc call launcher toggle usb"))
 hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("quickshell ipc call launcher toggle power"))
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("quickshell ipc call launcher toggle identity"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("quickshell ipc call launcher closeAll"))
 -- NOTE: SUPER+R (app) already bound above; SUPER+SHIFT+P toggles the perf drawer

@@ -35,6 +35,7 @@ Scope {
     PowerCenter { id: powerCenter }
     KeyLauncher { id: keyLauncher }
     TrayManager { id: trayManager }
+    IdentityManager { id: identityManager }
     ControlCenter {
         id: controlCenter
         onRequestToggle: (name) => ipcHandler.toggle(name)
@@ -64,6 +65,7 @@ Scope {
             if (except !== "keys" && except !== "key") keyLauncher.close()
             if (except !== "control") controlCenter.close()
             if (except !== "tray") trayManager.close()
+            if (except !== "identity") identityManager.close()
         }
 
         function toggle(name: string): void {
@@ -81,13 +83,14 @@ Scope {
             else if (name === "keys" || name === "key") { if (keyLauncher.isOpen) keyLauncher.close(); else { closeAllExcept("keys"); keyLauncher.open() } }
             else if (name === "control") { if (controlCenter.isOpen) controlCenter.close(); else { closeAllExcept("control"); controlCenter.open() } }
             else if (name === "tray") { if (trayManager.isOpen) trayManager.close(); else { closeAllExcept("tray"); trayManager.open() } }
+            else if (name === "identity") { if (identityManager.isOpen) identityManager.close(); else { closeAllExcept("identity"); identityManager.open() } }
             else if (name === "perf") { PerfService.toggle() }
             else console.log("unknown launcher: " + name)
         }
 
         function closeAll(): void {
             appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close()
-            displayManager.close(); usbManager.close(); notificationCenter.close(); calendarLauncher.close(); shutdownLauncher.close(); powerCenter.close(); keyLauncher.close(); controlCenter.close(); trayManager.close(); screenCastLauncher.close()
+            displayManager.close(); usbManager.close(); notificationCenter.close(); calendarLauncher.close(); shutdownLauncher.close(); powerCenter.close(); keyLauncher.close(); controlCenter.close(); trayManager.close(); screenCastLauncher.close(); identityManager.close()
         }
 
         function open(name: string): void { toggle(name) }
@@ -106,6 +109,7 @@ Scope {
             else if (name==="keys") keyLauncher.close()
             else if (name==="control") controlCenter.close()
             else if (name==="tray") trayManager.close()
+            else if (name==="identity") identityManager.close()
         }
     }
 
