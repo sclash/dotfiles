@@ -19,6 +19,13 @@ let
           "$out/libexec/gnome-network-displays-stream"
     '';
   });
+
+  # Password changes for the Identity Manager (IdentityService.qml): drives
+  # passwd(1) on a pty, passwords on stdin only. Tested by
+  # quickshell/tests/test-identity-passwd.sh.
+  identity-passwd = pkgs.writers.writePython3Bin "identity-passwd" {
+    flakeIgnore = [ "E501" ];
+  } (builtins.readFile ../../quickshell/scripts/identity-passwd.py);
 in
 {
   programs.quickshell = {
@@ -69,6 +76,7 @@ in
     ddcutil            # external monitor brightness (VCP 0x10)
     wl-gammarelay-rs   # per-output gamma brightness and color temperature
     gnome-network-displays # Miracast/Chromecast daemon for ScreenCastService
+    identity-passwd    # password changes for IdentityService (Identity Manager)
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
