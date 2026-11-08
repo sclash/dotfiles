@@ -29,6 +29,8 @@ QtObject {
     signal dataUpdated()
 
     property bool _seeded: false
+    property bool _listErrorActive: false
+    property string _queuedFinger: ""
 
     // ---------- public API ----------
 
@@ -39,21 +41,33 @@ QtObject {
         root._writeState(on ? "true" : "false")
     }
     function enroll(finger) {
-        if (root.enrolling || root.enrollProc.running || !root.fprintdAvailable) return
+        if (root.enrolling || !root.fprintdAvailable) return
         root.enrolling = true
         root.enrollFinger = finger
         root.enrollPasses = 0
         root.enrollDone = false
         root.enrollStage = ""
+        if (root.enrollProc.running) {
+            // A cancelled process is still terminating; start as soon as it exits.
+            root._queuedFinger = finger
+            root.dataUpdated()
+            return
+        }
+        root._startEnrollProc(finger)
+        root.dataUpdated()
+    }
+    function _startEnrollProc(finger) {
         root.enrollProc.command = ["fprintd-enroll", "-f", finger]
         root.enrollProc.running = true
-        root.dataUpdated()
+        root._startWatch.restart()
     }
     function cancelEnroll() {
         if (!root.enrolling) return
         root.enrollProc.running = false
         root.enrolling = false
         root.enrollDone = false
+        root._queuedFinger = ""
+        root._startWatch.stop()
         root.refresh()
     }
     function deleteFinger(finger) {
@@ -99,11 +113,18 @@ QtObject {
             return
         }
         // Non-result chatter (e.g. "failed to claim device: …") — surface it.
-        if (/failed|impossible/i.test(String(line))) root.lastError = String(line).trim()
+        if (/failed|impossible/i.test(String(line))) { root.lastError = String(line).trim(); root._listErrorActive = false }
     }
     function _finishEnroll(code) {
+        root._startWatch.stop()
+        const wasQueued = root._queuedFinger
+        root._queuedFinger = ""
         root.enrolling = false
         root.enrollDone = code === 0
+        if (wasQueued !== "") {
+            root.enroll(wasQueued)
+            return
+        }
         root.refresh()
     }
 
@@ -121,8 +142,15 @@ QtObject {
         stdout: StdioCollector {
             onStreamFinished: {
                 const text = this.text
-                root.lastError = Parse.listError(text)
-                root.devicePresent = root.lastError !== "nodevice" && root.lastError !== "daemon"
+                const listErr = Parse.listError(text)
+                if (listErr !== "") {
+                    root.lastError = listErr
+                    root._listErrorActive = true
+                } else if (root._listErrorActive) {
+                    root.lastError = ""
+                    root._listErrorActive = false
+                }
+                root.devicePresent = listErr !== "nodevice" && listErr !== "daemon"
                 root.enrolled = Parse.parseEnrolled(text).map(n => ({ name: n, label: Parse.fingerLabel(n) }))
                 root.dataUpdated()
             }
@@ -142,7 +170,7 @@ QtObject {
         stdout: StdioCollector {
             onStreamFinished: {
                 const text = String(this.text || "").trim()
-                if (text.indexOf("Failed to delete") !== -1) root.lastError = text
+                if (text.indexOf("Failed to delete") !== -1) { root.lastError = text; root._listErrorActive = false }
                 root.refresh()
             }
         }
@@ -153,6 +181,13 @@ QtObject {
         stdout: StdioCollector {
             onStreamFinished: root.probeProc.running = true
         }
+    }
+
+    // FailedToStart never emits `exited`; `running` still drops to false. If an
+    // attempt is still flagged as running shortly after start, finish it.
+    property Timer _startWatch: Timer {
+        interval: 1200
+        onTriggered: { if (root.enrolling && !root.enrollProc.running) root._finishEnroll(1) }
     }
 
     Component.onCompleted: root.refresh()
