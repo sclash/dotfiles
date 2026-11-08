@@ -72,6 +72,7 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `ddcutil` | External-display brightness (DDC/CI VCP 10) | **yes** for Display-Manager | `pkgs.ddcutil` |
 | i2c access | `/dev/i2c-*` devices for `ddcutil` | **yes** for DDC brightness | `hardware.i2c.enable = true;` + `extraGroups = [ "i2c" ]` |
 | `wl-gammarelay-rs` | Per-output software brightness and color temperature | **yes** for Display-Manager | `pkgs.wl-gammarelay-rs` |
+| `gnome-network-displays` | Miracast/Chromecast discovery + streaming daemon for Screen-Cast | **yes** for Screen-Cast | `pkgs.gnome-network-displays` (patched in `programs/quickshell.nix`: GND hardcodes `/usr/libexec` for its stream helper) |
 | `noto-fonts` + `nerd-fonts.jetbrains-mono` | Icons / typography | **yes** | ensure in `fonts.packages` |
 | `quickshell` needs `qt6.qtdeclarative` | Already in `home.packages` | **yes** | present |
 | `herdr` | Agentic orchestration | **yes** for build phase | `pkgs-unstable.herdr` — already enabled |
@@ -121,6 +122,7 @@ quickshell/
 │   ├── NotifService.qml      # Wrapper over Quickshell.Services.Notifications
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
+│   ├── ScreenCastService.qml # Singleton — GND daemon (scan/start/stop) + cast output settings
 │   └── DisplaySettingsService.qml # Singleton — per-output brightness (backlight/DDC/gamma) + color temperature
 ├── components/
 │   ├── bar/
@@ -147,6 +149,7 @@ quickshell/
 │       ├── KeyLauncher.qml
 │       ├── DisplayManager.qml
 │       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
+│       ├── ScreenCastLauncher.qml   # SUPER+K — wireless display discovery + session
 │       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/
@@ -240,6 +243,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Bluetooth-Center | `SUPER+b` | `Bluetooth-Center.md` |
 | Audio-Center | `SUPER+a` | `Audio-Center.md` |
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
+| Screen-Cast | `SUPER+K` | `Screen-Cast.md` |
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
 | Calendar-Launcher | `SUPER+c` | `Calendar-Launcher.md` |
