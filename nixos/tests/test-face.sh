@@ -41,7 +41,7 @@ in
   faceServiceEnabled = svcs.hyprlock-face.enable;
   faceUsesFprintd = lib.hasInfix "pam_fprintd" faceText;
   howdySufficient = lib.hasInfix "sufficient" howdyLine;
-  howdyBeforeUnix = howdyIdx >= 0 && unixIdx > howdyIdx;
+  unixBeforeHowdy = unixIdx >= 0 && howdyIdx > unixIdx;
   plainHyprlockHasHowdy = lib.hasInfix "pam_howdy" svcs.hyprlock.text;
   devicePath = c.config.services.howdy.settings.video.device_path;
   devicePathOverridable = overridden.services.howdy.settings.video.device_path == "/dev/video9";
@@ -73,7 +73,7 @@ expect '.howdyTexts == ["hyprlock-face"]'      "only hyprlock-face's PAM text co
 expect '.faceServiceEnabled'                   "the hyprlock-face PAM service exists"
 expect '.faceUsesFprintd == false'             "hyprlock-face does not use pam_fprintd"
 expect '.howdySufficient'                      "pam_howdy is sufficient (password stays a fallback)"
-expect '.howdyBeforeUnix'                      "pam_howdy runs before pam_unix"
+expect '.unixBeforeHowdy'                      "a typed password is checked first; empty Enter falls through to pam_howdy"
 expect '.plainHyprlockHasHowdy == false'       "the plain hyprlock service stays password-only"
 expect '.devicePath == "/dev/v4l/ir0"'         "Howdy reads the udev-detected IR camera"
 expect '.devicePathOverridable'                "machine.nix can override the camera path"

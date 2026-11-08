@@ -157,6 +157,19 @@ TestCase {
         verify(/position = 0, /.test(l[0]))
         verify(t.indexOf("Press Enter") === -1)        // nothing usable: no hint
     }
+    function test_render_no_face_hint() {
+        // Face selected: icon only, no text (empty Enter = face is the gesture).
+        const t = Parse.renderHyprlockAuth({ fingerprint: false, pamModule: "hyprlock-face", face: true },
+            icons("unavailable", "enabled"), lockStyle)
+        compare(iconLabels(t).length, 1)
+        verify(t.indexOf("face") === -1 || t.indexOf("text = Press") === -1)
+        verify(!/text = [^FC\n]/.test(t))                // no hint label at all
+        // Fingerprint selected with face as fallback: sensor hint, no face wording.
+        const t2 = Parse.renderHyprlockAuth({ fingerprint: true, pamModule: "hyprlock-face", face: true },
+            icons("enabled", "enabled"), lockStyle)
+        verify(t2.indexOf("text = Touch the sensor to unlock") !== -1)
+        verify(t2.indexOf("Enter for face") === -1)
+    }
 
     // --- renderHyprlockAuth() ---
     function test_render_hyprlock_password_only() {

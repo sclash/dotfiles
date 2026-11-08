@@ -16,7 +16,7 @@ import "../theme"
 //   ~/.local/state/hyprlock-auth.conf — derived from the choices and the
 //     detected hardware on every refresh; sourced last by hyprlock. It
 //     switches hyprlock's native fprintd unlock and its PAM service
-//     (`hyprlock` = password, `hyprlock-face` = Howdy then password).
+//     (`hyprlock` = password, `hyprlock-face` = password, or Howdy on an empty Enter).
 QtObject {
     id: root
 

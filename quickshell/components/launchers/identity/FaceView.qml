@@ -93,7 +93,7 @@ Item {
         MethodRow {
             icon: Icons.face
             title: "Unlock with face"
-            note: view.available ? "lock screen only · press Enter, then look at the camera" : ""
+            note: view.available ? "lock screen only · Enter on an empty password box, then look" : ""
             stateText: IdentityService.faceState === "enabled" ? "Enabled"
                 : IdentityService.faceState === "disabled" ? "Disabled" : "Not available"
             dim: IdentityService.faceState !== "enabled"

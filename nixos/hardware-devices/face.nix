@@ -2,11 +2,13 @@
 #
 # Howdy is installed everywhere; on machines without an IR camera it never
 # runs. Its PAM module is limited to one dedicated service, `hyprlock-face`
-# (Howdy `sufficient`, then the usual password check). hyprlock picks that
-# service through `auth:pam:module`, which the Quickshell Identity Manager
-# (SUPER+I) writes per user in ~/.local/state/hyprlock-auth.conf, so face
-# unlock is switched on and off without root or a rebuild. hyprlock starts
-# PAM when Enter is pressed: Enter on an empty field = "look at the camera".
+# (the usual password check, then Howdy, both `sufficient`). hyprlock picks
+# that service through `auth:pam:module`, which the Quickshell Identity
+# Manager (SUPER+I) writes per user in ~/.local/state/hyprlock-auth.conf, so
+# face unlock is switched on and off without root or a rebuild. hyprlock
+# starts PAM when Enter is pressed: a typed password is checked as a password
+# and the camera never starts; Enter on an empty field fails pam_unix and
+# falls through to Howdy ("look at the camera").
 #
 # Face models are per machine and per user (/var/lib/howdy/models), never in
 # this repo. Howdy can be fooled by a good photo, which is why it is never
@@ -51,9 +53,15 @@ in
   # Howdy's PAM module would otherwise be added to every service as
   # `required`. Off everywhere, on only for the lock screen's face service.
   security.pam.howdy.enable = false;
-  security.pam.services.${faceService}.howdy = {
-    enable = true;
-    control = "sufficient";
+  security.pam.services.${faceService} = {
+    howdy = {
+      enable = true;
+      control = "sufficient";
+    };
+    # Password first, face only when it fails (empty Enter). pam_unix's fail
+    # delay applies only if the whole stack fails, so a face match after an
+    # empty password is not slowed down.
+    rules.auth.howdy.order = config.security.pam.services.${faceService}.rules.auth.unix.order + 10;
   };
 
   assertions = [
