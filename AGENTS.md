@@ -110,6 +110,7 @@ The pre-commit hook runs `tests/check-no-hardcoded-home.sh` and the template che
 nix flake check ./nixos --no-write-lock-file
 bash nixos/tests/test-bootstrap.sh
 bash nixos/tests/test-sync-secrets.sh
+bash nixos/tests/test-fingerprint.sh
 bash tests/check-no-hardcoded-home.sh
 bash tests/test-user.sh
 bash tests/test-guard.sh
