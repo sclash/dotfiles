@@ -10,3 +10,4 @@ singleton UsbService 1.0 UsbService.qml
 singleton DisplaySettingsService 1.0 DisplaySettingsService.qml
 singleton PowerProfileService 1.0 PowerProfileService.qml
 singleton ScreenCastService 1.0 ScreenCastService.qml
+singleton IdentityService 1.0 IdentityService.qml
