@@ -1,0 +1,246 @@
+/* GTK4 global theme — conforms backgrounds to quickshell/theme/Theme.qml
+ * (matte-black Omarchy palette). Deployed as ~/.config/gtk-4.0/gtk.css via
+ * the gtk4 out-of-store symlink. Restart apps to apply.
+ *
+ * Two layers:
+ *   1. @define-color palette — serves non-libadwaita GTK4 apps.
+ *      (libadwaita resolves its own named colors internally, so layer 2 is
+ *      required for GNOME apps; verified empirically on nautilus.)
+ *   2. Targeted background rules — beat libadwaita's defaults via the user
+ *      CSS provider's higher priority (USER > THEME) at equal specificity.
+ *      Selector set covers common adw containers; may need additions when
+ *      libadwaita restructures its stylesheet.
+ *
+ * Theme.qml tokens:
+ *   bgBar/bgLauncher #000000 · bgBarAlt #1e1e1e · shadow #0a0a0a
+ *   fg #bebebe · fgMuted #8a8a8d · fgDim #555555 · fgBright/accent #eaeaea
+ *   border #2a2a2a · borderActive #3a3a3a · borderSelected #4a4a4a
+ *   warning #c63d3d · critical #D35F5F · bgCritical #631e1e
+ */
+
+/* ── 1. Named palette ─────────────────────────────────────────────── */
+
+/* libadwaita named colors */
+@define-color accent_bg_color #eaeaea;
+@define-color accent_fg_color #000000;
+@define-color accent_color #eaeaea;
+@define-color window_bg_color #000000;
+@define-color window_fg_color #bebebe;
+@define-color view_bg_color #000000;
+@define-color view_fg_color #bebebe;
+@define-color headerbar_bg_color #000000;
+@define-color headerbar_fg_color #bebebe;
+@define-color headerbar_border_color #2a2a2a;
+@define-color headerbar_backdrop_color #000000;
+@define-color headerbar_shade_color #0a0a0a;
+@define-color headerbar_dnd_shade_color #0a0a0a;
+@define-color sidebar_bg_color #000000;
+@define-color sidebar_fg_color #bebebe;
+@define-color sidebar_backdrop_color #000000;
+@define-color sidebar_shade_color #0a0a0a;
+@define-color sidebar_border_color #2a2a2a;
+@define-color secondary_sidebar_bg_color #1e1e1e;
+@define-color secondary_sidebar_fg_color #bebebe;
+@define-color secondary_sidebar_backdrop_color #1e1e1e;
+@define-color secondary_sidebar_shade_color #0a0a0a;
+@define-color secondary_sidebar_border_color #2a2a2a;
+@define-color card_bg_color #1e1e1e;
+@define-color card_fg_color #bebebe;
+@define-color card_shade_color #0a0a0a;
+@define-color dialog_bg_color #000000;
+@define-color dialog_fg_color #bebebe;
+@define-color popover_bg_color #000000;
+@define-color popover_fg_color #bebebe;
+@define-color popover_shade_color #0a0a0a;
+@define-color thumbnail_bg_color #1e1e1e;
+@define-color thumbnail_fg_color #bebebe;
+@define-color shade_color #0a0a0a;
+@define-color scrollbar_outline_color #2a2a2a;
+@define-color success_color #eaeaea;
+@define-color success_bg_color #eaeaea;
+@define-color success_fg_color #000000;
+@define-color warning_color #c63d3d;
+@define-color warning_bg_color #c63d3d;
+@define-color warning_fg_color #000000;
+@define-color error_color #D35F5F;
+@define-color error_bg_color #631e1e;
+@define-color error_fg_color #eaeaea;
+@define-color destructive_color #D35F5F;
+@define-color destructive_bg_color #631e1e;
+@define-color destructive_fg_color #eaeaea;
+
+/* GTK core named colors — non-libadwaita GTK4 apps */
+@define-color theme_bg_color #000000;
+@define-color theme_fg_color #bebebe;
+@define-color theme_base_color #000000;
+@define-color theme_text_color #bebebe;
+@define-color theme_selected_bg_color #2a2a2a;
+@define-color theme_selected_fg_color #eaeaea;
+@define-color theme_unfocused_bg_color #000000;
+@define-color theme_unfocused_base_color #000000;
+@define-color theme_unfocused_fg_color #8a8a8d;
+@define-color theme_unfocused_text_color #8a8a8d;
+@define-color theme_unfocused_selected_bg_color #1e1e1e;
+@define-color theme_unfocused_selected_fg_color #bebebe;
+@define-color theme_disabled_color #555555;
+@define-color disabled_fg_color #555555;
+@define-color borders #2a2a2a;
+@define-color unfocused_borders #2a2a2a;
+
+/* ── 2. Targeted backgrounds for libadwaita apps ──────────────────── */
+
+/* Primary surfaces — Theme.bgLauncher */
+window.background,
+.background,
+.titlebar,
+headerbar,
+headerbar:backdrop,
+dialog,
+dialog.background,
+popover.background,
+menubutton menu,
+window.dialog.message .message-area {
+  background-color: #000000;                        /* Theme.bgLauncher */
+}
+
+/* AdwToolbarView's raised top/bottom bars paint the container itself
+ * (.top-bar.raised @ 0,2,0) — must match specificity to win. */
+toolbarview > .top-bar.raised,
+toolbarview > .bottom-bar.raised,
+toolbarview > .top-bar.raised:backdrop,
+toolbarview > .bottom-bar.raised:backdrop {
+  background-color: #000000;
+}
+
+/* Content views */
+.view,
+textview,
+textview text,
+listview,
+gridview,
+treeview.view,
+stacksidebar {
+  background-color: #000000;
+}
+
+/* Sidebars — Theme.bgLauncher (nautilus placessidebar, generic sidebars).
+ * adw 4.16+ split layout paints .sidebar-pane/.content-pane containers. */
+placessidebar,
+.sidebar,
+.navigation-sidebar,
+.sidebar-pane,
+.content-pane,
+.outline-pane,
+.sidebar-pane .navigation-sidebar,
+.sidebar-pane listview,
+.navigation-sidebar > row,
+.sidebar-pane row,
+placessidebar row {
+  background-color: #000000;
+}
+
+/* Sidebar rows: hover/selected = bgBarAlt fill (walker row parity) */
+.navigation-sidebar > row:hover,
+.navigation-sidebar > row:selected,
+.sidebar-pane row:hover,
+.sidebar-pane row:selected,
+placessidebar row:hover,
+placessidebar row:selected {
+  background-color: #1e1e1e;                        /* Theme.bgBarAlt */
+}
+
+/* Secondary surfaces — Theme.bgBarAlt (cards, thumbnails, alt rows) */
+.card,
+card,
+thumbnail,
+row.activatable:selected,
+row:selected,
+columnview row:selected {
+  background-color: #1e1e1e;                        /* Theme.bgBarAlt */
+}
+
+/* Selected rows: keep bgBarAlt fill + bright text (walker row parity) */
+row:selected label,
+columnview row:selected label,
+placessidebar row:selected label {
+  color: #eaeaea;                                   /* Theme.fgBright */
+}
+
+/* Entry fields — flat black like the launcher filter bars */
+entry,
+text {
+  background-color: #000000;
+  caret-color: #bebebe;                             /* Theme.fg */
+}
+
+/* Buttons — flat: black fill, Theme.border outline */
+button {
+  background-color: #000000;
+  border-color: #3a3a3a;                            /* Theme.borderActive */
+}
+
+button:hover {
+  background-color: #1e1e1e;                        /* Theme.bgBarAlt */
+}
+
+/* Headerbar / top-bar area — adw styles these with class-qualified rules
+ * (e.g. windowcontrols button.close), so match the specificity. */
+.top-bar,
+headerbar button,
+.top-bar button,
+windowcontrols button,
+windowcontrols > button.close,
+headerbar .linked > button,
+headerbar button.image-button,
+headerbar button.toggle {
+  background-color: #000000;
+}
+
+headerbar button:hover,
+.top-bar button:hover,
+windowcontrols button:hover,
+headerbar .linked > button:hover {
+  background-color: #1e1e1e;                        /* Theme.bgBarAlt */
+}
+
+headerbar button:checked,
+.top-bar button:checked {
+  background-color: #1e1e1e;
+  color: #eaeaea;                                   /* Theme.fgBright */
+}
+
+button.suggested-action {
+  background-color: #eaeaea;                        /* Theme.accent */
+  color: #000000;
+}
+
+button.destructive-action {
+  background-color: #631e1e;                        /* Theme.bgCritical */
+  color: #eaeaea;
+}
+
+/* Column-view headers (nautilus Name/Size/Modified strip) */
+columnview header,
+columnview header button,
+columnview .column-header {
+  background-color: #000000;
+}
+
+/* Disabled — Theme.fgDim */
+:disabled,
+window:disabled {
+  color: #555555;
+}
+
+/* Toolbar containers — the grey bands behind the headerbar row
+ * (empirically pinned: these windowhandle/toolbar boxes carry adw's
+ * --headerbar-bg-color wash; matched selectors, user priority wins). */
+headerbar > windowhandle > box,
+.top-bar > windowhandle > box,
+windowhandle > box,
+box.toolbar,
+.toolbar,
+toolbarview > .top-bar,
+toolbarview > .top-bar > windowhandle {
+  background-color: #000000;
+}

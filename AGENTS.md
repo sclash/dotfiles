@@ -85,7 +85,7 @@ Put first-install work in the installer. The dotfiles never generate keys, and n
 
 ### What the installer relies on in this repo
 
-The installer, and every stick already flashed from it, depend on the items below. Changing one breaks new installs, not this repo's tests, so ask first. Any change also needs a matching installer change and a reflashed stick. The installer's `README.md` is the authoritative version of this contract.
+The installer, and every stick already flashed from it, depend on the items below. Changing one breaks new installs, not this repo's tests, so ask first. Any change also needs a matching installer change. The installer's `README.md` is the authoritative version of this contract.
 
 - The repo can be cloned over HTTPS without logging in, from the branch set in the installer's `settings.nix` (currently `quickshell`). `nixos/bootstrap.sh` fetches submodules over HTTPS too.
 - `nixos/bootstrap.sh` exists at that path, runs as the user on first login, and is safe to re-run. Any non-zero exit makes the installer stop and tell the user how to retry.
