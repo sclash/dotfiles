@@ -111,6 +111,10 @@ nix flake check ./nixos --no-write-lock-file
 bash nixos/tests/test-bootstrap.sh
 bash nixos/tests/test-sync-secrets.sh
 bash nixos/tests/test-fingerprint.sh
+bash nixos/tests/test-face.sh
+bash quickshell/tests/run.sh
+bash quickshell/tests/test-identity-passwd.sh
+bash quickshell/tests/smoke-identity-views.sh
 bash tests/check-no-hardcoded-home.sh
 bash tests/test-user.sh
 bash tests/test-guard.sh

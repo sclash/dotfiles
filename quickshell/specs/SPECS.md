@@ -123,7 +123,7 @@ quickshell/
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
 │   ├── ScreenCastService.qml # Singleton — GND daemon (scan/start/stop) + cast output settings
-│   ├── IdentityService.qml   # Singleton — fprintd CLIs + hyprlock fingerprint state file
+│   ├── IdentityService.qml   # Singleton — password (identity-passwd), face (Howdy), fingerprint (fprintd) + hyprlock auth state
 │   └── DisplaySettingsService.qml # Singleton — per-output brightness (backlight/DDC/gamma) + color temperature
 ├── components/
 │   ├── bar/
@@ -151,7 +151,7 @@ quickshell/
 │       ├── DisplayManager.qml
 │       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
 │       ├── ScreenCastLauncher.qml   # SUPER+K — wireless display discovery + session
-│       ├── IdentityManager.qml      # SUPER+I — fingerprint auth manager (IdentityService)
+│       ├── IdentityManager.qml      # SUPER+I — password / face / fingerprint manager (views in identity/)
 │       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/
