@@ -185,6 +185,7 @@ QtObject {
     property string app:              ""
     property string shade:            "󰖂"
     property string monitor:          "󰍹"
+    property string cast:             "󰄘"
     property string bell:             ""
     property string keys:             ""
     property string shutdown:         ""

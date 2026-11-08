@@ -21,7 +21,7 @@ Reference popup: a **sectioned**, filterable table of keybindings grouped by con
 
   | Section | Source file | Notes |
   |---|---|---|
-  | Shell | `hyprland.lua` quickshell-launcher binds + `shell.qml` IpcHandler | launcher toggles only; `SUPER+c` → Calendar-Launcher |
+  | Shell | `hyprland.lua` quickshell-launcher binds + `shell.qml` IpcHandler | launcher toggles only; `SUPER+c` → Calendar-Launcher, `SUPER+K` → Screen-Cast, `SUPER+SPACE` → Control Center |
   | Hyprland | `hypr/hyprland.lua` | `SUPER+SHIFT+c` → Close active window (`killactive`); window/workspace/group/submap/multimedia binds; `kb_options grp:alt_shift_toggle` |
   | Ghostty | `ghostty/config` `keybind =` lines only | un-commented binds |
   | Tmux | `~/.config/tmux/tmux.conf` (+ sensible defaults) | `prefix = C-b`; `v/C-v/y` in copy-mode-vi; `alt+*` root binds |

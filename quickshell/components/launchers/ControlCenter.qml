@@ -168,6 +168,7 @@ WlrLayershell {
         { label: "Bluetooth", key: "SUPER+b", icon: Icons.bluetoothOn, target: "bluetooth" },
         { label: "Audio", key: "SUPER+a", icon: Icons.audioVolume, target: "audio" },
         { label: "Display", key: "SUPER+d", icon: Icons.display, target: "display" },
+        { label: "Screen Cast", key: "SUPER+k", icon: Icons.cast, target: "screencast" },
         { label: "Notifications", key: "SUPER+SHIFT+A", icon: Icons.notification, target: "notification" },
         { label: "Calendar", key: "SUPER+C", icon: Icons.calendar, target: "calendar" },
         { label: "App Launcher", key: "SUPER+r", icon: Icons.search, target: "app" },
