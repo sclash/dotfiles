@@ -123,6 +123,7 @@ quickshell/
 │   ├── HyprService.qml       # Optional — Hyprland helpers beyond Quickshell.Hyprland
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
 │   ├── ScreenCastService.qml # Singleton — GND daemon (scan/start/stop) + cast output settings
+│   ├── IdentityService.qml   # Singleton — fprintd CLIs + hyprlock fingerprint state file
 │   └── DisplaySettingsService.qml # Singleton — per-output brightness (backlight/DDC/gamma) + color temperature
 ├── components/
 │   ├── bar/
@@ -150,6 +151,7 @@ quickshell/
 │       ├── DisplayManager.qml
 │       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
 │       ├── ScreenCastLauncher.qml   # SUPER+K — wireless display discovery + session
+│       ├── IdentityManager.qml      # SUPER+I — fingerprint auth manager (IdentityService)
 │       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/
@@ -244,6 +246,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Audio-Center | `SUPER+a` | `Audio-Center.md` |
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
 | Screen-Cast | `SUPER+K` | `Screen-Cast.md` |
+| Identity-Manager | `SUPER+I` | `Identity-Manager.md` |
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |
 | Calendar-Launcher | `SUPER+c` | `Calendar-Launcher.md` |

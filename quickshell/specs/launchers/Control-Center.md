@@ -23,14 +23,15 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 | 3 | Audio | `SUPER+a` | `` | `launcher.toggle("audio")` |
 | 4 | Display | `SUPER+d` | `󰍹` | `launcher.toggle("display")` |
 | 5 | Screen Cast | `SUPER+k` | `󰄘` (`Icons.cast`) | `launcher.toggle("screencast")` |
-| 6 | Notifications | `SUPER+SHIFT+a` | `` | `launcher.toggle("notification")` |
-| 7 | Calendar | `SUPER+c` | `` (`Icons.calendar`) | `launcher.toggle("calendar")` |
-| 8 | App Launcher | `SUPER+r` | `` | `launcher.toggle("app")` |
-| 9 | Shutdown | `SUPER+q` | `` | `launcher.toggle("shutdown")` |
-| 10 | Key Hints | `SUPER+/` | `` | `launcher.toggle("keys")` |
-| 11 | USB | `SUPER+u` | `Icons.usb` (nf-md-usb) | `launcher.toggle("usb")` |
-| 12 | Power | `SUPER+p` | `󰁹` (`Icons.battery`) | `launcher.toggle("power")` |
-| 13 | Tray | `SUPER+t` | `Icons.app` | `launcher.toggle("tray")` |
+| 6 | Identity | `SUPER+i` | `Icons.fingerprint` | `launcher.toggle("identity")` |
+| 7 | Notifications | `SUPER+SHIFT+a` | `` | `launcher.toggle("notification")` |
+| 8 | Calendar | `SUPER+c` | `` (`Icons.calendar`) | `launcher.toggle("calendar")` |
+| 9 | App Launcher | `SUPER+r` | `` | `launcher.toggle("app")` |
+| 10 | Shutdown | `SUPER+q` | `` | `launcher.toggle("shutdown")` |
+| 11 | Key Hints | `SUPER+/` | `` | `launcher.toggle("keys")` |
+| 12 | USB | `SUPER+u` | `Icons.usb` (nf-md-usb) | `launcher.toggle("usb")` |
+| 13 | Power | `SUPER+p` | `󰁹` (`Icons.battery`) | `launcher.toggle("power")` |
+| 14 | Tray | `SUPER+t` | `Icons.app` | `launcher.toggle("tray")` |
 
 > The Control Center **does not duplicate** launcher UIs inside itself — it dispatches to them. Selecting an entry closes Control Center and opens that launcher (replace, don't stack).
 
@@ -49,7 +50,7 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 
 ## 6. Acceptance
 
-* [ ] Lists all 13 launchers with correct icons + key hints.
+* [ ] Lists all 14 launchers with correct icons + key hints.
 * [ ] Fuzzy filter + vim nav + `Enter` dispatch works; `Esc` closes.
 * [ ] Dispatching closes self and opens the target launcher (no stacking).
 * [ ] `SUPER+SPACE` toggles open/close.

@@ -79,6 +79,8 @@ update # alias for: sudo nixos-rebuild switch --flake ~/dotfiles/nixos#default -
 ```
 `default` is only the flake's name for the config. A machine's hostname comes from its `/etc/nixos/machine.nix`.
 
+**Fingerprint (optional).** `services.fprintd` is enabled on every machine, so any machine with a reader can unlock hyprlock with a fingerprint once prints are enrolled. Manage it from the Identity Manager (`SUPER+I`): enable/disable, enroll, delete. Enrollment is per machine (templates live in `/var/lib/fprint`) and is never in this repo. On machines without a reader everything logs and falls back to the password.
+
 ## Alacritty
 
 > Alacritty is the my default terminal emulator of choice. the `i3` config files are already set to use `Alacritty` as such. the Keyboard shortcut for `Alacritty` is `$mod+<Enter>`

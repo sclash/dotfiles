@@ -230,6 +230,7 @@ property string keys:             ""
 property string shutdown:         ""
 property string control:          "󰀻"
 property string calendar:         ""
+property string fingerprint:      String.fromCodePoint(0xF0237) // nf-md-fingerprint
 ```
 
 * Per-app SVG overrides (`appGhostty`, `appChrome` + `appIconOverride(appId)`) exist
@@ -272,7 +273,7 @@ property string calendar:         ""
   with `margins: Theme.padM, spacing: Theme.gapM`. Some launchers
   (ControlCenter, NotificationToast) inline the same chrome instead.
 * **Card widths by launcher:** ControlCenter 600 · AudioCenter / NotificationCenter /
-  ShutdownLauncher / PowerCenter 620 · KeyLauncher / DisplayManager / BluetoothCenter /
+  ShutdownLauncher / PowerCenter / IdentityManager 620 · KeyLauncher / DisplayManager / BluetoothCenter /
   NetworkCenter 640 · CalendarLauncher 480 (dense 7-column grid — see
   `launchers/Calendar-Launcher.md` §2). Height is content-driven (ControlCenter caps at 560).
 
