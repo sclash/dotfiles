@@ -21,6 +21,7 @@ WlrLayershell {
             { key: "SUPER+A", action: "Audio", desc: "sound" },
             { key: "SUPER+D", action: "Display", desc: "monitors" },
             { key: "SUPER+K", action: "Screen Cast", desc: "cast" },
+            { key: "SUPER+I", action: "Identity Manager", desc: "fingerprint" },
             { key: "SUPER+SHIFT+A", action: "Notifications", desc: "bell" },
             { key: "SUPER+C", action: "Calendar", desc: "dates" },
             { key: "SUPER+Q", action: "Shutdown", desc: "power" },
