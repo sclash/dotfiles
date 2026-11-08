@@ -30,7 +30,7 @@ Unlock itself is hyprlock: fingerprint through its native fprintd path (`auth:fi
 
 ### 3.2 Password (`PasswordView.qml`)
 
-* Three masked fields: current, new, repeat. `Enter` moves to the next field and submits on the last; `Tab` moves too.
+* Three masked fields (`SecretField`): current, new, repeat. One eye toggle (click, or `Ctrl+S`) shows/hides all three; hidden again on reset. `Enter` moves to the next field and submits on the last; `Tab` moves too.
 * Before anything is sent: `Parse.validatePasswordForm` — current and new must be non-empty, new and repeat must match (mandatory), then `Parse.passwordPolicy`: no leading or trailing whitespace, and deliberately no length or character limits. On a mismatch the repeat field is cleared and focused.
 * Submit → `IdentityService.changePassword(current, new)`; **all fields are cleared immediately**, and again whenever the view is left or the launcher closes.
 * Result line from `passwdResult`: `Password changed` (`Theme.fg`), `Current password is wrong`, `Rejected: <PAM reason>`, `Error: …` (`Theme.critical`).
@@ -41,8 +41,8 @@ Unlock itself is hyprlock: fingerprint through its native fprintd path (`auth:fi
 
 * Toggle row `Unlock with face`, note `lock screen only · press Enter, then look at the camera`; `Enter`/`t`/`Space` on it flips the choice; inert when `Not available`.
 * `Face models` list (`label`, date from `time`). Empty: `No face models yet — press a to add one`.
-* `a`/`e` → label field (max 24 chars, commas dropped; empty = `Face N`), `Enter` → `IdentityService.addFace(label)`: polkit password prompt, then `Look straight into the camera…`, then `Face model added` or Howdy's message.
-* `d`/`Enter` on a model → footer `Remove "<label>"?  y / n` (`Theme.critical`) → `removeFace(id)` (polkit prompt).
+* `a`/`e` → label field (max 24 chars, commas dropped; empty = `Face N`), `Enter` → `IdentityService.addFace(label)`: an **inline** password field (`Enter your password to add a face model`, eye toggle, polkit's retry message) answers polkit, then `Look straight into the camera…`, then `Face model added` or Howdy's message. `Esc` in the field cancels (`Authorization cancelled`).
+* `d`/`Enter` on a model → footer `Remove "<label>"?  y / n` (`Theme.critical`) → `removeFace(id)` (same inline password field).
 * If Howdy saw only black frames: `The IR light looks off. Run once: sudo linux-enable-ir-emitter configure`.
 * Unavailable: `Howdy is not installed — run update` or `No IR camera detected (<device_path>)`.
 
@@ -101,7 +101,7 @@ Pure logic (unit-tested in `tests/tst_identity_parse.qml`) is in `services/ident
 
 * **Choices** `~/.local/state/identity/choices` — `fingerprint=on|off`, `face=on|off`; written only by this service; a missing key means "hardware default" (enabled when present).
 * **hyprlock override** `~/.local/state/hyprlock-auth.conf` — *derived*, rewritten on every refresh when it changes: `auth:fingerprint:enabled` (reader present and not `off`), `auth:pam:module` = `hyprlock-face` when the IR camera is present, face is not `off` and at least one face model exists, else `hyprlock`; with face on it also adds a `Press Enter to unlock with your face` label. `hypr/hyprlock.conf` sources it last.
-* **Face** — Howdy 3 (`nixos/hardware-devices/face.nix`). The IR camera is Howdy's `device_path` (default `/dev/v4l/ir0`, created by a udev rule matching `*IR Camera*|*Infrared*`; a machine can override it in `/etc/nixos/machine.nix`); present = that path exists. Models are read from `/var/lib/howdy/models/<user>.dat` (world-readable JSON); add/remove run `pkexec howdy -U <user> -y add <label>` / `remove <id>`. hyprlock starts PAM only when Enter is pressed, so face unlock is "Enter, then look". Howdy's PAM module is `sufficient` before `pam_unix`, so a failed or skipped face check always falls back to the password.
+* **Face** — Howdy 3 (`nixos/hardware-devices/face.nix`). The IR camera is Howdy's `device_path` (default `/dev/v4l/ir0`, created by a udev rule matching `*IR Camera*|*Infrared*`; a machine can override it in `/etc/nixos/machine.nix`); present = that path exists. Models are read from `/var/lib/howdy/models/<user>.dat` (world-readable JSON); add/remove run `pkexec howdy -U <user> -y add <label>` / `remove <id>`. Quickshell is the session's polkit agent (`services/PolkitService.qml`): while the Face view is open it claims `pkexec howdy` requests (`polkitParse.js` `routeInline`) and answers them inline; any other request, or this one after the launcher closes, goes to `components/launchers/PolkitPrompt.qml`. hyprlock starts PAM only when Enter is pressed, so face unlock is "Enter, then look". Howdy's PAM module is `sufficient` before `pam_unix`, so a failed or skipped face check always falls back to the password.
 * **Password** — `identity-passwd` (`scripts/identity-passwd.py`, packaged in `nixos/programs/quickshell.nix`): reads the current and new password from stdin, drives `passwd` on a pty under `LC_ALL=C`, prints one line `OK | BAD_CURRENT | REJECTED <msg> | ERROR <msg>`. Passwords never go into argv, the environment or logs.
 * **Fingerprint** — `fprintd-list`, `fprintd-enroll -f <finger>`, `fprintd-delete <user> -f <finger>`; PAM integration stays disabled system-wide (`nixos/hardware-devices/fingerprint.nix`).
 

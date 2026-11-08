@@ -11,3 +11,4 @@ singleton DisplaySettingsService 1.0 DisplaySettingsService.qml
 singleton PowerProfileService 1.0 PowerProfileService.qml
 singleton ScreenCastService 1.0 ScreenCastService.qml
 singleton IdentityService 1.0 IdentityService.qml
+singleton PolkitService 1.0 PolkitService.qml

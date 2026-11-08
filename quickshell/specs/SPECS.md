@@ -124,6 +124,7 @@ quickshell/
 │   ├── UsbService.qml        # Singleton — udisks2 / lsusb / udev monitor wrapper
 │   ├── ScreenCastService.qml # Singleton — GND daemon (scan/start/stop) + cast output settings
 │   ├── IdentityService.qml   # Singleton — password (identity-passwd), face (Howdy), fingerprint (fprintd) + hyprlock auth state
+│   ├── PolkitService.qml     # Singleton — Quickshell as the session's polkit agent; routes requests inline or to PolkitPrompt
 │   └── DisplaySettingsService.qml # Singleton — per-output brightness (backlight/DDC/gamma) + color temperature
 ├── components/
 │   ├── bar/
@@ -152,6 +153,8 @@ quickshell/
 │       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
 │       ├── ScreenCastLauncher.qml   # SUPER+K — wireless display discovery + session
 │       ├── IdentityManager.qml      # SUPER+I — password / face / fingerprint manager (views in identity/)
+│       ├── PolkitPrompt.qml         # polkit password prompt for any app (overlay layer)
+│       ├── SecretField.qml          # masked field with show/hide eye (Ctrl+S)
 │       ├── TrayManager.qml
 │       └── UsbManager.qml
 ├── theme/

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "services"
 import "components/launchers/identity" // scanned the way IdentityManager.qml imports it
+import "components/launchers"          // SecretField, PolkitPrompt
 
 // Smoke test for the Identity Manager views, run inside Quickshell itself
 // from a temporary config root holding copies of components/, services/
@@ -78,8 +79,12 @@ ShellRoot {
                 } else {
                     check("password: submit is inert without identity-passwd", !IdentityService.passwordBusy)
                 }
+                check("password: hidden by default", f.every(x => x.input.echoMode === TextInput.Password))
+                f[1].revealToggled()
+                check("password: one eye reveals all three fields", f.every(x => x.input.echoMode === TextInput.Normal))
                 p.reset()
                 check("password: reset clears every field", f.every(x => x.text === ""))
+                check("password: reset hides again", f.every(x => x.input.echoMode === TextInput.Password))
             }
             let back = false
             p.back.connect(() => back = true)
@@ -118,6 +123,16 @@ ShellRoot {
             key(fp, Qt.Key_Escape)
             check("fingerprint: Esc goes back", back)
             fp.destroy()
+        }
+
+        // --- polkit: agent disabled in tests; generic prompt hidden without a request ---
+        check("polkit: agent not registered under QS_NO_POLKIT_AGENT", PolkitService.disabled && !PolkitService.registered)
+        const pc = Qt.createComponent("components/launchers/PolkitPrompt.qml")
+        check("PolkitPrompt.qml compiles", pc.status === Component.Ready, pc.errorString())
+        if (pc.status === Component.Ready) {
+            const pp = pc.createObject(shell)
+            check("PolkitPrompt hidden without a request", pp !== null && pp.shown === false && pp.visible === false)
+            if (pp) pp.destroy()
         }
 
         // --- the launcher shell (layer surface; created closed, never shown) ---

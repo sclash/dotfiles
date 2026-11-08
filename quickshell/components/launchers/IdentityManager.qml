@@ -20,6 +20,10 @@ WlrLayershell {
         : view === "face" ? faceView
         : view === "fingerprint" ? fingerprintView : methodsView
 
+    // While the Face view is open, its own polkit request (pkexec howdy) is
+    // answered inline there; otherwise PolkitPrompt shows it.
+    Binding { target: PolkitService; property: "faceClaim"; value: root.isOpen && root.view === "face" }
+
     function open() { isOpen = true }
     function close() {
         passwordView.reset()                 // never keep typed passwords around

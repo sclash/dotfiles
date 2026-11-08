@@ -160,11 +160,9 @@
   security.pam.services.hyprlock.enable = true;
 
   # Polkit password prompts (pkexec, udisks, the Identity Manager's face
-  # models). Run as the package's own user unit, tied to the graphical
-  # session and restarted on failure, instead of a one-shot exec from
-  # Hyprland that can die without anyone noticing.
-  systemd.packages = [ pkgs.hyprpolkitagent ];
-  systemd.user.services.hyprpolkitagent.wantedBy = [ "graphical-session.target" ];
+  # models) come from Quickshell itself (quickshell/services/PolkitService.qml):
+  # it is the session's authentication agent, so prompts appear inside the
+  # shell. A session has one agent, so no hyprpolkitagent alongside it.
 
   # GTK theming is set declaratively via dconf in home.nix. Do NOT set
   # GTK_THEME here: it takes precedence over the gtk-theme GSettings key and
@@ -412,7 +410,6 @@
       hyprpicker
       hyprpaper
       hyprlock
-      hyprpolkitagent
       wlr-randr
       pywal
       # swaynotificationcenter

@@ -15,6 +15,9 @@ Scope {
     // (singletons are lazy; without a live reference it would never apply).
     property var _ensurePowerProfile: PowerProfileService.auto
 
+    // Register Quickshell as the polkit agent at startup (PolkitService).
+    property var _ensurePolkit: PolkitService.registered
+
     // Bar
     Bar {
         id: bar
@@ -36,6 +39,7 @@ Scope {
     KeyLauncher { id: keyLauncher }
     TrayManager { id: trayManager }
     IdentityManager { id: identityManager }
+    PolkitPrompt { id: polkitPrompt }
     ControlCenter {
         id: controlCenter
         onRequestToggle: (name) => ipcHandler.toggle(name)

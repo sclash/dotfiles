@@ -20,7 +20,8 @@ mkdir -p "$tmp/bin"
 printf '#!/bin/sh\ntouch "%s/passwd-called"\necho "ERROR stub"\n' "$tmp" > "$tmp/bin/identity-passwd"
 chmod +x "$tmp/bin/identity-passwd"
 
-HOME="$tmp" PATH="$tmp/bin:$PATH" QT_QPA_PLATFORM=offscreen timeout 60 \
+# QS_NO_POLKIT_AGENT: never register a second polkit agent in the live session.
+HOME="$tmp" PATH="$tmp/bin:$PATH" QS_NO_POLKIT_AGENT=1 QT_QPA_PLATFORM=offscreen timeout 60 \
   quickshell -p "$root/shell.qml" > "$tmp/log" 2>&1
 
 grep -oE 'SMOKE (OK|FAIL|DONE).*' "$tmp/log"

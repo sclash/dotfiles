@@ -3,16 +3,19 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../theme"
 import "../../../services"
+import ".."                                   // SecretField
 
 // Face unlock (Howdy, lock screen only): on/off toggle and the user's face
-// models. Adding or removing a model asks for the password through polkit
-// (Howdy keeps models in /var/lib/howdy, owned by root).
+// models. Adding or removing a model needs root (Howdy keeps models in
+// /var/lib/howdy); polkit's password request is answered right here, inline
+// (PolkitService routes it to this view while it is open).
 Item {
     id: view
     property string mode: "list"            // list | label
     property int sel: 0                     // 0 = toggle, 1.. = models
     property string confirmText: ""
     property var pendingRemove: null
+    property bool authReveal: false
     signal back()
 
     readonly property bool available: IdentityService.faceState !== "unavailable"
@@ -20,7 +23,7 @@ Item {
 
     implicitHeight: col.implicitHeight
 
-    function reset() { mode = "list"; sel = 0; confirmText = ""; pendingRemove = null; labelField.text = "" }
+    function reset() { mode = "list"; sel = 0; confirmText = ""; pendingRemove = null; labelField.text = ""; authField.text = ""; authReveal = false }
     function fmtDate(t) { return t > 0 ? Qt.formatDate(new Date(t * 1000), "yyyy-MM-dd") : "" }
     function toggle() {
         if (available) IdentityService.setChoice("face", IdentityService.faceState !== "enabled")
@@ -43,6 +46,11 @@ Item {
         confirmText = 'Remove "' + m.label + '"?  y / n'
     }
     function handleKey(e) {
+        if (PolkitService.faceInline) {
+            if (e.key === Qt.Key_Escape) { PolkitService.cancel(); authField.text = ""; e.accepted = true }
+            else authField.forceActiveFocus()
+            return
+        }
         if (confirmText !== "") {
             if (e.key === Qt.Key_Y) { IdentityService.removeFace(pendingRemove.id); confirmText = ""; pendingRemove = null; e.accepted = true }
             else if (e.key === Qt.Key_N || e.key === Qt.Key_Escape) { confirmText = ""; pendingRemove = null; e.accepted = true }
@@ -66,6 +74,15 @@ Item {
     Connections {
         target: IdentityService
         function onDataUpdated() { view.sel = Math.max(0, Math.min(view.sel, view.count - 1)) }
+    }
+    // Take the keyboard when polkit asks for the password; give it back after.
+    Connections {
+        target: PolkitService
+        function onFaceInlineChanged() {
+            authField.text = ""
+            if (PolkitService.faceInline) authField.forceActiveFocus()
+            else { view.authReveal = false; view.refocus() }
+        }
     }
 
     ColumnLayout {
@@ -163,9 +180,44 @@ Item {
             }
         }
 
+        // Inline polkit password prompt for this view's own pkexec howdy.
+        ColumnLayout {
+            visible: PolkitService.faceInline
+            Layout.fillWidth: true
+            spacing: Theme.gapS
+            Text {
+                text: Icons.lock + "  Enter your password to "
+                    + (IdentityService.faceAction === "remove" ? "remove the face model" : "add a face model")
+                font.family: Theme.fontFamily
+                font.pixelSize: 12
+                color: Theme.fg
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+            }
+            SecretField {
+                id: authField
+                placeholder: PolkitService.flow !== null && PolkitService.flow.inputPrompt !== ""
+                    ? PolkitService.flow.inputPrompt.replace(/:\s*$/, "") : "password"
+                revealed: view.authReveal
+                fieldEnabled: PolkitService.flow !== null && PolkitService.flow.isResponseRequired
+                onRevealToggled: view.authReveal = !view.authReveal
+                onAccepted: { PolkitService.submit(text); text = "" }
+                onEscaped: { PolkitService.cancel(); text = "" }
+            }
+            Text {
+                visible: PolkitService.flow !== null && PolkitService.flow.supplementaryMessage !== ""
+                text: PolkitService.flow !== null ? PolkitService.flow.supplementaryMessage : ""
+                font.family: Theme.fontFamily
+                font.pixelSize: 11
+                color: PolkitService.flow !== null && PolkitService.flow.supplementaryIsError ? Theme.critical : Theme.fgMuted
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+            }
+        }
+
         // Progress / outcome of the last add or remove.
         Text {
-            visible: IdentityService.faceMessage !== ""
+            visible: IdentityService.faceMessage !== "" && !PolkitService.faceInline
             text: (IdentityService.faceBusy ? Icons.face : (IdentityService.faceMessageIsError ? Icons.warning : Icons.check))
                 + " " + IdentityService.faceMessage
             font.family: Theme.fontFamily
@@ -199,6 +251,7 @@ Item {
 
         Text {
             text: view.confirmText !== "" ? view.confirmText
+                : PolkitService.faceInline ? "Enter confirm · Ctrl+s show/hide · Esc cancel"
                 : view.mode === "label" ? "Enter add · Esc cancel"
                 : view.available ? "j/k move · t toggle · a add · d remove · Esc back"
                 : "Esc back"
