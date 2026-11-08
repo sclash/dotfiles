@@ -63,6 +63,21 @@ expect '.baseBuilds'                 "the base system evaluates (assertions hold
 expect '.violationFails'             "enabling fprintAuth on sudo fails evaluation"
 expect '.violationEnabledCount >= 1' "the violation flips a PAM service"
 
+# hyprlock.conf: fingerprint enabled by default, override source last.
+last_line=$(grep -v '^[[:space:]]*$' "$ROOT/hypr/hyprlock.conf" | tail -n 1)
+if [[ "$last_line" == "source = ~/.local/state/hyprlock-fingerprint.conf" ]]; then
+  echo "OK   hyprlock.conf ends with the state-file source line"
+else
+  echo "FAIL hyprlock.conf source line is not last (got: $last_line)"
+  failures=$((failures + 1))
+fi
+if grep -A4 '^auth {' "$ROOT/hypr/hyprlock.conf" | grep -q 'enabled = true'; then
+  echo "OK   hyprlock.conf enables fingerprint by default"
+else
+  echo "FAIL hyprlock.conf does not enable fingerprint"
+  failures=$((failures + 1))
+fi
+
 if ((failures)); then
   echo "$failures fingerprint tests failed"
   exit 1
