@@ -83,6 +83,16 @@ This repo is public, so it holds the *names* of credentials, never their values.
 
 Put first-install work in the installer. The dotfiles never generate keys, and never write to `/etc/nixos`.
 
+### What the installer relies on in this repo
+
+The installer, and every stick already flashed from it, depend on the items below. Changing one breaks new installs, not this repo's tests, so ask first. Any change also needs a matching installer change and a reflashed stick. The installer's `README.md` is the authoritative version of this contract.
+
+- The repo can be cloned over HTTPS without logging in, from the branch set in the installer's `settings.nix` (currently `quickshell`). `nixos/bootstrap.sh` fetches submodules over HTTPS too.
+- `nixos/bootstrap.sh` exists at that path, runs as the user on first login, and is safe to re-run. Any non-zero exit makes the installer stop and tell the user how to retry.
+- `nixos/secrets/template.yaml` exists at that path, and every line is `name: null`. First boot encrypts it as-is.
+- The age key is `~/.config/sops/age/keys.txt` and the secrets file is `~/.config/sops/secrets.yaml`. The installer creates both, and `nixos/sops.nix` and `nixos/sync-secrets.sh` read them.
+- The machine layer is `/etc/nixos/hardware-configuration.nix` and `/etc/nixos/machine.nix`, which `nixos/flake.nix` imports.
+
 ## How to work here
 
 - **Ask first.** Never commit, push, merge, rebuild, write to `/etc/nixos` or touch `~/.config/sops/` without the user's permission. They approve every edit.
@@ -113,4 +123,4 @@ To evaluate a real machine without rebuilding, point `DOTFILES_MACHINE_DIR` at a
 - `SOPS-README.md`: the full secrets workflow, including adding or removing a credential and troubleshooting.
 - `quickshell/AGENTS.md`: the Quickshell bar and launchers.
 - `wsl/`: a separate setup for WSL, with its own secrets. Its rules differ, so don't apply this guide there.
-- The `nixos-installer` repo: its `README.md` covers building and flashing the stick, and the contract between the installer and these dotfiles.
+- [`sclash/nixos-installer`](https://github.com/sclash/nixos-installer): the other half of the setup. Its `README.md` covers building and flashing the stick and the contract with these dotfiles, and its own `AGENTS.md` covers changing the installer. Read it there rather than copying it here.
