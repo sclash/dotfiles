@@ -37,7 +37,7 @@ else
   echo "FAIL choices file: $(cat "$state/identity/choices" 2>&1)"; fail=1
 fi
 if grep -q 'module = hyprlock$' "$state/hyprlock-auth.conf" 2>/dev/null \
-   && ! grep -q 'label {' "$state/hyprlock-auth.conf"; then
+   && ! grep -q 'unlock with your face' "$state/hyprlock-auth.conf"; then
   echo "OK   face off -> hyprlock-auth.conf selects the password-only PAM service"
 else
   echo "FAIL hyprlock-auth.conf: $(cat "$state/hyprlock-auth.conf" 2>&1)"; fail=1

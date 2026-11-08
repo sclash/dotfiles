@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell.Io
 import "identityParse.js" as Parse
+import "../theme"
 
 // IdentityService — the current user's ways to authenticate: password
 // (always on; changed through `identity-passwd`), face (Howdy over an IR
@@ -56,6 +57,10 @@ QtObject {
         fingerprintPresent: devicePresent, fingerprintChoice: choices.fingerprint,
         irPresent: howdyAvailable && irPresent, faceChoice: choices.face,
         faceModelCount: faceModels.length
+    })
+    // Lock-screen icons under the password box (hidden when unsupported).
+    readonly property var lockIcons: Parse.lockIcons({
+        fingerprintState: fingerprintState, faceState: faceState, faceModelCount: faceModels.length
     })
     signal dataUpdated()
 
@@ -190,7 +195,12 @@ QtObject {
         else root._finishRefresh()
     }
     function _finishRefresh() {
-        const text = Parse.renderHyprlockAuth(root.effective)
+        const hex = c => String(c).replace("#", "")
+        const text = Parse.renderHyprlockAuth(root.effective, root.lockIcons, {
+            glyphs: { fingerprint: Icons.fingerprint, face: Icons.face },
+            colors: { selected: hex(Theme.fgBright), enabled: hex(Theme.fg), disabled: hex(Theme.fgDim), hint: hex(Theme.fgMuted) },
+            font: Theme.fontFamily
+        })
         if (text !== root._writtenAuth) {
             root._writtenAuth = text
             root.authProc.environment = { CONTENT: text }

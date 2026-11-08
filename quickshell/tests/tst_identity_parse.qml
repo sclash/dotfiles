@@ -104,6 +104,60 @@ TestCase {
         compare(eff({ irPresent: false, faceModelCount: 2, faceChoice: "on" }).pamModule, "hyprlock")
     }
 
+    // --- lockIcons(): lock-screen icons, hidden when unsupported ---
+    function icons(fp, face, models) {
+        return Parse.lockIcons({ fingerprintState: fp, faceState: face, faceModelCount: models === undefined ? 1 : models })
+    }
+    function looks(list) { return list.map(i => i.method + ":" + i.look).join(",") }
+    function test_lock_icons_unsupported_hidden() {
+        compare(looks(icons("unavailable", "unavailable")), "")
+    }
+    function test_lock_icons_fingerprint_selected_face_fallback() {
+        compare(looks(icons("enabled", "enabled")), "fingerprint:selected,face:enabled")
+        compare(looks(icons("enabled", "unavailable")), "fingerprint:selected")
+    }
+    function test_lock_icons_face_selected_without_fingerprint() {
+        compare(looks(icons("unavailable", "enabled")), "face:selected")
+        compare(looks(icons("disabled", "enabled")), "fingerprint:disabled,face:selected")
+    }
+    function test_lock_icons_disabled() {
+        compare(looks(icons("disabled", "disabled")), "fingerprint:disabled,face:disabled")
+        compare(looks(icons("enabled", "disabled")), "fingerprint:selected,face:disabled")
+        // Face on but no model yet cannot unlock: shown as disabled.
+        compare(looks(icons("unavailable", "enabled", 0)), "face:disabled")
+    }
+
+    // --- renderHyprlockAuth() with icons ---
+    readonly property var lockStyle: ({
+        glyphs: { fingerprint: "F", face: "C" },
+        colors: { selected: "eaeaea", enabled: "bebebe", disabled: "555555" },
+        font: "JetBrainsMono Nerd Font"
+    })
+    function iconLabels(t) { return (t.match(/label \{[^}]*text = [FC]\n[^}]*\}/g) || []) }
+    function test_render_icons_none() {
+        const t = Parse.renderHyprlockAuth({ fingerprint: false, pamModule: "hyprlock", face: false }, [], lockStyle)
+        compare(iconLabels(t).length, 0)
+    }
+    function test_render_icons_two_side_by_side() {
+        const t = Parse.renderHyprlockAuth({ fingerprint: true, pamModule: "hyprlock-face", face: true },
+            icons("enabled", "enabled"), lockStyle)
+        const l = iconLabels(t)
+        compare(l.length, 2)
+        verify(l[0].indexOf("text = F") !== -1 && l[0].indexOf("rgb(eaeaea)") !== -1)   // selected
+        verify(l[1].indexOf("text = C") !== -1 && l[1].indexOf("rgb(bebebe)") !== -1)   // fallback
+        verify(l[0].indexOf("position = -") !== -1 && l[1].indexOf("position = -") === -1) // left, right
+        verify(t.indexOf("Touch the sensor") !== -1)
+    }
+    function test_render_icon_single_centered_and_disabled() {
+        const t = Parse.renderHyprlockAuth({ fingerprint: false, pamModule: "hyprlock", face: false },
+            icons("unavailable", "disabled"), lockStyle)
+        const l = iconLabels(t)
+        compare(l.length, 1)
+        verify(l[0].indexOf("rgb(555555)") !== -1)
+        verify(/position = 0, /.test(l[0]))
+        verify(t.indexOf("Press Enter") === -1)        // nothing usable: no hint
+    }
+
     // --- renderHyprlockAuth() ---
     function test_render_hyprlock_password_only() {
         const t = Parse.renderHyprlockAuth({ fingerprint: false, pamModule: "hyprlock", face: false })
@@ -115,8 +169,7 @@ TestCase {
         const t = Parse.renderHyprlockAuth({ fingerprint: true, pamModule: "hyprlock-face", face: true })
         verify(t.indexOf("enabled = true") !== -1)
         verify(t.indexOf("module = hyprlock-face") !== -1)
-        verify(t.indexOf("label {") !== -1)          // "press Enter" hint
-        verify(t.indexOf("Enter") !== -1)
+        verify(t.indexOf("label {") === -1)          // icons/hint only with a style
     }
 
     // --- parseHowdyDevicePath() ---
