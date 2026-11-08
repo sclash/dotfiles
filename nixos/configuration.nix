@@ -25,6 +25,7 @@
     ./hardware-devices/printers.nix
     ./hardware-devices/scanners.nix
     ./hardware-devices/fingerprint.nix
+    ./hardware-devices/face.nix
     inputs.walker.nixosModules.default
     # inputs.elephant.nixosModules.default
     inputs.nixd.nixosModules
