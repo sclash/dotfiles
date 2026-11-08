@@ -118,6 +118,7 @@ QtObject {
         if (root.displaysProc.running) return
         if (!root.daemonRunning) { root.ensureDaemon(); return }
         root.scanning = true
+        root.displayStderrText = ""
         root.displaysProc.running = true
     }
 
@@ -284,6 +285,10 @@ QtObject {
         }
     }
 
+    // StdioCollector fires on empty stderr too, so the failure decision belongs
+    // in onExited (where the exit code is known) rather than in stderr. The
+    // stderr handler only records the text.
+    property string displayStderrText: ""
     property Process displaysProc: Process {
         command: ["busctl", "--user", "--json=short", "get-property",
             "org.gnome.NetworkDisplays.Manager",
@@ -291,6 +296,20 @@ QtObject {
             "org.gnome.NetworkDisplays.Manager", "Displays"]
         onExited: (code, status) => {
             root.scanning = false
+            if (code !== 0) {
+                const t = root.displayStderrText.trim()
+                // Type=dbus makes the first call deterministic; a daemon that
+                // crashed between is-active and get-property still races. Retry
+                // briefly instead of declaring the whole feature unavailable.
+                if (t !== "" && Parse.isTransientBusError(t) && root.displayRetries < 6) {
+                    root.displayRetries++
+                    root.retryTimer.restart()
+                } else {
+                    root.available = false
+                    root.lastError = t ? t.split("\n")[0] : "Network Displays daemon unavailable"
+                    root.dataUpdated()
+                }
+            }
             Qt.callLater(() => root.maybeFinishClose())
         }
         stdout: StdioCollector {
@@ -313,20 +332,7 @@ QtObject {
             }
         }
         stderr: StdioCollector {
-            onStreamFinished: {
-                const t = String(this.text || "").trim()
-                // Type=dbus makes the first call deterministic; a daemon that
-                // crashed between is-active and get-property still races. Retry
-                // briefly instead of declaring the whole feature unavailable.
-                if (t !== "" && Parse.isTransientBusError(t) && root.displayRetries < 6) {
-                    root.displayRetries++
-                    root.retryTimer.restart()
-                    return
-                }
-                root.available = false
-                root.lastError = t ? t.split("\n")[0] : "Network Displays daemon unavailable"
-                root.dataUpdated()
-            }
+            onStreamFinished: { root.displayStderrText = String(this.text || "") }
         }
     }
 
