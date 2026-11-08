@@ -187,6 +187,7 @@ QtObject {
     property string monitor:          "󰍹"
     property string cast:             "󰄘"
     property string fingerprint:      String.fromCodePoint(0xF0237) // nf-md-fingerprint
+    property string face:             String.fromCodePoint(0xF0C99) // nf-md-face_recognition
     property string bell:             ""
     property string keys:             ""
     property string shutdown:         ""

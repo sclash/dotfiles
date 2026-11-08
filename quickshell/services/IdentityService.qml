@@ -3,21 +3,25 @@ import QtQuick
 import Quickshell.Io
 import "identityParse.js" as Parse
 
-// IdentityService — wraps the fprintd CLIs for the current user and the
-// hyprlock fingerprint override file. Launchers are pure views over this
+// IdentityService — the current user's ways to authenticate: password
+// (always on; changed through `identity-passwd`), face (Howdy over an IR
+// camera) and fingerprint (fprintd CLIs). Launchers are pure views over this
 // singleton; all Processes live here (SPECS.md §2.3 rule 3).
 //
-// State-file contract (shared with hypr/hyprlock.conf and the NixOS test):
-//   ~/.local/state/hyprlock-fingerprint.conf — `auth { fingerprint { … } }`
-//   override read by hyprlock's last `source =` line; absent/unparseable
-//   means enabled (the repo default). Seeded once per session so hyprlock
-//   never logs a missing-source config error.
+// State files (shared with hypr/hyprlock.conf and nixos/hardware-devices):
+//   ~/.local/state/identity/choices — `fingerprint=on|off`, `face=on|off`;
+//     written only here. A missing key = the hardware default (enabled when
+//     the device is present).
+//   ~/.local/state/hyprlock-auth.conf — derived from the choices and the
+//     detected hardware on every refresh; sourced last by hyprlock. It
+//     switches hyprlock's native fprintd unlock and its PAM service
+//     (`hyprlock` = password, `hyprlock-face` = Howdy then password).
 QtObject {
     id: root
 
+    // ---------- fingerprint ----------
     property bool fprintdAvailable: false
     property bool devicePresent: false
-    property bool authEnabled: true
     property var enrolled: []              // [{ name, label }]
     property bool enrolling: false
     property string enrollFinger: ""
@@ -25,21 +29,56 @@ QtObject {
     readonly property string enrollMessage: Parse.enrollStageLabel(enrollStage)
     property int enrollPasses: 0
     property bool enrollDone: false
-    property string lastError: ""
+    property string lastError: ""          // fingerprint errors
+    readonly property string fingerprintState: Parse.methodState(devicePresent, choices.fingerprint)
+
+    // ---------- face ----------
+    property bool howdyAvailable: false
+    property string irDevice: ""           // Howdy's device_path
+    property bool irPresent: false
+    property var faceModels: []            // [{ id, label, time }]
+    property bool faceBusy: false          // a pkexec howdy add/remove is running
+    property string faceAction: ""         // "add" | "remove" while busy
+    property string faceMessage: ""        // last add/remove outcome
+    property bool faceMessageIsError: false
+    property bool faceNeedsEmitter: false  // Howdy only saw black frames
+    readonly property string faceState: Parse.methodState(howdyAvailable && irPresent, choices.face)
+
+    // ---------- password ----------
+    property bool passwordAvailable: false // identity-passwd on PATH
+    property bool passwordBusy: false
+    property string passwordMessage: ""
+    property bool passwordOk: false
+
+    // ---------- shared ----------
+    property var choices: ({ fingerprint: "", face: "" })
+    readonly property var effective: Parse.effectiveAuth({
+        fingerprintPresent: devicePresent, fingerprintChoice: choices.fingerprint,
+        irPresent: howdyAvailable && irPresent, faceChoice: choices.face,
+        faceModelCount: faceModels.length
+    })
     signal dataUpdated()
 
-    property bool _seeded: false
     property bool _listErrorActive: false
     property string _queuedFinger: ""
+    property string _writtenAuth: ""       // last hyprlock-auth.conf content written
+    property string _pwPayload: ""         // cleared as soon as it is written
 
     // ---------- public API ----------
 
     function refresh() {
         root.probeProc.running = true
     }
-    function setAuthEnabled(on) {
-        root._writeState(on ? "true" : "false")
+    // method: "fingerprint" | "face". Only meaningful when the hardware exists.
+    function setChoice(method, on) {
+        const next = Object.assign({}, root.choices)
+        next[method] = on ? "on" : "off"
+        root.choices = next
+        root.choicesProc.environment = { CONTENT: Parse.renderChoices(next) }
+        root.choicesProc.running = true
     }
+
+    // --- fingerprint ---
     function enroll(finger) {
         if (root.enrolling || !root.fprintdAvailable) return
         root.enrolling = true
@@ -76,33 +115,88 @@ QtObject {
         root.deleteProc.running = true
     }
 
+    // --- face (root actions through pkexec → polkit password prompt) ---
+    function addFace(label) {
+        if (root.faceBusy || !root.howdyAvailable || !root.irPresent) return
+        const clean = String(label || "").replace(/,/g, "").trim().slice(0, 24)
+        root._startFace("add", ["add", clean !== "" ? clean : "Face " + (root.faceModels.length + 1)])
+    }
+    function removeFace(id) {
+        if (root.faceBusy || !root.howdyAvailable) return
+        root._startFace("remove", ["remove", String(id)])
+    }
+    function _startFace(action, args) {
+        root.faceBusy = true
+        root.faceAction = action
+        root.faceMessage = action === "add" ? "Look straight into the camera…" : "Removing…"
+        root.faceMessageIsError = false
+        root.faceNeedsEmitter = false
+        root.faceProc.command = ["sh", "-c", 'exec pkexec howdy -U "$(id -un)" -y "$@" 2>&1', "howdy"].concat(args)
+        root.faceProc.running = true
+        root.dataUpdated()
+    }
+
+    // --- password ---
+    function changePassword(current, next) {
+        if (root.passwordBusy || !root.passwordAvailable) return
+        root.passwordBusy = true
+        root.passwordOk = false
+        root.passwordMessage = "Changing password…"
+        root._pwPayload = current + "\n" + next + "\n"
+        root.passwdProc.running = true
+        root.dataUpdated()
+    }
+    function clearPasswordMessage() {
+        if (root.passwordBusy) return
+        root.passwordMessage = ""
+        root.passwordOk = false
+    }
+
     // ---------- internals ----------
 
-    function _writeState(value) {
-        root.writeProc.environment = { FPRINT_ENABLED: value }
-        root.writeProc.running = true
+    function _sections(text) {
+        // "KEY=VAL" header lines, then "@@NAME" sections with raw bodies.
+        const out = { head: {}, body: {} }
+        const parts = String(text || "").split(/^@@/m)
+        for (const line of parts.shift().split("\n")) {
+            const m = line.match(/^(\w+)=(.*)$/)
+            if (m) out.head[m[1]] = m[2].trim()
+        }
+        for (const p of parts) {
+            const nl = p.indexOf("\n")
+            out.body[p.slice(0, nl).trim()] = p.slice(nl + 1)
+        }
+        return out
     }
     function _handleProbe(text) {
-        const lines = String(text || "").split("\n")
-        const bin = (lines.shift() || "").trim() === "BIN=1"
-        const rest = lines.join("\n").trim()
-        root.fprintdAvailable = bin
-        if (!bin) {
+        const s = root._sections(text)
+        root.fprintdAvailable = s.head.FPRINT === "1"
+        root.howdyAvailable = s.head.HOWDY === "1" && s.head.PKEXEC === "1"
+        root.passwordAvailable = s.head.PASSWD === "1"
+        root.choices = Parse.parseChoices(s.body.CHOICES)
+        root.irDevice = root.howdyAvailable ? Parse.parseHowdyDevicePath(s.body.HOWDYCONF) : ""
+        if (!root.fprintdAvailable) {
             root.devicePresent = false
             root.enrolled = []
         }
-        if (rest === "ABSENT" || rest === "") {
-            root.authEnabled = true
-            if (!root._seeded) {
-                root._seeded = true
-                root._writeState("true")   // seed once; writeProc re-probes
-                return
-            }
-        } else {
-            root.authEnabled = Parse.parseAuthEnabled(rest)
+        root.faceProbe.environment = { FACE_DEVICE: root.irDevice }
+        root.faceProbe.running = true
+    }
+    function _handleFaceProbe(text) {
+        const s = root._sections(text)
+        root.irPresent = root.howdyAvailable && s.head.IR === "1"
+        root.faceModels = Parse.parseHowdyModels(s.body.MODELS)
+        if (root.fprintdAvailable) root.listProc.running = true
+        else root._finishRefresh()
+    }
+    function _finishRefresh() {
+        const text = Parse.renderHyprlockAuth(root.effective)
+        if (text !== root._writtenAuth) {
+            root._writtenAuth = text
+            root.authProc.environment = { CONTENT: text }
+            root.authProc.running = true
         }
-        if (bin) root.listProc.running = true
-        else root.dataUpdated()
+        root.dataUpdated()
     }
     function _handleEnrollLine(line) {
         const m = String(line).match(/^Enroll result: (.+)$/)
@@ -127,13 +221,45 @@ QtObject {
         }
         root.refresh()
     }
+    function _finishFace(code, text) {
+        const msg = Parse.howdyMessage(text)
+        root.faceBusy = false
+        root.faceNeedsEmitter = msg.needsEmitter
+        if (code === 0) {
+            root.faceMessage = root.faceAction === "add" ? "Face model added" : "Face model removed"
+            root.faceMessageIsError = false
+        } else if (code === 126 || code === 127) {
+            // pkexec: authorization dismissed, failed or not allowed.
+            root.faceMessage = "Authorization cancelled or failed"
+            root.faceMessageIsError = true
+        } else {
+            root.faceMessage = msg.text !== "" ? msg.text : "howdy " + root.faceAction + " failed (" + code + ")"
+            root.faceMessageIsError = true
+        }
+        root.faceAction = ""
+        root.refresh()
+    }
 
     // ---------- processes ----------
 
     property Process probeProc: Process {
-        command: ["sh", "-c", 'if command -v fprintd-enroll >/dev/null 2>&1 && command -v fprintd-list >/dev/null 2>&1 && command -v fprintd-delete >/dev/null 2>&1; then echo BIN=1; else echo BIN=0; fi; if [ -f "$HOME/.local/state/hyprlock-fingerprint.conf" ]; then cat "$HOME/.local/state/hyprlock-fingerprint.conf"; else echo ABSENT; fi']
+        command: ["sh", "-c", 'has() { command -v "$1" >/dev/null 2>&1 && echo 1 || echo 0; }; '
+            + 'fp=1; for c in fprintd-enroll fprintd-list fprintd-delete; do command -v "$c" >/dev/null 2>&1 || fp=0; done; '
+            + 'echo "FPRINT=$fp"; echo "HOWDY=$(has howdy)"; echo "PKEXEC=$(has pkexec)"; echo "PASSWD=$(has identity-passwd)"; '
+            + 'echo @@CHOICES; cat "$HOME/.local/state/identity/choices" 2>/dev/null || echo ABSENT; '
+            + 'echo @@HOWDYCONF; cat /etc/howdy/config.ini 2>/dev/null || echo ABSENT']
         stdout: StdioCollector {
             onStreamFinished: root._handleProbe(this.text)
+        }
+    }
+
+    // The IR camera counts as present when Howdy's device_path exists. Face
+    // models are world-readable JSON written by `howdy add` (Howdy 3.0.0).
+    property Process faceProbe: Process {
+        command: ["sh", "-c", 'if [ -n "$FACE_DEVICE" ] && [ -e "$FACE_DEVICE" ]; then echo IR=1; else echo IR=0; fi; '
+            + 'echo @@MODELS; cat "/var/lib/howdy/models/$(id -un).dat" 2>/dev/null || echo ABSENT']
+        stdout: StdioCollector {
+            onStreamFinished: root._handleFaceProbe(this.text)
         }
     }
 
@@ -152,7 +278,7 @@ QtObject {
                 }
                 root.devicePresent = listErr !== "nodevice" && listErr !== "daemon"
                 root.enrolled = Parse.parseEnrolled(text).map(n => ({ name: n, label: Parse.fingerLabel(n) }))
-                root.dataUpdated()
+                root._finishRefresh()
             }
         }
     }
@@ -176,11 +302,56 @@ QtObject {
         }
     }
 
-    property Process writeProc: Process {
-        command: ["sh", "-c", "mkdir -p \"$HOME/.local/state\" && printf 'auth {\\n    fingerprint {\\n        enabled = %s\\n    }\\n}\\n' \"$FPRINT_ENABLED\" > \"$HOME/.local/state/hyprlock-fingerprint.conf\""]
-        stdout: StdioCollector {
-            onStreamFinished: root.probeProc.running = true
+    // Output and exit can arrive in either order; finish once both are in.
+    property Process faceProc: Process {
+        property string output: ""
+        property bool gotOutput: false
+        property int code: -1
+        function settle() {
+            if (!gotOutput || code < 0) return
+            const c = code, t = output
+            gotOutput = false; code = -1; output = ""
+            root._finishFace(c, t)
         }
+        stdout: StdioCollector {
+            onStreamFinished: { root.faceProc.output = this.text; root.faceProc.gotOutput = true; root.faceProc.settle() }
+        }
+        onExited: (exitCode, exitStatus) => { root.faceProc.code = exitCode; root.faceProc.settle() }
+    }
+
+    // Passwords go to identity-passwd's stdin only (never argv/env) and the
+    // payload is dropped as soon as it has been written.
+    property Process passwdProc: Process {
+        command: ["identity-passwd"]
+        stdinEnabled: true
+        onStarted: {
+            root.passwdProc.write(root._pwPayload)
+            root._pwPayload = ""
+            root.passwdProc.stdinEnabled = false
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const r = Parse.passwdResult(this.text)
+                root.passwordOk = r.ok
+                root.passwordMessage = r.message
+                root.passwordBusy = false
+                root.dataUpdated()
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            root._pwPayload = ""
+            root.passwdProc.stdinEnabled = true   // ready for the next attempt
+        }
+    }
+
+    property Process choicesProc: Process {
+        command: ["sh", "-c", 'd="$HOME/.local/state/identity"; mkdir -p "$d" && printf "%s" "$CONTENT" > "$d/choices.tmp" && mv "$d/choices.tmp" "$d/choices"']
+        onExited: (exitCode, exitStatus) => root.refresh()
+    }
+
+    property Process authProc: Process {
+        command: ["sh", "-c", 'd="$HOME/.local/state"; mkdir -p "$d" && printf "%s" "$CONTENT" > "$d/hyprlock-auth.conf.tmp" && mv "$d/hyprlock-auth.conf.tmp" "$d/hyprlock-auth.conf"']
+        onExited: (exitCode, exitStatus) => { if (exitCode !== 0) root._writtenAuth = "" }
     }
 
     // FailedToStart never emits `exited`; `running` still drops to false. If an

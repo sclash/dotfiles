@@ -63,18 +63,26 @@ expect '.baseBuilds'                 "the base system evaluates (assertions hold
 expect '.violationFails'             "enabling fprintAuth on sudo fails evaluation"
 expect '.violationEnabledCount >= 1' "the violation flips a PAM service"
 
-# hyprlock.conf: fingerprint enabled by default, override source last.
+# hyprlock.conf: fingerprint enabled and password-only PAM by default (the
+# Identity Manager's generated override narrows both), override source last.
 last_line=$(grep -v '^[[:space:]]*$' "$ROOT/hypr/hyprlock.conf" | tail -n 1)
-if [[ "$last_line" == "source = ~/.local/state/hyprlock-fingerprint.conf" ]]; then
+if [[ "$last_line" == "source = ~/.local/state/hyprlock-auth.conf" ]]; then
   echo "OK   hyprlock.conf ends with the state-file source line"
 else
   echo "FAIL hyprlock.conf source line is not last (got: $last_line)"
   failures=$((failures + 1))
 fi
-if grep -A4 '^auth {' "$ROOT/hypr/hyprlock.conf" | grep -q 'enabled = true'; then
+auth_block=$(sed -n '/^auth {/,/^}/p' "$ROOT/hypr/hyprlock.conf")
+if grep -q 'enabled = true' <<<"$auth_block"; then
   echo "OK   hyprlock.conf enables fingerprint by default"
 else
   echo "FAIL hyprlock.conf does not enable fingerprint"
+  failures=$((failures + 1))
+fi
+if grep -qE 'module = hyprlock$' <<<"$auth_block"; then
+  echo "OK   hyprlock.conf uses the password-only PAM service by default"
+else
+  echo "FAIL hyprlock.conf default PAM module is not hyprlock"
   failures=$((failures + 1))
 fi
 
