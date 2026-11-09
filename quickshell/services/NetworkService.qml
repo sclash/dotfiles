@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "vpnSchema.js" as VpnSchema
 
 QtObject {
     id: root
@@ -28,7 +29,18 @@ QtObject {
     property double _prevTx: -1
     property double _prevTs: 0
     property string _trafficIface: ""
-    readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running
+    // Native VPN management through the nm-vpn helper
+    // (docs/superpowers/specs/2026-11-09-native-vpn-design.md).
+    property bool helperAvailable: false      // nm-vpn on PATH
+    property var vpnTypes: []                 // [{name, service, import}] from `nm-vpn types`
+    property var vpnNeed: []                  // secret keys a pending connect asks for
+    property string vpnNeedUuid: ""
+    property string vpnNeedName: ""
+    property string vpnNeedType: ""
+    property var importCandidates: []         // config files found by refreshImportCandidates()
+    property var _helperCb: null
+    property string _helperPayload: ""
+    readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running || helperProc.running
     signal dataUpdated()
 
     function reportError(txt) {
@@ -106,16 +118,80 @@ QtObject {
         root.nmRadioProc.command = ["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]
         root.nmRadioProc.running = true
     }
-    function vpnConnect(uuid) { root.nmVpnUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]; root.nmVpnUpProc.running = true }
+    // Connects through nm-vpn. Secrets set to Ask come back as `need`: the
+    // Network Center prompts and calls this again with them. Without nm-vpn,
+    // plain nmcli (no prompt).
+    function vpnConnect(uuid, secrets) {
+        const v = root.vpnConnections.filter(x => x.uuid === uuid)[0]
+        const name = v ? v.name : ""
+        root.lastError = ""
+        if (!root.helperAvailable) {
+            root.nmVpnUpProc.command = ["nmcli", "connection", "up", "uuid", uuid]
+            root.nmVpnUpProc.running = true
+            return
+        }
+        root.connecting = true
+        root.connectingSsid = name
+        root._runHelper("connect", { uuid: uuid, secrets: secrets || {} }, r => {
+            root.connecting = false
+            root.connectingSsid = ""
+            if (r.ok) root.vpnCancelNeed()
+            else if (r.need && r.need.length > 0) {
+                root.vpnNeedUuid = uuid
+                root.vpnNeedName = name
+                root.vpnNeedType = r.type || ""
+                root.vpnNeed = r.need             // last: listeners see the fields above
+            } else {
+                root.vpnCancelNeed()
+                root.reportError(r.error || "VPN connection failed")
+            }
+            root.pollProc.running = true
+            root.dataUpdated()
+        })
+    }
+    function vpnCancelNeed() { root.vpnNeed = []; root.vpnNeedUuid = ""; root.vpnNeedName = ""; root.vpnNeedType = "" }
+    function vpnLoad(uuid, cb) { root._runHelper("get", { uuid: uuid }, cb) }
+    function vpnSave(request, cb) {
+        root._runHelper(request.uuid ? "update" : "add", request, r => { if (r.ok) root.vpnProc.running = true; if (cb) cb(r) })
+    }
+    function vpnImport(type, path, cb) {
+        root._runHelper("import", { type: type, path: path }, r => { if (r.ok) root.vpnProc.running = true; if (cb) cb(r) })
+    }
+    function loadVpnTypes() {
+        root._runHelper("types", {}, r => { if (r.ok) { root.vpnTypes = r.types; root.dataUpdated() } })
+    }
+    function refreshImportCandidates() {
+        if (root.importScanProc.running) return
+        root.importScanProc.environment = ({ EXTS: VpnSchema.importExtensions(root.vpnTypes).join(" ") })
+        root.importScanProc.running = true
+    }
+    function _runHelper(cmd, request, cb) {
+        const done = cb || function () {}
+        if (!root.helperAvailable) { done({ ok: false, error: "nm-vpn is not installed — run update" }); return }
+        if (root.helperProc.running) { done({ ok: false, error: "Busy — try again" }); return }
+        root._helperCb = done
+        root._helperPayload = JSON.stringify(request || {})
+        root.helperProc.command = ["nm-vpn", cmd]
+        root.helperProc.running = true
+    }
+    function _helperDone(text) {
+        const cb = root._helperCb
+        root._helperCb = null
+        const lines = (text || "").trim().split("\n")
+        let r = null
+        try { r = JSON.parse(lines[lines.length - 1]) } catch (e) { r = null }
+        if (!r || typeof r !== "object") r = { ok: false, error: "nm-vpn gave no answer" }
+        if (cb) cb(r)
+    }
     function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
     function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
-    function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true }
+    function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true; if (root.helperAvailable) root.loadVpnTypes() }
     function launchEditor() { root.vpnEditorProc.running = true }
     function vpnAdd() { root.vpnAddProc.running = true }
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep vpn || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
+        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep -E ':(vpn|wireguard)$' || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
@@ -174,14 +250,15 @@ QtObject {
         }
     }
     property Process vpnProc: Process {
-        command: ["sh", "-c", "nmcli -t -f NAME,UUID,TYPE connection show 2>/dev/null | grep -E 'vpn|wireguard'"]
+        command: ["sh", "-c", "nmcli -t -f NAME,UUID,TYPE connection show 2>/dev/null | grep -E ':(vpn|wireguard)$'"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = this.text.trim().split("\n").filter(Boolean)
                 root.vpnConnections = lines.map(l => {
                     const p = root.splitTerse(l)
-                    return ({ name: p[0] || "", uuid: p[1] || "", active: false })
+                    return ({ name: p[0] || "", uuid: p[1] || "", type: p[2] || "", active: false })
                 }).filter(v => v.name && v.uuid)
+                root.dataUpdated()
             }
         }
     }
@@ -247,6 +324,45 @@ QtObject {
     property Process vpnEditorProc: Process { command: ["nm-connection-editor"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
     property Process vpnAddProc: Process { command: ["nm-connection-editor", "-c", "-t", "vpn"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
 
+    // nm-vpn is its own package (quickshell/scripts/nm-vpn.nix). Without it,
+    // VPNs can still be listed, connected and deleted through nmcli.
+    property Process vpnProbe: Process {
+        command: ["sh", "-c", "command -v nm-vpn >/dev/null 2>&1 && echo 1 || echo 0"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.helperAvailable = this.text.trim() === "1"
+                if (root.helperAvailable) root.loadVpnTypes()
+                root.dataUpdated()
+            }
+        }
+    }
+    // One nm-vpn request at a time. The JSON request (secrets included) goes
+    // to its stdin only and is dropped as soon as it has been written.
+    property Process helperProc: Process {
+        stdinEnabled: true
+        onStarted: {
+            root.helperProc.write(root._helperPayload)
+            root._helperPayload = ""
+            root.helperProc.stdinEnabled = false
+        }
+        stdout: StdioCollector { onStreamFinished: root._helperDone(this.text) }
+        onExited: (exitCode, exitStatus) => {
+            root._helperPayload = ""
+            root.helperProc.stdinEnabled = true   // ready for the next request
+        }
+    }
+    // Config files for the import view, newest first. EXTS holds the
+    // extensions vpnSchema.js gives for the installed, import-capable types.
+    property Process importScanProc: Process {
+        command: ["sh", "-c", 'set --; for e in $EXTS; do [ $# -gt 0 ] && set -- "$@" -o; set -- "$@" -iname "*$e"; done; '
+            + '[ $# -eq 0 ] && exit 0; '
+            + 'for d in "$HOME/Downloads" "$HOME/Documents"; do [ -d "$d" ] && find "$d" -maxdepth 2 -type f \\( "$@" \\) -printf "%T@ %p\\n" 2>/dev/null; done '
+            + '| sort -rn | head -n 200 | cut -d" " -f2-']
+        stdout: StdioCollector {
+            onStreamFinished: { root.importCandidates = this.text.split("\n").filter(Boolean); root.dataUpdated() }
+        }
+    }
+
     // Traffic for the current active connection: totals from /proc/net/dev,
     // rates derived from successive polls (bytes/sec).
     property Process trafficProc: Process {
@@ -295,5 +411,5 @@ QtObject {
         interval: 2000; running: true; repeat: true
         onTriggered: { if (root.iface !== "" && !root.trafficProc.running) root.trafficProc.running = true }
     }
-    Component.onCompleted: { root.knownProc.running = true; root.vpnProc.running = true }
+    Component.onCompleted: { root.knownProc.running = true; root.vpnProc.running = true; root.vpnProbe.running = true }
 }
