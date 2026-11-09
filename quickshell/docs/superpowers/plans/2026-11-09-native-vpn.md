@@ -10,6 +10,12 @@
 
 **Spec:** `quickshell/docs/superpowers/specs/2026-11-09-native-vpn-design.md`
 
+**Amendments made during execution (these override the task text below):**
+- `import` is a reserved word for Qt 6.11's QML parser: quote every `import` object key (`"import":`) and use `t["import"]` in all QML/JS.
+- SSTP is dropped: `networkmanager-sstp` is flagged insecure (CVE-2026-91838) in the pinned nixpkgs and broke evaluation of the whole system. It isn't installed, has no schema entry, and docs must not list it as offered. Spec §11, §13 and §14 mention it and are amended in Task 10.
+- `nixos/tests/test-vpn.sh` also asserts that the whole system evaluates (`systemEvaluates`).
+- `LibnmBackend.load()` marks `secrets_unreadable` when the secrets fetch fails, and `save()` then refuses (fix approved by the user).
+
 **Plan 2 (not this plan):** the OpenConnect plugin and its login step (spec §10). It's written after Task 5, because it depends on two answers the VM test gives: whether `passwd-file` works through a pipe, and whether `nm-openconnect` accepts `form:*` secrets. Until then `networkmanager-openconnect` isn't installed, so nothing half-works.
 
 ## Global Constraints
@@ -2033,7 +2039,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("types lists the plugins and WireGuard"):
         t = {x["name"]: x for x in ok(vpn("types", {}))["types"]}
-        for name in ("openvpn", "l2tp", "strongswan", "sstp", "wireguard"):
+        for name in ("openvpn", "l2tp", "strongswan", "wireguard"):
             assert name in t, t
         assert t["openvpn"]["import"], t
         print("VM FINDING types: " + json.dumps(t))
@@ -2073,8 +2079,6 @@ pkgs.testers.runNixOSTest {
         ovpn = roundtrip("openvpn", {"remote": "ovpn.example.invalid", "connection-type": "password", "username": "alice"}, "password")
     with subtest("strongSwan round-trip"):
         sw = roundtrip("strongswan", {"address": "ike.example.invalid", "method": "eap", "user": "alice", "virtual": "yes"}, "password")
-    with subtest("SSTP round-trip"):
-        roundtrip("sstp", {"gateway": "sstp.example.invalid", "user": "alice"}, "password")
 
     with subtest("OpenVPN import"):
         uuid = ok(vpn("import", {"type": "openvpn", "path": "/etc/vpn-test/office.ovpn"}))["uuid"]
@@ -4536,7 +4540,7 @@ with:
 
 `README.md`, under `### Network`, after the closing ```` ``` ```` of the `nmcli device wifi connect` block, add:
 ```markdown
-**VPN:** `SUPER+W`, then `/vpn`. `Add VPN…` adds a profile for any installed type (OpenVPN, L2TP/IPsec, IKEv2, SSTP, WireGuard; more with `networking.networkmanager.plugins`) or imports a `.ovpn`/`.conf` file. `e` edits a profile. Each password is either saved by NetworkManager or asked when you connect.
+**VPN:** `SUPER+W`, then `/vpn`. `Add VPN…` adds a profile for any installed type (OpenVPN, L2TP/IPsec, IKEv2, WireGuard; more with `networking.networkmanager.plugins`) or imports a `.ovpn`/`.conf` file. `e` edits a profile. Each password is either saved by NetworkManager or asked when you connect.
 ```
 
 `AGENTS.md`, in "Checks before proposing a commit": after `bash nixos/tests/test-face.sh` add `bash nixos/tests/test-vpn.sh`. After `bash quickshell/tests/smoke-identity-views.sh` add:
