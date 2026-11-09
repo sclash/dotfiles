@@ -763,6 +763,11 @@
 				],
 				"disabled": true
 			},
+			"hf-mcp-server": {
+				"type": "remote",
+				"url": "https://huggingface.co/mcp?login",
+				"disabled": true
+			},
 			"ripwire": {
 				"type": "local",
 				"command": [
