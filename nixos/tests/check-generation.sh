@@ -53,8 +53,16 @@ if [[ "$HOMEDIR" != /home/asergi ]]; then
 fi
 
 has_file "/run/secrets"
-has_file "{env:HOME}"
 lacks_file "/home/asergi"
+
+# MCP servers come from nixos/programs/mcpservers.nix, not opencode.jsonc.
+# The generated opencode.json must carry this home, never a fixed one.
+lacks_file '"mcp":'
+O=home-files/.config/opencode/opencode.json
+has "$O" "$HOMEDIR/hacking/"
+if [[ "$HOMEDIR" != /home/asergi ]]; then
+  lacks "$O" /home/asergi
+fi
 
 J=home-files/.config/opencode/opencode.jsonc
 count=$((count + 1))

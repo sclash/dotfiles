@@ -95,51 +95,10 @@ in
         refreshInterval = 30;
       };
     };
-    mcpServers = {
-      markitdown = {
-        type = "stdio";
-        command = "nix";
-        args = [
-          "run"
-          "nixpkgs#markitdown-mcp"
-        ];
-      };
-      nixos = {
-        type = "stdio";
-        command = "nix";
-	args = [
-		"run"
-		"github:utensils/mcp-nixos"
-		"--"
-	];
-      };
-      chrome-devtools = {
-        type = "stdio";
-        command = "npx";
-        args = [
-          "-y"
-          "chrome-devtools-mcp@latest"
-        ];
-      };
-      github = {
-        type = "stdio";
-        command = "npx";
-        args = [
-          "-y"
-          "@modelcontextprotocol/server-github"
-        ];
-      };
-      filesystem = {
-        command = "npx";
-        args = [
-          "-y"
-          "@modelcontextprotocol/server-filesystem"
-          "${config.home.homeDirectory}/Downloads"
-          "${config.home.homeDirectory}/dotfiles"
-          "${config.home.homeDirectory}/hacking"
-        ];
-      };
-    };
+    # MCP servers come from programs.mcp.servers (../mcpservers.nix), shared
+    # with OpenCode. Claude starts all of them, `disabled` included (see there).
+    # Add Claude-only overrides in `mcpServers`, which wins on a name clash.
+    enableMcpIntegration = true;
     lspServers = {
       zig = {
         command = "zls";

@@ -1,109 +1,126 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, ... }:
 
+# Single source of truth for MCP servers, shared by Claude Code and OpenCode
+# through their `enableMcpIntegration` options.
+#
+# Write entries in Home Manager's neutral shape, never in a client's own shape:
+#   local server:  command + args (+ env / envFiles)
+#   remote server: url
+# Leave out `type`: each client module derives it from `url` (Claude Code
+# stdio/http, OpenCode local/remote). Toggle a server with `disabled`.
+#
+# `disabled` only takes effect in OpenCode, which lists the server and lets
+# you enable it mid-session. Claude Code receives these servers through Home
+# Manager's `hm` plugin and starts them all: it ignores `disabledMcpjsonServers`
+# for plugin servers.
+#
+# GITHUB_PERSONAL_ACCESS_TOKEN reaches the github server from the login
+# environment (see home.nix), so it needs no `env` entry here.
+let
+  home = config.home.homeDirectory;
+in
 {
   programs.mcp = {
     enable = true;
     servers = {
-
       markitdown = {
-        type = "local";
-        enabled = false;
+        command = "nix";
+        args = [
+          "run"
+          "nixpkgs#markitdown-mcp"
+        ];
         disabled = true;
-        command = "markitdown-mcp";
-        args = [ ];
-      };
-      openrouter = {
-        type = "remote";
-        enabled = false;
-        disabled = true;
-        url = "https://mcp.openrouter.ai/mcp";
       };
       hf-mcp-server = {
-        type = "remote";
-        enabled = false;
+        url = "https://huggingface.co/mcp?login";
         disabled = true;
-	url = "https://huggingface.co/mcp?login";
+      };
+      ripwire = {
+        command = "ripwire";
+        args = [ "--mcp" ];
+        disabled = true;
+      };
+      arxiv = {
+        command = "uvx";
+        args = [
+          "--from"
+          "arxiv-mcp-server[pdf]"
+          "arxiv-mcp-server"
+        ];
+        disabled = true;
+      };
+      graphify = {
+        command = "graphify-mcp";
+        args = [ "./graphify-out/graph.json" ];
+        disabled = true;
+      };
+      openrouter = {
+        url = "https://mcp.openrouter.ai/mcp";
+        disabled = true;
       };
       playwright = {
-        type = "local";
-        enabled = false;
-        disabled = true;
         command = "npx";
         args = [ "@playwright/mcp@latest" ];
-      };
-      shadcn-vue = {
-        type = "local";
-        enabled = false;
         disabled = true;
-        command = "bunx";
+      };
+      # The bunx variant is kept as a comment, as in the V1 opencode file:
+      # shadcn-vue = {
+      #   command = "bunx";
+      #   args = [
+      #     "--bun"
+      #     "shadcn-vue@latest"
+      #     "mcp"
+      #     "init"
+      #     "--client"
+      #     "opencode"
+      #   ];
+      #   disabled = true;
+      # };
+      shadcn-vue = {
+        command = "npx";
         args = [
-          "--bun"
           "shadcn-vue@latest"
           "mcp"
         ];
+        disabled = true;
       };
-
       nixos = {
-        type = "local";
-        enabled = false;
+        command = "nix";
+        args = [
+          "run"
+          "github:utensils/mcp-nixos"
+          "--"
+        ];
         disabled = true;
-        command = "mcp-nixos";
-        args = [ ];
       };
-
       chrome-devtools = {
-        type = "local";
-        enabled = false;
-        disabled = true;
         command = "npx";
         args = [
           "-y"
           "chrome-devtools-mcp@latest"
         ];
+        disabled = true;
       };
-
       github = {
-        type = "local";
-        enabled = false;
-        disabled = true;
-        command = "npx";
+        command = "nix";
         args = [
-          "-y"
-          "@modelcontextprotocol/server-github"
+          "run"
+          "nixpkgs#github-mcp-server"
+          "--"
+          "stdio"
         ];
-        environment = {
-          GITHUB_PERSONAL_ACCESS_TOKEN = "{env:GITHUB_PERSONAL_ACCESS_TOKEN}";
-        };
-      };
-
-      filesystem = {
-        type = "local";
-        enabled = false;
         disabled = true;
+      };
+      filesystem = {
         command = "npx";
         args = [
           "-y"
           "@modelcontextprotocol/server-filesystem"
-          "${config.home.homeDirectory}/"
-          "${config.home.homeDirectory}/hacking/"
-          "${config.home.homeDirectory}/Downloads/"
+          "${home}/"
+          "${home}/hacking/"
+          "${home}/Downloads/"
         ];
-      };
-
-      context-mode = {
-        type = "local";
-        enabled = false;
         disabled = true;
-        command = "npx";
-        args = [
-          "-y"
-          "context-mode"
-        ];
       };
     };
   };

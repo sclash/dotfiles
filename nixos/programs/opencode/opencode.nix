@@ -14,7 +14,11 @@
     # opencode/opencode2/open-code), so panes never show up in its Agents tab.
     # Put runtime env vars in home.sessionVariables below instead.
     package = pkgs-unstable.opencode;
-    # enableMcpIntegration = true;
+    # MCP servers come from programs.mcp.servers (../mcpservers.nix), shared
+    # with Claude Code. Home Manager writes them to ~/.config/opencode/opencode.json,
+    # which OpenCode 2 loads alongside opencode.jsonc and migrates to
+    # `mcp.servers`. Don't add an `mcp` block to opencode.jsonc: it would win.
+    enableMcpIntegration = true;
     # settings = {
     #   provider = {
     #     "llama.cpp" = {
