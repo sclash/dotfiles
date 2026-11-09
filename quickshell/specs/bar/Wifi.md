@@ -19,6 +19,7 @@ All glyphs via `Icons.*` (see `STYLE.md:3`), sizes from `Theme.fontSizeBar:14`.
 | **Wi-Fi connected** | `type==="wifi" && connected` | `Icons.wifiConnected` (``) | `Theme.fg` | `"{essid} ({signal}%) \n{ipaddr}"` — include VPN line if active |
 | **Wi-Fi weak** | same but `signal < 30` | same glyph | `Theme.warning` | same |
 | **VPN active** | `vpnActive === true` | `Icons.vpn` (`󰖂`) overlaid or `` + `󰖂` badge | `Theme.accent` | `"{essid} via {vpnName}\n{ipaddr}"` |
+| **Airplane mode** | `airplaneMode === true` (all rfkill devices soft-blocked) | `Icons.planeOn` (`󰀝`) | `Theme.accent` | `"Airplane mode"` |
 | **Disconnected** | `!connected` | `Icons.wifiDisconnected` (``) | `Theme.fgDim` | `"Disconnected"` |
 | **Unavailable** | `NetworkService.available === false` | `` | `Theme.fgDim` | `"NetworkManager unavailable"` |
 
@@ -36,6 +37,7 @@ QtObject {
   property int signalStrength   // 0-100, -1 if not wifi
   property bool vpnActive
   property string vpnName
+  property bool airplaneMode    // true when every rfkill device is soft-blocked
 }
 ```
 

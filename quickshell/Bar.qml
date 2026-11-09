@@ -202,6 +202,7 @@ Scope {
                         Text {
                             anchors.centerIn: parent
                             text: {
+                                if (NetworkService.airplaneMode) return Icons.planeOn
                                 if (!NetworkService.available) return Icons.wifiDisconnected
                                 if (!NetworkService.connected) return Icons.wifiDisconnected
                                 if (NetworkService.type === "ethernet") return Icons.wifiEthernet
@@ -214,6 +215,7 @@ Scope {
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.barIconSize
                             color: {
+                                if (NetworkService.airplaneMode) return Theme.accent
                                 if (!NetworkService.available || !NetworkService.connected) return Theme.fgDim
                                 if (NetworkService.signalStrength >=0 && NetworkService.signalStrength < 30) return Theme.warning
                                 return Theme.fg

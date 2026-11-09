@@ -20,6 +20,7 @@ QtObject {
     property var vpnConnections: []
     property string lastError: ""
     property bool wifiEnabled: true
+    property bool airplaneMode: false
     property string iface: ""
     property double rxTotal: 0
     property double txTotal: 0
@@ -210,7 +211,7 @@ QtObject {
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep -E ':(vpn|wireguard)$' || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi"]
+        command: ["sh", "-c", "nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null; echo '---IP---'; nmcli -t -f IP4.ADDRESS device show 2>/dev/null | head -n 5; echo '---VPN---'; nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep -E ':(vpn|wireguard)$' || true; echo '---WIFI---'; nmcli -t -f IN-USE,SIGNAL,SSID device wifi list --rescan no 2>/dev/null | head -n 20; echo '---RADIO---'; nmcli radio wifi; echo '---PLANE---'; rfkill list 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const txt = this.text
@@ -222,8 +223,12 @@ QtObject {
                 const vpnPart = (parts[1] || "").split("---VPN---")[1] || ""
                 const wifiRaw = (parts[1] || "").split("---WIFI---")[1] || ""
                 const wifiPart = wifiRaw.split("---RADIO---")[0] || ""
-                const radioPart = wifiRaw.split("---RADIO---")[1] || ""
+                const radioRaw = (parts[1] || "").split("---RADIO---")[1] || ""
+                const radioPart = radioRaw.split("---PLANE---")[0] || ""
+                const planePart = radioRaw.split("---PLANE---")[1] || ""
                 if (radioPart.trim() !== "") root.wifiEnabled = radioPart.trim() === "enabled"
+                const blocked = planePart.split("\n").map(l => l.trim()).filter(l => l.startsWith("Soft blocked:"))
+                root.airplaneMode = blocked.length > 0 && blocked.every(l => l.indexOf("Soft blocked: yes") !== -1)
                 const lines = devSection.trim().split("\n").filter(Boolean)
                 let ethName = ""
                 let wifiName = ""
