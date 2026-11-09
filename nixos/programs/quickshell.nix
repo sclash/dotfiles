@@ -43,7 +43,7 @@ in
     activeConfig = null;
   };
 
-  # On-demand user service used by ScreenCastService (SUPER+K). Deliberately
+  # On-demand user service used by ScreenCastService (SUPER+SHIFT+K). Deliberately
   # not WantedBy: the launcher starts it only while scanning for cast targets,
   # so machines that never cast do not run Wi-Fi P2P discovery continuously.
   systemd.user.services.gnome-network-displays-daemon = {

@@ -6,7 +6,7 @@ import Quickshell.Wayland
 import "../../theme"
 import "../../services"
 
-// Screen-Cast — SUPER+K. Scans for network displays through the GNOME Network
+// Screen-Cast — SUPER+SHIFT+K. Scans for network displays through the GNOME Network
 // Displays daemon, connects, and exposes the cast output's settings.
 // Spec: specs/launchers/Screen-Cast.md
 WlrLayershell {

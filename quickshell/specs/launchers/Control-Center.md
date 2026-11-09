@@ -22,7 +22,7 @@ Meta-launcher: a single entry point that **lists and dispatches to every other l
 | 2 | Bluetooth | `SUPER+b` | `󰂯` | `launcher.toggle("bluetooth")` |
 | 3 | Audio | `SUPER+a` | `` | `launcher.toggle("audio")` |
 | 4 | Display | `SUPER+d` | `󰍹` | `launcher.toggle("display")` |
-| 5 | Screen Cast | `SUPER+k` | `󰄘` (`Icons.cast`) | `launcher.toggle("screencast")` |
+| 5 | Screen Cast | `SUPER+SHIFT+k` | `󰄘` (`Icons.cast`) | `launcher.toggle("screencast")` |
 | 6 | Identity | `SUPER+i` | `Icons.fingerprint` | `launcher.toggle("identity")` |
 | 7 | Notifications | `SUPER+SHIFT+a` | `` | `launcher.toggle("notification")` |
 | 8 | Calendar | `SUPER+c` | `` (`Icons.calendar`) | `launcher.toggle("calendar")` |

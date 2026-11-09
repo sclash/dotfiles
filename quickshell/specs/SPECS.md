@@ -153,7 +153,7 @@ quickshell/
 │       ├── KeyLauncher.qml
 │       ├── DisplayManager.qml
 │       ├── DisplaySettingsPanel.qml # Per-output settings sub-view (s)
-│       ├── ScreenCastLauncher.qml   # SUPER+K — wireless display discovery + session
+│       ├── ScreenCastLauncher.qml   # SUPER+SHIFT+K — wireless display discovery + session
 │       ├── IdentityManager.qml      # SUPER+I — password / face / fingerprint manager (views in identity/)
 │       ├── PolkitPrompt.qml         # polkit password prompt for any app (overlay layer)
 │       ├── SecretField.qml          # masked field with show/hide eye (Ctrl+S)
@@ -250,7 +250,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Bluetooth-Center | `SUPER+b` | `Bluetooth-Center.md` |
 | Audio-Center | `SUPER+a` | `Audio-Center.md` |
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
-| Screen-Cast | `SUPER+K` | `Screen-Cast.md` |
+| Screen-Cast | `SUPER+SHIFT+K` | `Screen-Cast.md` |
 | Identity-Manager | `SUPER+I` | `Identity-Manager.md` |
 | USB-Manager | `SUPER+u` | `Usb-Manager.md` |
 | Notification-Center | `SUPER+SHIFT+a` | `Notification-Center.md` |

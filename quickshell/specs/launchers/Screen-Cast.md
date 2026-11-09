@@ -1,6 +1,6 @@
 # Screen-Cast — Refined Spec
 
-> Command: `SUPER+K` · File: `components/launchers/ScreenCastLauncher.qml` · Service: `ScreenCastService.qml` · Backend: `org.gnome.NetworkDisplays.Manager` (session bus) + `hyprctl`
+> Command: `SUPER+SHIFT+K` · File: `components/launchers/ScreenCastLauncher.qml` · Service: `ScreenCastService.qml` · Backend: `org.gnome.NetworkDisplays.Manager` (session bus) + `hyprctl`
 
 ---
 
@@ -152,7 +152,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 
 ## 8. Acceptance
 
-* [ ] `SUPER+K` toggles the launcher through `quickshell ipc call launcher toggle screencast`.
+* [ ] `SUPER+SHIFT+K` toggles the launcher through `quickshell ipc call launcher toggle screencast`.
 * [ ] Displays are listed automatically; `r` rescans; `/` filters by name.
 * [ ] Mode chips and `1/2/3` update `ScreenCastService.mode`; the hint matches the mode.
 * [ ] `Enter` on a display starts a stream; the session card shows name, protocol, mode and state.
