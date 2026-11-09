@@ -18,12 +18,21 @@ Center-screen confirmation grid for power/plane actions. Minimal chrome, large h
 | # | Action | Icon | Command | Confirm |
 |---|---|---|---|---|
 | 1 | **Sleep** | `󰒲` | `systemctl suspend` | no |
+| 1b | **Hibernate** (conditional) | `Icons.hibernate` (nf-md-snowflake, U+F0717) | `systemctl hibernate` | no |
 | 2 | **Reboot** | `󰜉` | `systemctl reboot` | yes — highlight in `Theme.warning` |
 | 3 | **Shutdown** | `` | `systemctl poweroff` | yes — highlight in `Theme.critical` |
 | 4 | **Plane Mode** (toggle) | `󰀞` when off, `󰀝` when on | `rfkill block all` / `rfkill unblock all` (or `nmcli radio all off/on`) | no — toggle with inline state |
 | 5 | **Logout** (optional, not in original spec but conventional) | `󰍃` | `hyprctl dispatch exit` | yes |
 
 > Original spec lists Sleep, Shutdown, Reboot, Plane Mode — keep exactly those four as required. Logout is optional addition; if omitted, grid is 2×2.
+
+### Hibernate availability
+
+* Shown right after Sleep, only when logind's `CanHibernate` returns `"yes"`
+  (`busctl --system call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager CanHibernate`),
+  re-checked every time the launcher opens. That needs swap at least as big as
+  RAM and a resume device, which come from the machine layer (`/etc/nixos`), not this repo.
+* When hidden, keyboard navigation skips it and `activate` refuses to run it.
 
 ### Plane Mode semantics
 
@@ -37,7 +46,7 @@ Center-screen confirmation grid for power/plane actions. Minimal chrome, large h
 ## 4. Interaction
 
 * `h/j/k/l` or arrow keys move focus in the grid; `Enter` activates.
-* **Confirm step** for Reboot/Shutdown/Logout: first `Enter` highlights the button and shows `"Press Enter again to confirm"` at `Theme.warning`/`Theme.critical`; second `Enter` executes. `Esc` cancels confirm and stays in launcher. Single-press `Enter` for Sleep/Plane Mode.
+* **Confirm step** for Reboot/Shutdown/Logout: first `Enter` highlights the button and shows `"Press Enter again to confirm"` at `Theme.warning`/`Theme.critical`; second `Enter` executes. `Esc` cancels confirm and stays in launcher. Single-press `Enter` for Sleep/Hibernate/Plane Mode.
 * `Esc` (when not confirming) closes launcher.
 * No typing/filter.
 
@@ -54,6 +63,7 @@ Center-screen confirmation grid for power/plane actions. Minimal chrome, large h
 ## 7. Acceptance
 
 * [ ] Renders 4 (or 5 with Logout) cards in a grid; vim `h/j/k/l` nav + `Enter` works.
+* [ ] Hibernate appears only when logind reports `CanHibernate=yes` and runs `systemctl hibernate` on a single `Enter`; when hidden, `h/l` skip it.
 * [ ] Sleep executes immediately; Reboot/Shutdown/Logout require double-Enter confirm.
 * [ ] Plane Mode toggles radios and the bar icons update via `NetworkService`/`BluetoothService`.
 * [ ] `Esc` cancels confirm, second `Esc` closes.

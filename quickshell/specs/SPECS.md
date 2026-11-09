@@ -156,6 +156,7 @@ quickshell/
 │       ├── ScreenCastLauncher.qml   # SUPER+SHIFT+K — wireless display discovery + session
 │       ├── IdentityManager.qml      # SUPER+I — password / face / fingerprint manager (views in identity/)
 │       ├── PolkitPrompt.qml         # polkit password prompt for any app (overlay layer)
+│       ├── LowBatteryPrompt.qml     # critical-battery popup suggesting hibernate (overlay layer, lowBatteryRule.js)
 │       ├── SecretField.qml          # masked field with show/hide eye (Ctrl+S)
 │       ├── TrayManager.qml
 │       └── UsbManager.qml

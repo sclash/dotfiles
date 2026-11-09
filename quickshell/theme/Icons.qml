@@ -172,6 +172,7 @@ QtObject {
     property string power:            ""
     property string reboot:           "󰜉"
     property string sleep:            "󰒲"
+    property string hibernate:        String.fromCodePoint(0xF0717) // nf-md-snowflake
     property string planeOn:          "󰀝"
     property string planeOff:         "󰀞"
     property string logout:           "󰍃"

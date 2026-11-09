@@ -178,6 +178,23 @@ re-selected.
 * `healthSupported === false` → Health row hidden; empty `model` → Model row hidden.
   A machine without `upowerd` yields `available === false` (degraded, not an error).
 
+## 7b. Low-battery hibernate prompt — `LowBatteryPrompt.qml`
+
+* Overlay popup (`WlrLayer.Overlay`, card 460, `Theme.critical` border) that opens
+  on its own, never via IPC, when `services/lowBatteryRule.js` says the battery is
+  critical while discharging: `≤ 5%`, or `≤ 5 min` left while at `≤ 15%`
+  (`PERCENT` / `MINUTES` / `GATE` in that file). Unknown readings (`-1`) never count.
+* Shows the time left and percent when known, and offers **Hibernate**
+  (`systemctl hibernate`) or **Dismiss**. `h`/`l` (also `j`/`k`, arrows) move
+  between them, Hibernate focused on open; `Enter` runs the focused one,
+  `Esc`/`q` dismiss. Focused button: `Theme.bgSelected`, border `Theme.critical`
+  (Hibernate) or `Theme.borderSelected` (Dismiss).
+* Keys are ignored for the first second, so an `Enter` typed into another window
+  can't hibernate by accident. Mouse clicks work straight away.
+* Dismiss holds for the rest of the discharge and re-arms once the machine is on AC.
+* Hidden entirely unless logind's `CanHibernate` is `"yes"` (same check as the
+  Shutdown launcher's Hibernate tile), so machines without swap/resume never see it.
+
 ## 8. Keybinding (moved perf drawer)
 
 * `SUPER+p` previously toggled the perf drawer (`Bar-performance.md` §2) — it now
@@ -199,5 +216,8 @@ re-selected.
 * [ ] On AC (including while charging): Auto drives Performance; unplug → Balanced;
   `≤ 20%` → Power Saver; hovering the 20–25% band does not flap.
 * [ ] A manual pick holds across plug/unplug until the Auto row is re-selected.
+* [ ] Critical battery while discharging opens the hibernate prompt; `h`/`l` pick a
+  button, Enter runs it, Esc dismisses until the next AC connection; never shown on AC, with unknown
+  readings, or when the machine can't hibernate.
 * [ ] Degraded note shows on lap-detected / high-temperature; profile section hidden
   when PPD is unreachable; Performance row hidden when unsupported.

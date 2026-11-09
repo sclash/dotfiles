@@ -40,6 +40,9 @@ Scope {
     TrayManager { id: trayManager }
     IdentityManager { id: identityManager }
     PolkitPrompt { id: polkitPrompt }
+    // Suggests hibernating when the battery is critically low. Opens on its own,
+    // never via IPC (lowBatteryRule.js decides).
+    LowBatteryPrompt { id: lowBatteryPrompt }
     ControlCenter {
         id: controlCenter
         onRequestToggle: (name) => ipcHandler.toggle(name)
