@@ -2,6 +2,8 @@
 
 Read this before changing anything in this repo. It explains what the repo is for, the rules that keep it that way, and how to work in it.
 
+Details ruling applying by default. If we're dealing with quickfixes do not overthink and overcomplicate the whole update. Just do it. Keep in mind the configuration structure so that you won't mess up with the whole configuration. If in doubt ask teh user.
+
 ## Philosophy
 
 **One personal setup, on any machine.** Boot a new computer from the installer stick, answer a few questions, log in, and end up with the same desktop, tools and settings as every other machine. Nothing in this repo is written for one particular laptop. Each machine you set up should make the repo more general, never less.
