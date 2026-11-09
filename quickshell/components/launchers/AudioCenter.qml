@@ -483,9 +483,10 @@ WlrLayershell {
         suppressUpdate = true
         filterField.text = ""
         suppressUpdate = false
-        selIndex = 0
         AudioService.updateLists()
         updateModels()
+        const volIdx = navItems.findIndex(it => it.kind === "volSlider")
+        selIndex = volIdx >= 0 ? volIdx : 0
         Qt.callLater(()=> mainCol.forceActiveFocus())
     }
 }
