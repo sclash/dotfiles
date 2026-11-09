@@ -12,14 +12,22 @@
 
       markitdown = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "markitdown-mcp";
         args = [ ];
       };
       openrouter = {
         type = "remote";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         url = "https://mcp.openrouter.ai/mcp";
+      };
+      hf-mcp-server = {
+        type = "remote";
+        enabled = false;
+        disabled = true;
+	url = "https://huggingface.co/mcp?login";
       };
       playwright = {
         type = "local";
@@ -42,7 +50,8 @@
 
       nixos = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "mcp-nixos";
         args = [ ];
       };
@@ -74,7 +83,8 @@
 
       filesystem = {
         type = "local";
-        enabled = true;
+        enabled = false;
+        disabled = true;
         command = "npx";
         args = [
           "-y"
@@ -88,6 +98,7 @@
       context-mode = {
         type = "local";
         enabled = true;
+        disabled = true;
         command = "npx";
         args = [
           "-y"
