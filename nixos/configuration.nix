@@ -77,9 +77,10 @@
     networkmanager-l2tp
   ];
   services.strongswan.enable = true;
-  # charon-nm (the strongSwan plugin's daemon, started over D-Bus) reads
-  # /etc/strongswan.conf and aborts when it is missing; services.strongswan
-  # points its own charon at a store file instead, so nothing creates it.
+  # charon-nm (the strongSwan plugin's daemon, started over D-Bus) and nm-l2tp's
+  # IPsec starter both read /etc/strongswan.conf and abort when it is
+  # missing; services.strongswan points its own charon at a store file
+  # instead, so nothing creates it.
   # Empty means strongSwan's defaults; charon-nm then uses random IKE ports,
   # so it runs beside services.strongswan (checked by nixos/tests/test-vpn-vm.sh).
   environment.etc."strongswan.conf".text = "";

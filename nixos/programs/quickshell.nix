@@ -67,7 +67,6 @@ in
   # Runtime deps for Quickshell services (SPECS.md:2.2)
   home.packages = with pkgs; [
     networkmanager      # nmcli for NetworkService
-    networkmanagerapplet # nm-connection-editor GUI for NetworkCenter
     wireplumber         # wpctl for AudioService
     pipewire            # pipewire core
     bluez               # bluetoothctl for BluetoothService

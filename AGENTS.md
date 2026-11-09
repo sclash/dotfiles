@@ -112,13 +112,19 @@ bash nixos/tests/test-bootstrap.sh
 bash nixos/tests/test-sync-secrets.sh
 bash nixos/tests/test-fingerprint.sh
 bash nixos/tests/test-face.sh
+bash nixos/tests/test-vpn.sh
 bash quickshell/tests/run.sh
 bash quickshell/tests/test-identity-passwd.sh
 bash quickshell/tests/smoke-identity-views.sh
+bash quickshell/tests/test-nm-vpn.sh
+bash quickshell/tests/smoke-vpn-views.sh
+bash quickshell/tests/test-vpn-schema-keys.sh
 bash tests/check-no-hardcoded-home.sh
 bash tests/test-user.sh
 bash tests/test-guard.sh
 ```
+
+When `nm-vpn`, the VPN plugins or `services.strongswan` change, also run `bash nixos/tests/test-vpn-vm.sh`. It's a NixOS VM test, needs KVM and takes a few minutes.
 
 To evaluate a real machine without rebuilding, point `DOTFILES_MACHINE_DIR` at a folder containing a `hardware-configuration.nix` and a `machine.nix`, and run `nixos-rebuild dry-build --flake ./nixos#default --impure`.
 

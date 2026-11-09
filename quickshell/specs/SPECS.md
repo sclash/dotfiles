@@ -60,6 +60,8 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `quickshell` (unstable) | Shell runtime | **yes** | `pkgs-unstable.quickshell` — already enabled |
 | `hyprland` | Compositor IPC | **yes** | already present |
 | `networkmanager` + `nmcli` | Wi-Fi / VPN / ethernet | **yes** | `pkgs.networkmanager` |
+| NetworkManager VPN plugins | VPN types offered in the Network Center (`/vpn`) | **yes** for VPN | `networking.networkmanager.plugins` (`configuration.nix`) |
+| `nm-vpn` | VPN add/import/edit/connect helper (libnm, secrets on stdin) | **yes** for VPN | `quickshell/scripts/nm-vpn.nix`, in `programs/quickshell.nix` |
 | `wireplumber` + `pipewire` + `wpctl` | Audio graph | **yes** | `pkgs.wireplumber` |
 | `bluez` + `bluez-tools` | Bluetooth | **yes** | `pkgs.bluez` |
 | `elephant` (or `walker`) | App index for App-Launcher | **yes** | already in autostart (`hyprland.lua:38`) — ensure packaged |

@@ -46,6 +46,7 @@ expect '[.plugins[] | test("l2tp")] | any'       "the L2TP plugin is installed"
 expect '[.plugins[] | test("strongswan")] | any' "the strongSwan (IKEv2) plugin is installed"
 expect '.home | index("nm-vpn") != null'         "nm-vpn is in the user's packages"
 expect '.strongswan'                             "services.strongswan stays enabled (L2TP/IPsec)"
+expect '[.home[] | test("network-manager-applet")] | any | not' "networkmanagerapplet is gone (no nm-connection-editor, no nm-applet)"
 expect '.strongswanConf'                         "/etc/strongswan.conf exists (charon-nm aborts without it)"
 expect '.systemEvaluates'                        "the full NixOS system evaluates (no insecure or broken packages)"
 

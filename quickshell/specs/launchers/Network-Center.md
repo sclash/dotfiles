@@ -21,7 +21,7 @@ The launcher is **view-based**: exactly one list is visible at a time. The view 
 |---|---|---|
 | (default) `/nearby` | nearby | current connection + scanned networks only |
 | `/known` | known | current connection + known networks only |
-| `/vpn` | vpn | current connection + VPN networks + config options (`Add VPN…`, `Open connection editor…`) |
+| `/vpn` | vpn | current connection + VPN profiles + `Add VPN…` |
 
 The **Current Connection** status card (§3.1) and the scan/filter row are always visible in every view. Typing any other text filters the list of the active view.
 
@@ -52,15 +52,16 @@ The **Current Connection** status card (§3.1) and the scan/filter row are alway
 
 ### 3.4 VPN (`/vpn`)
 
-* List: `nmcli -t -f NAME,TYPE connection show | grep vpn` — `vpnName` + `Connected` pill if active.
-* Actions per row:
-  * `Connect` — `nmcli connection up id "{vpnName}"`.
-  * `Disconnect` — `nmcli connection down id "{vpnName}"` (if active).
-  * `Delete` — `nmcli connection delete id "{vpnName}"` with confirm.
-* **Configuration options:**
-  * `Add VPN…` — opens `nm-connection-editor -c -t vpn` to create a new VPN profile.
-  * `Open connection editor…` — opens `nm-connection-editor` for full management/editing of all profiles.
-* **Empty state:** if no VPN profiles → `"No VPN connections"` at `Theme.fgDim`.
+Native: no `nm-connection-editor`, no `nm-applet`. Design: `docs/superpowers/specs/2026-11-09-native-vpn-design.md`.
+
+* **List:** `nmcli -t -f NAME,UUID,TYPE connection show` rows whose type is `vpn` or `wireguard`: name, plus `active` when connected. An active WireGuard connection counts as the active VPN.
+* **Row keys:** `Enter` connect / disconnect · `e` edit · `x` delete (`y/n`).
+* **Connect:** `NetworkService.vpnConnect(uuid)` → `nm-vpn connect`. Secrets set to **Ask** come back as `need`. That covers flag `2`, and also `1` (agent-owned), since no agent is left to supply it. An inline prompt (`network/VpnSecretPrompt.qml`) asks for them: one masked field per secret, labelled from the schema, `Ctrl+s` show/hide, `Enter` next / connect, `Esc` cancel. It clears its fields at once, and the values go through `nmcli … passwd-file` on a pipe. The Current Connection card shows `Connecting to {name}…`.
+* **`Add VPN…`** opens `network/VpnTypeView.qml`: `Import from file…` first, then the installed types (every plugin in `networking.networkmanager.plugins`, plus WireGuard). Types without a schema show `advanced`.
+* **Form** (`network/VpnFormView.qml`): Name, the type's fields from `services/vpnSchema.js`, `Use only for resources on its network` (`ipv4.never-default`), then a collapsed **Advanced** section. Advanced lists every other `vpn.data` key as `key = value`; `+ Add row` adds one, with a `Data | Secret` chip; clearing a key removes it. Each secret has a **`Save | Ask`** chip (default Save). Saved secrets never come back: their box reads `saved · leave empty to keep`. Keys: `Tab`/`Shift+Tab`/`Enter` move, `Enter` on the last stop saves, `Space` toggles, `h`/`l` cycle choices, `Ctrl+s` show/hide, `Esc` back. `Esc` asks `Discard changes? y / n` when something changed. A WireGuard profile with several peers shows `N peers · re-import to change`.
+* **Import** (`network/VpnImportView.qml`): config files from `~/Downloads` and `~/Documents` (depth 2, newest first), plus a path field; there's no file-picker window. The extension picks the type. When several installed types claim it, a short picker asks. The profile is created at once and opens in the form; `Esc` there returns to the list.
+* **Empty state:** no profiles → `"No VPN connections"` at `Theme.fgDim`. Without `nm-vpn` → `Add VPN… · Not available`, and list, connect and delete keep working through `nmcli`.
+* **Not offered yet:** OpenConnect. Its login needs its own step (design §10).
 
 ## 4. Shared Behaviours
 
@@ -69,6 +70,7 @@ The **Current Connection** status card (§3.1) and the scan/filter row are alway
 * **Vim nav:** `j/k` moves `currentIndex`, `Enter` acts on focused row/button. Section headers are not focusable.
 * **Refresh:** opening the launcher auto-triggers a wifi rescan (`NetworkService.rescanWifi()`) so the nearby list is fresh; `r` rescans again; `Ctrl+r` rescans + reloads known/VPN.
 * **Error toast:** inline `Text { color: Theme.critical }` under the relevant section, auto-cleared on next success.
+* **VPN views:** the type picker, form and import view slide over the list as a stack (`STYLE.md` §2.5: views below the top park at `x: -60`, the rest at `+60`; cross-fade; the card animates its height). Each view handles its own keys; `Esc` returns one level.
 
 ## 5. Service Contract
 
@@ -83,10 +85,15 @@ function connectScanned(ssid: string, password?: string): void
 // known → nmcli connection up (password ignored); unknown → device wifi connect.
 function forget(name: string): void
 function rescanWifi(): void
-function vpnConnect(name: string): void
-function vpnDisconnect(name: string): void
-function vpnDelete(name: string): void
-function vpnAdd(config: var): void
+function vpnConnect(uuid: string, secrets?: var): void   // nm-vpn connect; Ask secrets → vpnNeed
+function vpnCancelNeed(): void
+function vpnDisconnect(uuid: string): void
+function vpnDelete(uuid: string): void
+function vpnLoad(uuid: string, cb: function): void        // nm-vpn get (secret modes, never values)
+function vpnSave(request: var, cb: function): void        // nm-vpn add | update
+function vpnImport(type: string, path: string, cb: function): void
+function refreshImportCandidates(): void
+// properties: helperAvailable, vpnTypes, vpnNeed, vpnNeedUuid, vpnNeedName, vpnNeedType, importCandidates
 ```
 
 DBus `PropertiesChanged` or next poll propagates changes back to the `Wifi` icon.
@@ -94,13 +101,15 @@ DBus `PropertiesChanged` or next poll propagates changes back to the `Wifi` icon
 ## 6. Acceptance
 
 * [ ] Launcher opens to `nearby` view by default; only nearby networks shown.
-* [ ] `/nearby` shows only nearby; `/known` shows only known; `/vpn` shows VPN list + `Add VPN…` + `Open connection editor…`.
+* [ ] `/nearby` shows only nearby; `/known` shows only known; `/vpn` shows the VPN list + `Add VPN…`.
 * [ ] Current connection shows ESSID, signal, IPv4, VPN if any; Disconnect works.
 * [ ] Known list shows all wifi profiles with available/forget/connect.
 * [ ] Scan lists by signal desc; secured connect prompts for password; open connect succeeds.
 * [ ] Connecting to an already-known SSID from the nearby view never prompts for a password.
 * [ ] Submitting the password closes the dialog immediately; Current Connection shows `"Connecting to {ssid}…"` until the attempt resolves.
 * [ ] Every new wifi connection appears in Known (NM default).
-* [ ] VPN list/connect/delete/add works; `nm-connection-editor` fallback documented if native form deferred.
+* [ ] VPN add (every installed type), import (`.ovpn`, `.conf`), edit, delete and connect work in the shell. Saved secrets are never shown; each secret is Save or Ask; Ask prompts at connect.
+* [ ] No `nm-connection-editor` or `nm-applet` window ever opens (`networkmanagerapplet` is not installed).
+* [ ] An active WireGuard connection shows as the active VPN.
 * [ ] Vim nav + `/` filter + view commands + `r` rescan + `Esc` close all work.
 * [ ] Uses `LauncherBase` + `Theme.*` tokens; no hard-coded colours.

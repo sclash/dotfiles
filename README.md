@@ -69,6 +69,8 @@ Use `nmcli`
 ```bash
 nmcli device wifi connect <ssid> <password>
 ```
+
+**VPN:** `SUPER+W`, then `/vpn`. `Add VPN…` adds a profile for any installed type (OpenVPN, L2TP/IPsec, IKEv2, WireGuard; more with `networking.networkmanager.plugins`) or imports a `.ovpn`/`.conf` file. `e` edits a profile. Each password is either saved by NetworkManager or asked when you connect.
 ### Dotfiles
 
 To update the NixOS configuration we can work in the directory in which this repo is cloned.
