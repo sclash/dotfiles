@@ -1,7 +1,7 @@
 # Network Center — Native VPN Management Design
 
 **Date:** 2026-11-09
-**Status:** Draft, awaiting user approval
+**Status:** Implemented (Plan 1: every type except the OpenConnect login). OpenConnect (`networkmanager-openconnect`, `nm-vpn oc-login`, `ocAnswer`/`ocCancel`) is Plan 2 and not built yet; the items marked Plan 2 below describe it.
 **Scope:** NetworkManager VPN plugins, a VPN helper (`nm-vpn`), `vpnSchema.js`, `NetworkService.qml`, new Network Center views, removal of `networkmanagerapplet`, spec, doc and test updates.
 
 ## 1. Intent
@@ -14,7 +14,7 @@ The Network Center (`SUPER+W`, `/vpn`) lists, connects and deletes VPNs, but **A
 - Support every installed VPN type. Types are discovered at runtime, so adding a plugin in Nix makes it appear with no QML change.
 - Friendly forms for the common types, and a raw key/value fallback so no installed plugin is ever unreachable.
 - Each secret chooses **Save** (NetworkManager stores it) or **Ask** (prompted at every connect; needed for 2FA/OTP).
-- OpenConnect (Cisco AnyConnect, GlobalProtect, Juniper/Pulse, Fortinet, F5, Array) logs in through the shell, including certificate trust and browser single sign-on.
+- (Plan 2) OpenConnect (Cisco AnyConnect, GlobalProtect, Juniper/Pulse, Fortinet, F5, Array) logs in through the shell, including certificate trust and browser single sign-on.
 - Secrets never enter argv, the environment, logs or QML memory beyond the moment they are typed.
 - Remove `networkmanagerapplet` (editor, tray applet, secret agent).
 
@@ -71,17 +71,17 @@ NetworkCenter.qml ─► network/*View.qml ─► vpnSchema.js ─► NetworkSer
 
 ## 7. Helper `nm-vpn`
 
-`nm-vpn <command>` reads one JSON request on stdin and prints exactly one JSON line on stdout, except `oc-login`, which streams. Every result has `"ok"`. Failures carry `"error"`, scrubbed of every secret in the request. The exit code is 0 whenever a result line was printed.
+`nm-vpn <command>` reads one JSON request on stdin and prints exactly one JSON line on stdout (Plan 2's `oc-login` will stream instead). Every result has `"ok"`. Failures carry `"error"`, scrubbed of every secret in the request. The exit code is 0 whenever a result line was printed.
 
 | Command | Request | Result |
 |---|---|---|
 | `types` | `{}` | `{"ok":true,"types":[{"name":"openvpn","service":"org.freedesktop.NetworkManager.openvpn","import":true}, …, {"name":"wireguard","service":null,"import":true}]}` from `NM.VpnPluginInfo.list_load()` plus WireGuard; `import` from the editor plugin's capabilities |
 | `get` | `{"uuid":…}` | `{"ok":true,"profile":{"uuid","name","type","data":{…},"secrets":{"password":"save"\|"ask"\|"unset"},"native":{…},"user":{…}}}`. **No secret values**, only modes (`unset`: no value and not asked) |
-| `add` | `{"type","name","data":{…},"secrets":{"k":{"mode":"save"\|"ask","value":"…"}},"native":{…},"user":{…}}` | `{"ok":true,"uuid":…}` |
+| `add` | `{"type","name","data":{…},"secrets":{"k":{"mode":"save"\|"ask","value":"…"}},"native":{…},"user":{…}}` | `{"ok":true,"uuid":…}`. Created with `connection.autoconnect` off |
 | `update` | as `add` plus `uuid`. A data key absent from `data` is removed. A secret with an empty `value` keeps its stored value but takes the new `mode`; a secret absent from `secrets` is left as it is | `{"ok":true}` |
-| `import` | `{"type","path"}` | `{"ok":true,"uuid":…}`. The profile is created immediately |
-| `connect` | `{"uuid","secrets":{"k":"v"}}` | `{"ok":true}`, or `{"ok":false,"need":["password",…],"type":"l2tp"}` when Ask secrets are missing, or `{"ok":false,"error":…}` |
-| `oc-login` | `{"uuid","secrets":{…}}` | JSON-line conversation (§10) |
+| `import` | `{"type","path"}` | `{"ok":true,"uuid":…}`. The profile is created immediately, with `connection.autoconnect` off, as `add` does: a VPN comes up only when it is connected from the Network Center (otherwise a WireGuard import would come up at once and at every boot) |
+| `connect` | `{"uuid","secrets":{"k":"v"}}` | `{"ok":true}`, or `{"ok":false,"need":["password",…],"type":"l2tp"}` when Ask secrets are missing (OpenVPN's `challenge-response` is only asked when the profile has a `static-challenge`, as nm-openvpn does), or `{"ok":false,"error":…}` |
+| `oc-login` (Plan 2) | `{"uuid","secrets":{…}}` | JSON-line conversation (§10) |
 
 Delete and disconnect stay on plain `nmcli` (no secrets), so they work without the helper.
 
@@ -89,14 +89,14 @@ Delete and disconnect stay on plain `nmcli` (no secrets), so they work without t
 
 **Connect.** `nmcli --wait 90 connection up uuid U passwd-file <pipe>`, with lines `vpn.secrets.<key>:<value>` (or `wireguard.private-key:…`). `nmcli` accepts the pipe (verified in the VM test, §14), so no secret ever touches disk. strongSwan's secret names come from its auth dialog in external-UI mode, which needs a display: the desktop session has one, a headless shell does not.
 
-**Our own metadata** (OpenConnect login method, username, pinned server certificate) goes in NetworkManager's generic `user` setting (`user.data`, keys `quickshell.vpn.*`), never as `vpn.data` keys: OpenVPN and OpenConnect reject data keys they don't recognise.
+**Our own metadata** (Plan 2: OpenConnect login method, username, pinned server certificate) goes in NetworkManager's generic `user` setting (`user.data`, keys `quickshell.vpn.*`), never as `vpn.data` keys: OpenVPN and OpenConnect reject data keys they don't recognise.
 
 **Packaging.** `quickshell/scripts/nm-vpn.nix`: `python3.withPackages` with `pygobject3`, behind `makeWrapper`, so `GI_TYPELIB_PATH` holds libnm's and GLib's typelibs and `PATH` holds `nmcli` (Plan 2 adds `openconnect` the same way). Test hooks, as `IDENTITY_PASSWD_BIN` does: `NM_VPN_FAKE_STATE` (a JSON-file backend instead of libnm), `NM_VPN_NMCLI_BIN`, `NM_VPN_CONNECT_WAIT`.
 
 **VM findings** (`nixos/tests/test-vpn-vm.sh`, NetworkManager 1.56.0, strongSwan 6.1.0, networkmanager-strongswan 1.6.5, 2026-11-09).
 - `passwd-file` through a pipe works: `nm-vpn connect` and `nmcli … passwd-file <(…)` both get NetworkManager past the secrets stage, so no file fallback is needed.
 - `charon-nm` coexists with `services.strongswan`, once `/etc/strongswan.conf` exists (§11).
-- An imported OpenVPN profile arrives with `password-flags 1` (agent-owned), which `nm-vpn get` reads as `ask`. The importer also adds `challenge-response` (flags 2), turns `remote` into `host:port` and resolves a relative `ca` against the file's folder. It refuses a file with no `ca`.
+- An imported OpenVPN profile arrives with `password-flags 1` (agent-owned), which `nm-vpn get` reads as `ask`. The importer also adds `challenge-response` (flags 2) to every file, so `nm-vpn connect` skips that key unless the profile has a `static-challenge`. It turns `remote` into `host:port` and resolves a relative `ca` against the file's folder. It refuses a file with no `ca`.
 
 **One request at a time.** `nm-vpn` handles one request at a time. A second request while one runs returns `Busy — try again`.
 
@@ -114,6 +114,7 @@ l2tp: { service: "org.freedesktop.NetworkManager.l2tp", label: "L2TP/IPsec", imp
 ]}
 ```
 
+- **Defaults are for new profiles only.** `default` fills the Add form. When an existing profile lacks a schema key, `fromProfile` shows the plugin's own meaning of a missing key (the field's `absent` value, else off for a bool, the `default` for a choice, empty otherwise: OpenVPN `connection-type` absent reads `tls`, L2TP `ipsec-enabled` and strongSwan `virtual` read off) and returns that key in `absent`. `buildRequest` leaves absent keys out, so they stay absent on save, unless the form's `touched` marks the field edited. A rename never turns IPsec on.
 - **Kinds:** `text`, `secret`, `bool` (stored `yes`/`no`), `choice` (fixed `options`), `file` (path; `~` expanded and existence checked by the helper), `number`.
 - **`showIf`** hides fields that don't apply (OpenVPN `connection-type` decides between certificate and username/password fields). `buildRequest` leaves hidden fields out, so on save, switching OpenVPN's connection type drops the other type's keys.
 - **Schemas shipped:** L2TP, OpenVPN, strongSwan, WireGuard (OpenConnect arrives with Plan 2). SSTP was dropped: `networkmanager-sstp` is flagged insecure (CVE-2026-91838) in the pinned nixpkgs, and that broke evaluation of the whole system. Key names are checked against each plugin before use (L2TP's are verified, §13). WireGuard entries set `native: true` and use setting paths (`wireguard.private-key`, `ipv4.addresses`, `ipv4.dns`, `peer.endpoint`, `peer.public-key`, `peer.allowed-ips`, `peer.preshared-key`, `peer.persistent-keepalive`) with one peer.
@@ -140,9 +141,9 @@ l2tp: { service: "org.freedesktop.NetworkManager.l2tp", label: "L2TP/IPsec", imp
 
 **`VpnImportView`.** Candidate files from one `find ~/Downloads ~/Documents -maxdepth 2` filtered by every schema's `importExt` (`.ovpn`, `.conf`, …), plus a path field for anything else. `j/k`, `/`, `Enter`. The type comes from `typeForPath`; when ambiguous, a picker shows only installed types with `import: true`. After import the stack becomes `/vpn` list → `VpnFormView` (Edit) on the new profile, so `Esc` returns to the list and keeps the profile.
 
-**`VpnSecretPrompt`.** Inline in the `/vpn` view, like the Wi-Fi password dialog. One `SecretField` per needed key (label from `labelFor`, or the key name), or one event at a time during `oc-login`. `Ctrl+S` reveals, `Enter` goes to the next field and then submits, `Esc` cancels. On submit the fields are **cleared immediately** and the Current Connection card shows `Connecting to {name}…` (spec §3.1). Fields are also cleared on leaving the view and on close.
+**`VpnSecretPrompt`.** Inline in the `/vpn` view, like the Wi-Fi password dialog. One `SecretField` per needed key (label from `labelFor`, or the key name), or (Plan 2) one event at a time during `oc-login`. `Ctrl+S` reveals, `Enter` goes to the next field and then submits, `Esc` cancels. On submit the fields are **cleared immediately** and the Current Connection card shows `Connecting to {name}…` (spec §3.1). Fields are also cleared on leaving the view and on close.
 
-## 10. Connect flow and the OpenConnect login
+## 10. Connect flow and (Plan 2) the OpenConnect login
 
 **Every type except OpenConnect:**
 1. `Enter` → `NetworkService.vpnConnect(uuid)` → `nm-vpn connect` with no secrets.
@@ -151,7 +152,7 @@ l2tp: { service: "org.freedesktop.NetworkManager.l2tp", label: "L2TP/IPsec", imp
 
 Without the helper, `vpnConnect` falls back to `nmcli connection up uuid` (today's behaviour).
 
-**OpenConnect.** NetworkManager needs `cookie`, `gateway` and `gwcert`, which only come from a live login. `nm-vpn oc-login` runs `openconnect --authenticate --protocol=<p> [--servercert <pin>] [--external-browser=xdg-open] <gateway>` on a pseudo-terminal and relays the conversation:
+**OpenConnect (Plan 2, not built).** NetworkManager needs `cookie`, `gateway` and `gwcert`, which only come from a live login. `nm-vpn oc-login` runs `openconnect --authenticate --protocol=<p> [--servercert <pin>] [--external-browser=xdg-open] <gateway>` on a pseudo-terminal and relays the conversation:
 
 | Out (helper → shell) | Meaning |
 |---|---|
@@ -183,7 +184,7 @@ The saved OpenConnect password is a `vpn.secrets` key named as the plugin's own 
 | `nixos/configuration.nix` | `networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn networkmanager-strongswan networkmanager-l2tp ];` (SSTP dropped: `networkmanager-sstp` is flagged insecure, CVE-2026-91838, and broke evaluation of the whole system.) `services.strongswan` stays; an empty `environment.etc."strongswan.conf"` so `charon-nm` can start |
 | `nixos/configuration.nix` (Plan 2) | `networkmanager-openconnect` is added together with the OpenConnect login (§10) |
 | `nixos/programs/quickshell.nix` | Remove `networkmanagerapplet` (editor, tray applet, its XDG autostart). Add the `nm-vpn` package (§7) |
-| `quickshell/services/NetworkService.qml` | Remove `vpnEditorProc`, `vpnAddProc`, `launchEditor()`, `vpnAdd()`. Add `helperAvailable`, `vpnTypes`, `vpnLoad(uuid)`, `vpnSave(request)`, `vpnImport(type, path)`, `vpnConnect(uuid, secrets)`, `ocAnswer(id, answer)` and `ocCancel()`. Errors use the existing `lastError` |
+| `quickshell/services/NetworkService.qml` | Remove `vpnEditorProc`, `vpnAddProc`, `launchEditor()`, `vpnAdd()`. Add `helperAvailable`, `vpnTypes`, `vpnLoad(uuid)`, `vpnSave(request)`, `vpnImport(type, path)`, `vpnConnect(uuid, secrets)` and `vpnCancelNeed()` (Plan 2 adds `ocAnswer(id, answer)` and `ocCancel()`). Errors use the existing `lastError` |
 | `quickshell/services/NetworkService.qml` (fix) | The poll's active-VPN check greps `vpn` only, so an active **WireGuard** connection never shows as `vpnActive`. Match `wireguard` too, as `vpnProc` already does |
 
 `/etc/strongswan.conf` is empty on purpose: `charon-nm` needs the file to exist, and so does nm-l2tp's IPsec starter. NixOS creates none, because `services.strongswan` points its own charon at a store file.
@@ -194,7 +195,7 @@ Left alone: the commented-out `nm-applet` line in `hypr/hyprland.lua` and `hypr/
 - `nm-vpn` missing: `Add VPN…` shows `Not available`, and list/connect/delete keep working through `nmcli`.
 - No plugins: WireGuard only, plus the hint.
 - Every helper failure is an inline `Theme.critical` line under the VPN list, cleared on the next success (spec §4).
-- Timeouts: 30 s for single-shot commands, 90 s for connect, 5 min for `oc-login`.
+- Timeouts: 30 s for single-shot commands, 90 s for connect (Plan 2: 5 min for `oc-login`).
 
 ## 12. Known limits
 
@@ -227,11 +228,11 @@ Left alone: the commented-out `nm-applet` line in `hypr/hyprland.lua` and `hypr/
 
 | Test | Proves |
 |---|---|
-| `quickshell/tests/tst_vpn_schema.qml` (run by `tests/run.sh`) | `buildRequest`, `showIf`, flag → mode, `secretKeysFromData`, `typeForPath`, Advanced rows |
-| `quickshell/tests/test-nm-vpn.sh` | Helper with stubbed binaries: JSON protocol, scrubbing, `passwd-file` lines, the `need` handshake, `oc-login` against a fake `openconnect` (prompts, echo-off detection, choice, cert, browser, failure, cancel) |
+| `quickshell/tests/tst_vpn_schema.qml` (run by `tests/run.sh`) | `defaults`, `fromProfile` (secret modes, absent keys stay absent), `buildRequest`, `showIf`, `validate`, `typeForPath`, `importExtensions`, `pickerTypes`, Advanced rows |
+| `quickshell/tests/test-nm-vpn.sh` | Helper with stubbed binaries: JSON protocol, scrubbing, `passwd-file` lines, the `need` handshake (no OpenVPN `challenge-response` without a `static-challenge`), against a JSON-file backend and a fake `nmcli`. The `oc-login` tests against a fake `openconnect` come with Plan 2 |
 | `quickshell/tests/smoke-vpn-views.sh` | Each new view loads offscreen with a stub `nm-vpn`; secret fields clear on submit and on leave |
-| `nixos/tests/test-vpn.sh` | Evaluated config: the five plugins, no `networkmanagerapplet`, `nm-vpn` present |
-| `nixos/tests/test-vpn-vm.sh` (opt-in, needs KVM; a NixOS VM test) | Real libnm round-trips per type (add/get/update/import/delete), `types` sees the plugins, `passwd-file` via a pipe, `charon-nm` beside `services.strongswan` |
+| `nixos/tests/test-vpn.sh` | Evaluated config: the three plugins (OpenVPN, strongSwan, L2TP), no `networkmanagerapplet`, `nm-vpn` present |
+| `nixos/tests/test-vpn-vm.sh` (opt-in, needs KVM; a NixOS VM test) | Real libnm round-trips per type (add/get/update/import/delete), `types` sees the plugins, `passwd-file` via a pipe, imports created with autoconnect off, `charon-nm` beside `services.strongswan` |
 
 Plus the repo checks in `AGENTS.md`.
 
@@ -248,7 +249,7 @@ Plus the repo checks in `AGENTS.md`.
 2. `nm-vpn`: `types`, `get`, `add`, `update`, `import`, `connect`, with stub tests; Nix packaging and plugins; the VM test (answers §14).
 3. `NetworkService` VPN API and the WireGuard `vpnActive` fix.
 4. Views and `NetworkCenter.qml` integration; smoke test.
-5. `oc-login` (helper and prompt events) with the fake-`openconnect` tests.
+5. (Plan 2) `oc-login` (helper and prompt events) with the fake-`openconnect` tests.
 6. Remove `networkmanagerapplet` and the editor code; docs, specs and hints.
 7. All repo checks.
 

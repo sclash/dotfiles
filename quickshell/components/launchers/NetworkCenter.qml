@@ -805,7 +805,8 @@ WlrLayershell {
         target: NetworkService
         function onDataUpdated(){ updateModels() }
         function onVpnNeedChanged(){
-            if (NetworkService.vpnNeed.length === 0 || !root.isOpen) return
+            if (NetworkService.vpnNeed.length === 0) return
+            if (!root.isOpen) { NetworkService.vpnCancelNeed(); return }   // the user left; don't prompt on the next visit
             root.leaveViews()
             root.view = "vpn"
             root.updateModels()

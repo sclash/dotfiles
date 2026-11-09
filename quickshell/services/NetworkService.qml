@@ -198,12 +198,13 @@ QtObject {
         const r = root._helperResult || { ok: false, error: "nm-vpn could not start" }
         root._helperCb = null
         root._helperResult = null
+        root._helperPayload = ""                // also when nm-vpn failed to start
         root.helperWatch.stop()
         cb(r)
     }
     function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
     function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
-    function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true; if (root.helperAvailable) root.loadVpnTypes() }
+    function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true; if (root.helperAvailable) root.loadVpnTypes(); else root.vpnProbe.running = true }
 
     property Process pollProc: Process {
         running: true
