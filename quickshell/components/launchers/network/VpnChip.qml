@@ -8,7 +8,7 @@ Rectangle {
     id: chip
     property string first: "Save"
     property string second: "Ask"
-    property bool onSecond: false
+    property bool isSecond: false
     signal toggled()
     signal advance(var from)
 
@@ -34,16 +34,16 @@ Rectangle {
             text: chip.first
             font.family: Theme.fontFamily
             font.pixelSize: 11
-            font.weight: chip.onSecond ? Theme.fontWeightNormal : Theme.fontWeightMedium
-            color: chip.onSecond ? Theme.fgDim : Theme.fgBright
+            font.weight: chip.isSecond ? Theme.fontWeightNormal : Theme.fontWeightMedium
+            color: chip.isSecond ? Theme.fgDim : Theme.fgBright
         }
         Text { text: "|"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgDim }
         Text {
             text: chip.second
             font.family: Theme.fontFamily
             font.pixelSize: 11
-            font.weight: chip.onSecond ? Theme.fontWeightMedium : Theme.fontWeightNormal
-            color: chip.onSecond ? Theme.fgBright : Theme.fgDim
+            font.weight: chip.isSecond ? Theme.fontWeightMedium : Theme.fontWeightNormal
+            color: chip.isSecond ? Theme.fgBright : Theme.fgDim
         }
     }
     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { chip.forceActiveFocus(); chip.toggled() } }

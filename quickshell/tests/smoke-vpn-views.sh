@@ -93,6 +93,11 @@ ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for 
 imports = [c for c in calls if c["argv"][:1] == ["import"]]
 ok(any(c["req"].get("type") == "openvpn" and c["req"].get("path", "").endswith("office.ovpn") for c in imports),
    "the .ovpn file is imported as openvpn")
+adds = [c for c in calls if c["argv"][:1] == ["add"]]
+ok(any(c["req"].get("data", {}).get("gateway") == "smoke.example.com"
+       and c["req"].get("secrets", {}).get("password", {}).get("value") == "smoke-secret-3"
+       and c["req"].get("data", {}).get("ipsec-enabled") == "no" for c in adds),
+   "the form's add request carries its fields and the typed secret on stdin")
 # --- log checks are added below by later tasks ---
 sys.exit(1 if bad else 0)
 PY

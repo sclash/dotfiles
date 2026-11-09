@@ -149,6 +149,54 @@ ShellRoot {
             check("prompt: hidden once connected", shell.sp !== null && !shell.sp.visible)
             if (shell.sp) shell.sp.destroy()
         },
+        function () {
+            const fv = shell.make("VpnFormView.qml")
+            shell.fv = fv
+            if (!fv) return
+            fv.saved.connect(() => shell.fvSaved = true)
+            fv.startAdd("l2tp")
+            check("form: l2tp stops in schema order",
+                  JSON.stringify(fv.visibleKeys()) === JSON.stringify(["gateway", "user", "password", "ipsec-enabled", "ipsec-psk", "ipsec-gateway-id", "ipv4.never-default"]),
+                  JSON.stringify(fv.visibleKeys()))
+            const ipsec = fv.stopFor("ipsec-enabled")
+            ipsec.checked = false
+            ipsec.edited(false)
+            check("form: turning IPsec off hides the PSK", fv.visibleKeys().indexOf("ipsec-psk") === -1, JSON.stringify(fv.visibleKeys()))
+            fv.save()
+            check("form: a missing name blocks Save", fv.formError === "Name is required", fv.formError)
+            fv.stopFor("name").edited("Smoke")
+            fv.save()
+            check("form: a missing gateway blocks Save", fv.formError === "Gateway is required", fv.formError)
+            fv.stopFor("gateway").edited("smoke.example.com")
+            const pwf = shell.findFields(fv.stopFor("password"), [])
+            check("form: the password is a masked field", pwf.length === 1 && pwf[0].input.echoMode === TextInput.Password)
+            if (pwf.length === 1) pwf[0].text = "smoke-secret-3"
+            fv.save()
+            check("form: typed secrets are cleared once handed over", pwf.length === 1 && pwf[0].text === "")
+            check("form: busy while saving", fv.busy)
+        },
+        function () {
+            check("form: saved", shell.fvSaved)
+            NetworkService.vpnLoad("uuid-l2tp", r => { if (r.ok) { shell.fv.startEdit(r.profile); shell.loaded = true } })
+        },
+        function () {
+            const fv = shell.fv
+            if (!fv) return
+            check("form: edit is prefilled", shell.loaded && fv.uuid === "uuid-l2tp" && fv.name === "Office" && fv.values.gateway === "vpn.example.com")
+            const pwf = shell.findFields(fv.stopFor("password"), [])
+            check("form: a saved secret shows a placeholder, never a value",
+                  pwf.length === 1 && pwf[0].text === "" && pwf[0].placeholder === "saved · leave empty to keep", pwf.length ? pwf[0].placeholder : "")
+            check("form: an Ask secret keeps its mode", fv.stopFor("ipsec-psk").mode === "ask")
+            check("form: unknown keys go to Advanced", fv.advanced.some(r => r.key === "lcp-echo-interval"))
+            fv.stopFor("user").edited("bob")
+            shell.key(fv, Qt.Key_Escape)
+            check("form: Esc with changes asks first", fv.confirmText !== "")
+            let back = false
+            fv.back.connect(() => back = true)
+            shell.key(fv, Qt.Key_Y)
+            check("form: y discards and goes back", back && fv.type === "")
+            fv.destroy()
+        },
         // --- view checks are added below by later tasks ---
         function () {
             console.log("SMOKE DONE failures=" + shell.failures)
