@@ -97,7 +97,7 @@
 
       context-mode = {
         type = "local";
-        enabled = true;
+        enabled = false;
         disabled = true;
         command = "npx";
         args = [
