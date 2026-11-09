@@ -44,6 +44,11 @@ RowLayout {
             color: Theme.fg
             placeholderTextColor: Theme.fgDim
             background: null
+            cursorDelegate: Rectangle {
+                width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                height: Math.round(parent.font.pixelSize * 1.5)
+                color: Theme.fg
+            }
             activeFocusOnTab: true
             onTextEdited: { row.entry.key = text; row.changed() }
             onAccepted: row.advance(keyBox)
@@ -85,6 +90,11 @@ RowLayout {
             color: Theme.fg
             placeholderTextColor: Theme.fgDim
             background: null
+            cursorDelegate: Rectangle {
+                width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                height: Math.round(parent.font.pixelSize * 1.5)
+                color: Theme.fg
+            }
             activeFocusOnTab: true
             onTextEdited: { row.entry.value = text; row.changed() }
             onAccepted: row.advance(valueBox)

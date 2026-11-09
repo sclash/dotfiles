@@ -7,6 +7,8 @@
 > All component specs are **refined and normative** — do not reinterpret them.
 > All the specs are in `./specs` directory
 
+Details ruling applying by default. If we're dealing with quickfixes do not overthink and overcomplicate the whole update. Just do it. Keep in mind the configuration structure so that you won't mess up with the whole configuration. If in doubt ask teh user.
+
 ---
 
 ## 1. Goal (one line)

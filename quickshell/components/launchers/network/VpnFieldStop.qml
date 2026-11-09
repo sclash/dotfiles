@@ -78,6 +78,11 @@ ColumnLayout {
             color: Theme.fg
             placeholderTextColor: Theme.fgDim
             background: null
+            cursorDelegate: Rectangle {
+                width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                height: Math.round(parent.font.pixelSize * 1.5)
+                color: Theme.fg
+            }
             activeFocusOnTab: true
             onTextEdited: stop.edited(text)
             onAccepted: stop.advance(box)

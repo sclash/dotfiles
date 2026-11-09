@@ -73,6 +73,11 @@ Item {
                     color: Theme.fg
                     placeholderTextColor: Theme.fgDim
                     background: null
+                    cursorDelegate: Rectangle {
+                        width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
+                        height: Math.round(parent.font.pixelSize * 1.5)
+                        color: Theme.fg
+                    }
                     onTextChanged: view.filter = text
                     onAccepted: { filterBox.visible = false; view.refocus() }
                 }

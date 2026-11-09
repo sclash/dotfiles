@@ -301,8 +301,13 @@ ShellRoot {
             if (!nc) return
             NetworkService.vpnCancelNeed()
             nc.resetVpnViews()
+            nc.view = "nearby"
+            nc.updateModels()
             nc.view = "vpn"
             nc.updateModels()
+            check("network: /vpn selects the first VPN by default",
+                  nc.navItems[nc.selIndex] !== undefined && nc.navItems[nc.selIndex].kind === "vpn",
+                  JSON.stringify({ sel: nc.selIndex, items: nc.navItems }))
             const vpnIdx = nc.navItems.findIndex(it => it.kind === "vpn")
             check("network: /vpn has a selectable VPN", vpnIdx !== -1, JSON.stringify(nc.navItems))
             NetworkService.vpnActive = false

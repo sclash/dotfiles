@@ -18,6 +18,7 @@ WlrLayershell {
     // Known section visible only after the `/known` command
     property var navItems: []
     property int selIndex: 0
+    property string appliedView: ""
     function open(){ isOpen=true }
     function close(){ isOpen=false; filterActive=false; resetVpnViews() }
     function toggle(){ if(isOpen) close(); else open() }
@@ -825,6 +826,15 @@ WlrLayershell {
         else if(root.view==="known"){ for(let i=0;i<k.length;i++) items.push({kind:"known", idx:i}) }
         else if(root.view==="vpn"){ for(let i=0;i<v.length;i++) items.push({kind:"vpn", idx:i}); items.push({kind:"vpnAdd"}) }
         navItems=items
+        // Entering the VPN view selects the first VPN, or "Add VPN…" when empty,
+        // so Enter never falls through to the Power button (spec §9).
+        if (root.view === "vpn" && appliedView !== "vpn") {
+            let first = -1
+            for (let i = 0; i < items.length; i++) if (items[i].kind === "vpn") { first = i; break }
+            if (first === -1) for (let i = 0; i < items.length; i++) if (items[i].kind === "vpnAdd") { first = i; break }
+            if (first !== -1) selIndex = first
+        }
+        appliedView = root.view
         selIndex=Math.max(0, Math.min(selIndex, items.length-1))
         Qt.callLater(()=> ensureVisible(selIndex))
     }
