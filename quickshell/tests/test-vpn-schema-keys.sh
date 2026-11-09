@@ -3,8 +3,6 @@
 # string in its NetworkManager plugin's binaries. Builds (usually fetches)
 # the plugins from the flake's pinned nixpkgs. Native (WireGuard) and common
 # fields are NetworkManager settings, not plugin keys, and are skipped.
-# The sstp plugin is flagged insecure in nixpkgs; it is only built to read its
-# strings (NIXPKGS_ALLOW_INSECURE, --impure), never installed by this test.
 # Run: bash quickshell/tests/test-vpn-schema-keys.sh
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -17,7 +15,6 @@ declare -A pkg=(
   [l2tp]=networkmanager-l2tp
   [openvpn]=networkmanager-openvpn
   [strongswan]=networkmanager-strongswan
-  [sstp]=networkmanager-sstp
 )
 
 # "<type> <key>" for each plugin field, read from the one-line-per-field layout.
@@ -38,7 +35,7 @@ failures=0
 for type in $(cut -d' ' -f1 "$tmp/keys" | sort -u); do
   attr=${pkg[$type]:-}
   if [[ -z $attr ]]; then echo "FAIL no plugin package known for schema type $type"; failures=$((failures + 1)); continue; fi
-  out=$(NIXPKGS_ALLOW_INSECURE=1 nix build --impure --no-link --print-out-paths --inputs-from "$root/nixos" "nixpkgs#$attr" 2>/dev/null | head -n 1)
+  out=$(nix build --no-link --print-out-paths --inputs-from "$root/nixos" "nixpkgs#$attr" 2>/dev/null | head -n 1)
   if [[ -z $out ]]; then echo "FAIL could not build $attr"; failures=$((failures + 1)); continue; fi
   find "$out" -type f \( -name '*.so*' -o -perm -u+x \) -exec strings {} + 2>/dev/null | sort -u > "$tmp/strings-$type"
   while read -r t key; do

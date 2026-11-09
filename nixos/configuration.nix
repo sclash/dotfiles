@@ -75,7 +75,6 @@
     networkmanager-openvpn
     networkmanager-strongswan
     networkmanager-l2tp
-    networkmanager-sstp
   ];
   services.strongswan.enable = true;
 

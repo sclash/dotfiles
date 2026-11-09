@@ -43,14 +43,6 @@ var TYPES = {
         { key: "local-ip", label: "Local IP", kind: "text", showIf: { "connection-type": "static-key" } },
         { key: "remote-ip", label: "Remote IP", kind: "text", showIf: { "connection-type": "static-key" } },
     ] },
-    sstp: { label: "SSTP", service: "org.freedesktop.NetworkManager.sstp", importExt: [], fields: [
-        { key: "gateway", label: "Gateway", kind: "text", required: true, placeholder: "vpn.example.com" },
-        { key: "user", label: "Username", kind: "text" },
-        { key: "password", label: "Password", kind: "secret" },
-        { key: "domain", label: "NT domain", kind: "text" },
-        { key: "ca-cert", label: "CA certificate", kind: "file" },
-        { key: "ignore-cert-warn", label: "Ignore certificate warnings", kind: "bool", default: false },
-    ] },
     strongswan: { label: "IKEv2 (strongSwan)", service: "org.freedesktop.NetworkManager.strongswan", importExt: [], fields: [
         { key: "address", label: "Gateway", kind: "text", required: true, placeholder: "vpn.example.com" },
         { key: "method", label: "Authentication", kind: "choice", default: "eap", options: [{ value: "eap", label: "Username and password (EAP)" }, { value: "psk", label: "Pre-shared key" }, { value: "key", label: "Certificate and private key" }, { value: "agent", label: "Certificate and ssh-agent" }, { value: "smartcard", label: "Smartcard" }] },

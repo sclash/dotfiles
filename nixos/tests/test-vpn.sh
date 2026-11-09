@@ -23,6 +23,7 @@ in
   plugins = names c.networking.networkmanager.plugins;
   home = names c.home-manager.users.${user}.home.packages;
   strongswan = c.services.strongswan.enable;
+  systemEvaluates = (builtins.tryEval c.system.build.toplevel.drvPath).success;
 }
 NIX
 
@@ -42,9 +43,9 @@ expect() { # jq-filter, description
 expect '[.plugins[] | test("openvpn")] | any'    "the OpenVPN plugin is installed"
 expect '[.plugins[] | test("l2tp")] | any'       "the L2TP plugin is installed"
 expect '[.plugins[] | test("strongswan")] | any' "the strongSwan (IKEv2) plugin is installed"
-expect '[.plugins[] | test("sstp")] | any'       "the SSTP plugin is installed"
 expect '.home | index("nm-vpn") != null'         "nm-vpn is in the user's packages"
 expect '.strongswan'                             "services.strongswan stays enabled (L2TP/IPsec)"
+expect '.systemEvaluates'                        "the full NixOS system evaluates (no insecure or broken packages)"
 
 if ((failures)); then echo "$failures VPN config checks failed"; exit 1; fi
 echo "OK (VPN config checks)"
