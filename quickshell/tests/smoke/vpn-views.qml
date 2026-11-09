@@ -1,9 +1,9 @@
 import QtQuick
 import Quickshell
 import "services"
-// Views are created by path (make() and Qt.createComponent), so the
-// components/launchers/network directory needs no import here and may not
-// exist yet when this file is first added (Task 6).
+import "components/launchers/network"   // scanned so the views find sibling components (VpnRow, ...)
+import "components/launchers"           // SecretField
+// Views are created by path (make() and Qt.createComponent).
 
 // Smoke test for NetworkService's VPN API and the Network Center VPN views,
 // run inside Quickshell from a temporary config root (see
@@ -82,6 +82,72 @@ ShellRoot {
         },
         function () {
             check("service: a callback can start the next helper request", shell.chained)
+        },
+        function () {
+            const tv = shell.make("VpnTypeView.qml")
+            if (!tv) return
+            check("types: Import first, then 4 types", tv.rows.length === 5 && tv.rows[0].kind === "import", JSON.stringify(tv.rows))
+            const last = tv.rows[tv.rows.length - 1]
+            check("types: advanced-only types last", last.name === "fortisslvpn" && last.note === "advanced", JSON.stringify(last))
+            let picked = ""
+            tv.pickType.connect(n => picked = n)
+            shell.key(tv, Qt.Key_J)
+            shell.key(tv, Qt.Key_Return)
+            check("types: j + Enter picks a type", picked === tv.rows[1].name, picked)
+            let asked = false
+            tv.importRequested.connect(() => asked = true)
+            shell.key(tv, Qt.Key_K)
+            shell.key(tv, Qt.Key_Return)
+            check("types: Enter on Import asks for a file", asked)
+            let back = false
+            tv.back.connect(() => back = true)
+            shell.key(tv, Qt.Key_Escape)
+            check("types: Esc goes back", back)
+            tv.destroy()
+            shell.iv = shell.make("VpnImportView.qml")
+            if (shell.iv) shell.iv.imported.connect(u => shell.importedUuid = u)
+        },
+        function () {
+            const iv = shell.iv
+            if (!iv) return
+            check("import: lists the two candidates", iv.files.length === 2, JSON.stringify(iv.files))
+            iv.sel = iv.files.findIndex(p => p.endsWith(".ovpn"))
+            shell.key(iv, Qt.Key_Return)            // only OpenVPN claims .ovpn: imports at once
+        },
+        function () {
+            const iv = shell.iv
+            if (!iv) return
+            check("import: .ovpn imports as OpenVPN at once", shell.importedUuid === "uuid-imported", shell.importedUuid)
+            iv.sel = iv.files.findIndex(p => p.endsWith(".conf"))
+            shell.key(iv, Qt.Key_Return)
+            check("import: .conf asks which type", iv.choosingPath.endsWith("wg0.conf") && iv.typeChoices.length === 2,
+                  JSON.stringify(iv.typeChoices))
+            shell.key(iv, Qt.Key_Escape)
+            check("import: Esc leaves the type question", iv.choosingPath === "")
+            let back = false
+            iv.back.connect(() => back = true)
+            shell.key(iv, Qt.Key_Escape)
+            check("import: a second Esc goes back", back)
+            iv.destroy()
+            shell.sp = shell.make("VpnSecretPrompt.qml")
+            NetworkService.vpnConnect("uuid-l2tp", {})
+        },
+        function () {
+            const sp = shell.sp
+            if (!sp) return
+            const f = shell.findFields(sp, [])
+            check("prompt: one masked field per Ask secret", sp.visible && f.length === 1 && f[0].input.echoMode === TextInput.Password,
+                  "visible=" + sp.visible + " fields=" + f.length)
+            check("prompt: labelled from the schema", f.length === 1 && f[0].placeholder === "Pre-shared key", f.length ? f[0].placeholder : "")
+            if (f.length === 1) {
+                f[0].text = "smoke-secret-2"
+                sp.submit()
+                check("prompt: field cleared on submit", f[0].text === "")
+            }
+        },
+        function () {
+            check("prompt: hidden once connected", shell.sp !== null && !shell.sp.visible)
+            if (shell.sp) shell.sp.destroy()
         },
         // --- view checks are added below by later tasks ---
         function () {

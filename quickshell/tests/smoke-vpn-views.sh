@@ -88,6 +88,11 @@ ok(all("smoke-secret" not in " ".join(c["argv"]) for c in calls), "secrets never
 connects = [c for c in calls if c["argv"][:1] == ["connect"]]
 ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-1" for c in connects),
    "an Ask secret reaches nm-vpn on stdin")
+ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for c in connects),
+   "the prompt's secret reaches nm-vpn on stdin")
+imports = [c for c in calls if c["argv"][:1] == ["import"]]
+ok(any(c["req"].get("type") == "openvpn" and c["req"].get("path", "").endswith("office.ovpn") for c in imports),
+   "the .ovpn file is imported as openvpn")
 # --- log checks are added below by later tasks ---
 sys.exit(1 if bad else 0)
 PY
