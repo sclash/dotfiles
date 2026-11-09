@@ -23,6 +23,8 @@ ShellRoot {
     property bool fvSaved: false
     property bool loaded: false
     property bool chained: false
+    property var nc: null
+    property var ncFields: []
 
     function check(name, cond, detail) {
         console.log((cond ? "SMOKE OK   " : "SMOKE FAIL ") + name + (cond || !detail ? "" : " — " + detail))
@@ -243,6 +245,23 @@ ShellRoot {
             check("network: Esc returns one level", nc.top === "types")
             nc.resetVpnViews()
             check("network: closing resets the stack", nc.top === "home" && nc.stack.length === 0)
+            nc.open()
+            nc.openForm("l2tp")
+            shell.nc = nc
+        },
+        function () {                       // the slide has faded in; opening's own helper calls are done
+            const nc = shell.nc
+            shell.ncFields = shell.findFields(nc.contentItem, []).filter(f => f.visible)   // the form's (others are hidden dialogs)
+            for (const f of shell.ncFields) f.text = "typed-secret"
+            check("network: the form has masked fields to fill", shell.ncFields.length > 0)
+            NetworkService.vpnConnect("uuid-l2tp", {})
+        },
+        function () {
+            const nc = shell.nc
+            check("network: a secret prompt closes the form views", nc.top === "home" && nc.stack.length === 0, JSON.stringify(nc.stack) + " need=" + JSON.stringify(NetworkService.vpnNeed) + " open=" + nc.isOpen)
+            check("network: typed form secrets are cleared when the prompt takes over",
+                  shell.ncFields.every(f => f.text !== "typed-secret"))   // a cleared field is "", a rebuilt one is gone
+            nc.close()
             nc.destroy()
         },
         // --- view checks are added below by later tasks ---

@@ -46,7 +46,9 @@ WlrLayershell {
     }
     function pushView(name) { stack = stack.concat([name]); refocusTop() }
     function popView() { stack = stack.slice(0, stack.length - 1); refocusTop() }
-    function resetVpnViews() { stack = []; typeView.reset(); formView.reset(); importView.reset(); secretPrompt.clear() }
+    // Clear the stack and every view that leaves it (typed secrets die with them).
+    function leaveViews() { stack = []; typeView.reset(); formView.reset(); importView.reset() }
+    function resetVpnViews() { leaveViews(); secretPrompt.clear() }
     function openAdd() {
         if (!NetworkService.helperAvailable) { NetworkService.lastError = "nm-vpn is not installed — run update"; return }
         typeView.reset()
@@ -56,7 +58,7 @@ WlrLayershell {
     function openImport() { importView.reset(); NetworkService.refreshImportCandidates(); pushView("import") }
     function editProfile(uuid) {
         NetworkService.vpnLoad(uuid, r => {
-            if (!r.ok) { NetworkService.reportError(r.error || "Could not read the VPN profile"); root.stack = []; root.refocusTop(); return }
+            if (!r.ok) { NetworkService.reportError(r.error || "Could not read the VPN profile"); root.leaveViews(); root.refocusTop(); return }
             importView.reset()
             formView.startEdit(r.profile)
             root.stack = ["form"]                 // after an import too: Esc returns to the list
@@ -804,7 +806,7 @@ WlrLayershell {
         function onDataUpdated(){ updateModels() }
         function onVpnNeedChanged(){
             if (NetworkService.vpnNeed.length === 0 || !root.isOpen) return
-            root.stack = []
+            root.leaveViews()
             root.view = "vpn"
             root.updateModels()
             Qt.callLater(() => secretPrompt.focusFirst())
