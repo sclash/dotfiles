@@ -189,6 +189,8 @@ The saved OpenConnect password is a `vpn.secrets` key named as the plugin's own 
 
 `/etc/strongswan.conf` is empty on purpose: `charon-nm` needs the file to exist, and so does nm-l2tp's IPsec starter. NixOS creates none, because `services.strongswan` points its own charon at a store file.
 
+**strongSwan is rebuilt with IKEv1.** L2TP/IPsec can only negotiate with IKEv1, and strongSwan 6 builds without it, so charon refused every L2TP/IPsec connection with `IKE version 1 not supported`. A `nixpkgs.overlays` entry in `nixos/configuration.nix` adds `--enable-ikev1`. The overlay reaches `networkmanager-l2tp`, the strongSwan plugin and `services.strongswan`. Cost: strongSwan is compiled locally, not taken from the binary cache. strongSwan marks IKEv1 deprecated and plans to remove it; L2TP/IPsec would then need another IPsec daemon (libreswan). Found on a real connection on 2026-11-09; checked by `nixos/tests/test-vpn.sh` and the VM test (charon now starts an IKEv1 Main Mode exchange).
+
 Left alone: the commented-out `nm-applet` line in `hypr/hyprland.lua` and `hypr/hyprland.conf`, `i3/config`, and the `nm-applet` example in `Tray-Manager.md` (still a valid example of a dbusmenu app).
 
 **Degraded states.**
@@ -219,7 +221,7 @@ Left alone: the commented-out `nm-applet` line in `hypr/hyprland.lua` and `hypr/
 - ~~Whether `charon-nm` coexists with `services.strongswan`~~: it does, once `/etc/strongswan.conf` exists; charon-nm aborts without it, and NixOS creates none (VM test, 2026-11-09; §11).
 - Key names for OpenVPN, OpenConnect and strongSwan (checked against each plugin before its schema is written).
 - A strongSwan secret set to Ask needs a graphical session: the plugin's auth dialog starts GTK in external-UI mode, prints only the secret names and shows no window. The VM verified this under X11 only, not Wayland.
-- L2TP with IPsec next to `services.strongswan` is untested, because they share the ipsec pid file and the IKE ports.
+- An L2TP/IPsec connection to a real server: the VM proves charon starts IKEv1 Main Mode, but its gateway doesn't exist. Running beside `services.strongswan` (shared ipsec pid file and IKE ports) is untested too.
 - Whether `nm-openconnect` accepts `form:*` secrets.
 - That libnm import loads only each plugin's core library, not its GTK editor.
 - Real connections to your own servers, OpenConnect against a corporate gateway, and browser SSO.

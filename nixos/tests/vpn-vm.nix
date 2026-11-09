@@ -164,6 +164,20 @@ pkgs.testers.runNixOSTest {
         assert "unable to bind" not in jlog.lower(), jlog
         machine.succeed("systemctl is-active strongswan.service")
 
+    with subtest("L2TP/IPsec gets past IKEv1 (strongSwan built with --enable-ikev1)"):
+        l2 = ok(vpn("add", {"type": "l2tp", "name": "t-l2tp-ipsec",
+            "data": {"gateway": "192.0.2.10", "user": "alice", "ipsec-enabled": "yes"},
+            "secrets": {"password": {"mode": "save", "value": "dummy-l2tp-pw"},
+                        "ipsec-psk": {"mode": "save", "value": "dummy-l2tp-psk"}},
+            "native": {"ipv4.never-default": "no"}, "user": {}}))["uuid"]
+        since = machine.succeed("date '+%Y-%m-%d %H:%M:%S'").strip()
+        machine.execute(f"nmcli --wait 20 connection up uuid {l2}")
+        ike = machine.succeed(f"journalctl --since '{since}' --no-pager | grep -iE 'charon|ipsec|l2tp' || true")
+        print("VM FINDING l2tp ipsec log tail: " + "\n".join(ike.splitlines()[-12:]))
+        assert "IKE version 1 not supported" not in ike, ike
+        assert "Main Mode" in ike, ike          # charon really starts an IKEv1 negotiation
+        assert "dummy-l2tp-psk" not in ike and "dummy-l2tp-pw" not in ike, "secret in journal"
+
     with subtest("strongSwan Ask secret through nm-vpn, with a display"):
         # nm-strongswan-auth-dialog calls gtk_init before reading
         # --external-ui-mode, so nmcli only learns the secret names when a

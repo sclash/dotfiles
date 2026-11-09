@@ -16,6 +16,7 @@ let
   root = builtins.getEnv "VPN_CHECK_ROOT";
   f = builtins.getFlake ("git+file://" + root + "?dir=nixos");
   c = f.nixosConfigurations.default.config;
+  pkgs = f.nixosConfigurations.default.pkgs;
   user = builtins.head (builtins.attrNames c.home-manager.users);
   names = ps: map (p: p.pname or p.name) ps;
 in
@@ -25,6 +26,10 @@ in
   strongswan = c.services.strongswan.enable;
   strongswanConf = c.environment.etc ? "strongswan.conf";
   systemEvaluates = (builtins.tryEval c.system.build.toplevel.drvPath).success;
+  # L2TP/IPsec negotiates with IKEv1, which strongSwan 6 leaves out unless
+  # built with --enable-ikev1. The L2TP plugin must use that same build.
+  strongswanIkev1 = builtins.elem "--enable-ikev1" (pkgs.strongswan.configureFlags or [ ]);
+  l2tpUsesSystemStrongswan = builtins.any (p: p.drvPath == pkgs.networkmanager-l2tp.drvPath) c.networking.networkmanager.plugins;
 }
 NIX
 
@@ -49,6 +54,8 @@ expect '.strongswan'                             "services.strongswan stays enab
 expect '[.home[] | test("network-manager-applet")] | any | not' "networkmanagerapplet is gone (no nm-connection-editor, no nm-applet)"
 expect '.strongswanConf'                         "/etc/strongswan.conf exists (charon-nm aborts without it)"
 expect '.systemEvaluates'                        "the full NixOS system evaluates (no insecure or broken packages)"
+expect '.strongswanIkev1'                        "strongSwan is built with IKEv1 (L2TP/IPsec needs it)"
+expect '.l2tpUsesSystemStrongswan'               "the L2TP plugin is built against that strongSwan"
 
 if ((failures)); then echo "$failures VPN config checks failed"; exit 1; fi
 echo "OK (VPN config checks)"

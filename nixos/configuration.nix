@@ -84,6 +84,19 @@
   # Empty means strongSwan's defaults; charon-nm then uses random IKE ports,
   # so it runs beside services.strongswan (checked by nixos/tests/test-vpn-vm.sh).
   environment.etc."strongswan.conf".text = "";
+  # L2TP/IPsec can only negotiate with IKEv1, and strongSwan 6 builds without
+  # it unless --enable-ikev1 is given (its charon then logs "IKE version 1 not
+  # supported"). The overlay reaches networkmanager-l2tp, the strongSwan
+  # plugin and services.strongswan alike. strongSwan marks IKEv1 deprecated
+  # and plans to remove it; when that happens, L2TP/IPsec needs another
+  # IPsec daemon. Checked by nixos/tests/test-vpn.sh and test-vpn-vm.sh.
+  nixpkgs.overlays = [
+    (final: prev: {
+      strongswan = prev.strongswan.overrideAttrs (old: {
+        configureFlags = (old.configureFlags or [ ]) ++ [ "--enable-ikev1" ];
+      });
+    })
+  ];
 
   nix.settings.experimental-features = [
     "nix-command"
