@@ -67,6 +67,7 @@ class PureLogic(unittest.TestCase):
         d = nv.describe(l2tp())
         self.assertEqual(d["secrets"], {"password": "save", "ipsec-psk": "ask"})
         self.assertNotIn("stored-pw", json.dumps(d))
+        self.assertNotIn("secrets_unreadable", nv.describe(l2tp(secrets_unreadable=True)))
 
     def test_ask_keys(self):
         self.assertEqual(nv.ask_keys(l2tp()), ["ipsec-psk"])
@@ -233,6 +234,21 @@ class Cli(unittest.TestCase):
         s = self.stored("u-office")
         self.assertEqual(s["data"]["password-flags"], "2")
         self.assertNotIn("password", s["secrets"])
+
+    def test_update_refuses_when_secrets_unreadable(self):
+        with open(self.state) as f:
+            st = json.load(f)
+        st["profiles"]["u-office"]["secrets_unreadable"] = True
+        with open(self.state, "w") as f:
+            json.dump(st, f)
+        before = self.stored("u-office")
+        r = self.run_cli("update", edit(uuid="u-office", name="Renamed"))
+        self.assertFalse(r["ok"])
+        self.assertIn("Could not read the profile's saved secrets; nothing was changed. Try again.", r["error"])
+        self.assertEqual(self.stored("u-office"), before)
+        g = self.run_cli("get", {"uuid": "u-office"})     # get stays usable, key not leaked
+        self.assertTrue(g["ok"], g)
+        self.assertNotIn("secrets_unreadable", json.dumps(g))
 
     def test_update_type_mismatch(self):
         r = self.run_cli("update", edit(uuid="u-office", type="openvpn"))

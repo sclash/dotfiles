@@ -338,6 +338,9 @@ HANDLERS = {"types": cmd_types, "get": cmd_get, "add": cmd_add, "update": cmd_up
 
 # ---------- backends ----------
 
+SECRETS_UNREADABLE = "Could not read the profile's saved secrets; nothing was changed. Try again."
+
+
 class FakeBackend:
     """JSON-file stand-in for libnm (tests only: NM_VPN_FAKE_STATE)."""
 
@@ -383,6 +386,8 @@ class FakeBackend:
         return rec["uuid"]
 
     def save(self, rec):
+        if rec.get("secrets_unreadable"):
+            raise Failure(SECRETS_UNREADABLE)
         self._store(rec)
 
     def import_file(self, type_name, path):
@@ -486,15 +491,17 @@ class LibnmBackend:
             setting_name = "wireguard"
         else:
             raise Failure("%s is not a VPN" % rc.get_id())
+        unreadable = False
         try:   # secrets come back only for this caller; none at all is fine
             sec = self._call(lambda cb: rc.get_secrets_async(setting_name, None, cb, None),
                              lambda src, res: src.get_secrets_finish(res))
             if sec is not None:
                 rc.update_secrets(setting_name, sec)
         except (Failure, self.GLib.Error):
-            pass
+            unreadable = True   # save() refuses: it would erase the stored secrets
         rec = {"uuid": uuid, "name": rc.get_id(), "service": None,
-               "data": {}, "secrets": {}, "native": {}, "user": {}}
+               "data": {}, "secrets": {}, "native": {}, "user": {},
+               "secrets_unreadable": unreadable}
         if ctype == "vpn":
             s = rc.get_setting_vpn()
             rec["service"] = s.get_service_type()
@@ -667,6 +674,8 @@ class LibnmBackend:
         return self._add(conn)
 
     def save(self, rec):
+        if rec.get("secrets_unreadable"):
+            raise Failure(SECRETS_UNREADABLE)
         rc = self._remote(rec["uuid"])            # load() already merged the secrets into rc
         conn = self.NM.SimpleConnection.new_clone(rc)
         self._apply_to(conn, rec)
