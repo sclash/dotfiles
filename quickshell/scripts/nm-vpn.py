@@ -3,7 +3,9 @@
     nm-vpn types|get|add|update|import|connect   < one JSON request on stdin
 
 Prints exactly one JSON line: {"ok": true, ...} or {"ok": false, "error": ...}.
-`connect` answers {"ok": false, "need": [keys], "type": t} while secrets set to
+`connect` takes an optional "mode": "full"|"split" (empty or absent leaves
+the profile's never-default setting untouched) and answers
+{"ok": false, "need": [keys], "type": t} while secrets set to
 Ask are missing. Secrets travel only on stdin and, when connecting, through
 nmcli's passwd-file on a pipe: never in argv, the environment or the output.
 Reads and writes go through libnm (PyGObject) over D-Bus; connecting runs
@@ -323,18 +325,35 @@ def cmd_import(backend, req):
     return {"ok": True, "uuid": backend.import_file(type_name, path)}
 
 
+def connect_mode(req):
+    mode = req.get("mode", "")
+    if mode not in ("", "full", "split"):
+        raise Failure("mode must be full or split")
+    return mode
+
+
 def cmd_connect(backend, req):
     uuid = need_str(req, "uuid")
     given = req.get("secrets") or {}
     if not isinstance(given, dict) or not all(isinstance(v, str) for v in given.values()):
         raise Failure("secrets must map keys to strings")
+    mode = connect_mode(req)
     rec = backend.load(uuid)
     asked = ask_keys(rec)
     missing = [k for k in asked if k not in given]
     if missing:
         return {"ok": False, "need": missing, "type": rec["type"]}
     wanted = {k: given[k] for k in asked}
-    nmcli_up(uuid, passwd_lines(rec, wanted), list(wanted.values()))
+    old = backend.set_mode(uuid, mode == "split") if mode else None
+    try:
+        nmcli_up(uuid, passwd_lines(rec, wanted), list(wanted.values()))
+    except Failure:
+        if old is not None:
+            try:
+                backend.set_mode(uuid, old == "split")
+            except Failure:
+                pass
+        raise
     return {"ok": True}
 
 
@@ -395,6 +414,17 @@ class FakeBackend:
         if rec.get("secrets_unreadable"):
             raise Failure(SECRETS_UNREADABLE)
         self._store(rec)
+
+    def set_mode(self, uuid, split):
+        rec = self.state["profiles"].get(uuid)
+        if rec is None:
+            raise Failure("No VPN profile %s" % uuid)
+        native = rec.setdefault("native", {})
+        old = native.get("ipv4.never-default", "no") == "yes"
+        native["ipv4.never-default"] = "yes" if split else "no"
+        native["ipv6.never-default"] = "yes" if split else "no"
+        self._write()
+        return "split" if old else "full"
 
     def import_file(self, type_name, path):
         src = self.state["imports"].get(os.path.basename(path))
@@ -688,6 +718,18 @@ class LibnmBackend:
         rc.replace_settings_from_connection(conn)
         self._call(lambda cb: rc.commit_changes_async(True, None, cb, None),
                    lambda src, res: src.commit_changes_finish(res))
+
+    def set_mode(self, uuid, split):
+        rc = self._remote(uuid)
+        conn = self.NM.SimpleConnection.new_clone(rc)
+        ip4, ip6 = self._ip_settings(conn)
+        old = ip4.get_never_default()
+        ip4.set_property("never-default", split)
+        ip6.set_property("never-default", split)
+        rc.replace_settings_from_connection(conn)
+        self._call(lambda cb: rc.commit_changes_async(True, None, cb, None),
+                   lambda src, res: src.commit_changes_finish(res))
+        return "split" if old else "full"
 
     def import_file(self, type_name, path):
         NM, GLib = self.NM, self.GLib

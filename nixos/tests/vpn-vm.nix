@@ -46,6 +46,7 @@ pkgs.testers.runNixOSTest {
 
     machine.wait_for_unit("NetworkManager.service")
     machine.wait_until_succeeds("nmcli general status")
+    true_bin = machine.succeed("command -v true").strip()
 
     with subtest("types lists the plugins and WireGuard"):
         t = {x["name"]: x for x in ok(vpn("types", {}))["types"]}
@@ -85,6 +86,20 @@ pkgs.testers.runNixOSTest {
 
     with subtest("L2TP round-trip"):
         roundtrip("l2tp", {"gateway": "l2tp.example.invalid", "user": "alice", "ipsec-enabled": "yes"}, "password")
+    with subtest("connect mode sets never-default and keeps secrets"):
+        l2m = ok(vpn("add", {"type": "l2tp", "name": "t-mode",
+            "data": {"gateway": "192.0.2.11", "user": "alice", "ipsec-enabled": "no"},
+            "secrets": {"password": {"mode": "save", "value": "dummy-mode-pw"}},
+            "native": {"ipv4.never-default": "no"}, "user": {}}))["uuid"]
+        r = vpn("connect", {"uuid": l2m, "mode": "split"}, env=f"NM_VPN_NMCLI_BIN={true_bin}")
+        assert r == {"ok": True}, r
+        assert machine.succeed(f"nmcli -g ipv4.never-default connection show uuid {l2m}").strip() == "yes"
+        assert machine.succeed(f"nmcli -g ipv6.never-default connection show uuid {l2m}").strip() == "yes"
+        assert "dummy-mode-pw" in secrets_of(l2m)
+        r = vpn("connect", {"uuid": l2m, "mode": "full"}, env=f"NM_VPN_NMCLI_BIN={true_bin}")
+        assert r == {"ok": True}, r
+        assert machine.succeed(f"nmcli -g ipv4.never-default connection show uuid {l2m}").strip() == "no"
+        assert "dummy-mode-pw" in secrets_of(l2m)
     with subtest("OpenVPN round-trip"):
         ovpn = roundtrip("openvpn", {"remote": "ovpn.example.invalid", "connection-type": "password", "username": "alice"}, "password")
     with subtest("strongSwan round-trip"):

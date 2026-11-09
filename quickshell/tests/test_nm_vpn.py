@@ -305,6 +305,61 @@ class Cli(unittest.TestCase):
         self.assertFalse(r["ok"])
         self.assertEqual(r["error"], "Connection activation failed: rejected ***")
 
+    def saved_psk(self):
+        self.run_cli("update", edit(uuid="u-office",
+            secrets={"ipsec-psk": {"mode": "save", "value": "p"}}))
+
+    def test_connect_mode_split_sets_never_default_yes(self):
+        self.saved_psk()
+        self.assertEqual(self.run_cli("connect", {"uuid": "u-office", "mode": "split"}), {"ok": True})
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "yes")
+        self.assertEqual(self.stored("u-office")["native"]["ipv6.never-default"], "yes")
+
+    def test_connect_mode_full_sets_never_default_no(self):
+        self.saved_psk()
+        with open(self.state) as f:
+            st = json.load(f)
+        st["profiles"]["u-office"]["native"]["ipv4.never-default"] = "yes"
+        with open(self.state, "w") as f:
+            json.dump(st, f)
+        self.assertEqual(self.run_cli("connect", {"uuid": "u-office", "mode": "full"}), {"ok": True})
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "no")
+        self.assertEqual(self.stored("u-office")["native"]["ipv6.never-default"], "no")
+
+    def test_connect_without_mode_leaves_profile_unchanged(self):
+        self.saved_psk()
+        with open(self.state) as f:
+            st = json.load(f)
+        st["profiles"]["u-office"]["native"]["ipv4.never-default"] = "yes"
+        with open(self.state, "w") as f:
+            json.dump(st, f)
+        self.assertEqual(self.run_cli("connect", {"uuid": "u-office"}), {"ok": True})
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "yes")
+
+    def test_connect_mode_is_not_applied_when_secrets_are_missing(self):
+        r = self.run_cli("connect", {"uuid": "u-office", "mode": "split"})
+        self.assertEqual(r, {"ok": False, "need": ["ipsec-psk"], "type": "l2tp"})
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "no")
+
+    def test_connect_rejects_bad_mode(self):
+        r = self.run_cli("connect", {"uuid": "u-office", "mode": "both"})
+        self.assertFalse(r["ok"])
+        self.assertIn("mode must be full or split", r["error"])
+        self.assertFalse(os.path.exists(self.args_file))
+
+    def test_connect_mode_failure_restores_previous(self):
+        self.saved_psk()
+        with open(self.state) as f:
+            st = json.load(f)
+        st["profiles"]["u-office"]["native"]["ipv4.never-default"] = "yes"
+        with open(self.state, "w") as f:
+            json.dump(st, f)
+        r = self.run_cli("connect", {"uuid": "u-office", "mode": "full"},
+                         FAKE_NMCLI_FAIL="boom")
+        self.assertFalse(r["ok"])
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "yes")
+        self.assertEqual(self.stored("u-office")["native"]["ipv6.never-default"], "yes")
+
     def test_bad_json(self):
         r = self.run_cli("get", "not json")
         self.assertFalse(r["ok"])

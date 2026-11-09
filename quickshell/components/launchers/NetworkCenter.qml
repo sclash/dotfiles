@@ -26,6 +26,7 @@ WlrLayershell {
     // a stack above the main view. Views below the top park at x -60, the
     // rest at +60 (STYLE.md §2.5).
     property var stack: []                    // "types" | "form" | "import"
+    readonly property bool modePromptOpen: modePrompt.visible
     readonly property string top: stack.length > 0 ? stack[stack.length - 1] : "home"
     readonly property string titleSuffix: top === "types" ? "  ·  Add VPN"
         : top === "import" ? "  ·  Import"
@@ -74,6 +75,22 @@ WlrLayershell {
         editProfile(v.uuid)
     }
     function formSaved() { formView.reset(); stack = []; NetworkService.refresh(); refocusTop() }
+    // One activation path for Enter and row clicks: an active VPN disconnects;
+    // WireGuard and the no-helper fallback connect directly; everything else
+    // asks for the route mode first.
+    function requestVpnConnect(v) {
+        if (!v) return
+        if (NetworkService.vpnActive && NetworkService.vpnName === v.name) {
+            NetworkService.vpnDisconnect(v.uuid)
+            return
+        }
+        if (!NetworkService.helperAvailable || v.type === "wireguard") {
+            NetworkService.vpnConnect(v.uuid)
+            return
+        }
+        modePrompt.open(v.uuid, v.name)
+        Qt.callLater(() => root.scrollToAnchor(modePrompt))
+    }
 
     // A view slot of the stack (STYLE.md §2.5 slide + cross-fade).
     component Slide: Item {
@@ -407,7 +424,7 @@ WlrLayershell {
                         id: vpnMA
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: isActive ? NetworkService.vpnDisconnect(modelData.uuid) : NetworkService.vpnConnect(modelData.uuid)
+                        onClicked: root.requestVpnConnect(modelData)
                     }
                     RowLayout {
                         anchors.fill: parent
@@ -450,6 +467,14 @@ WlrLayershell {
             VpnSecretPrompt {
                 id: secretPrompt
                 onDone: mainCol.forceActiveFocus()
+            }
+            VpnModePrompt {
+                id: modePrompt
+                onPicked: (uuid, mode) => {
+                    NetworkService.vpnConnect(uuid, {}, mode)
+                    Qt.callLater(() => mainCol.forceActiveFocus())
+                }
+                onCancelled: Qt.callLater(() => mainCol.forceActiveFocus())
             }
             Rectangle {
                 id: pwdDialog
@@ -642,7 +667,8 @@ WlrLayershell {
                 else if(e.key===Qt.Key_N || e.key===Qt.Key_Escape) { confirmText=""; e.accepted=true; return }
             }
             if(e.key===Qt.Key_Escape) {
-                if(secretPrompt.visible){ secretPrompt.cancel(); e.accepted=true }
+                if(modePrompt.visible){ modePrompt.cancel(); e.accepted=true }
+                else if(secretPrompt.visible){ secretPrompt.cancel(); e.accepted=true }
                 else if(pwdDialog.visible){ cancelPwd(); e.accepted=true }
                 else if(filterActive){ filterActive=false; clearFilter(); mainCol.forceActiveFocus(); e.accepted=true }
                 else if(root.view !== "nearby"){ root.view="nearby"; updateModels(); e.accepted=true }
@@ -761,7 +787,7 @@ WlrLayershell {
         else if(it.kind==="scan"){ NetworkService.rescanWifi() }
         else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.uuid) }
         else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n) connectNearby(n) }
-        else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.uuid); else NetworkService.vpnConnect(v.uuid) } }
+        else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v) root.requestVpnConnect(v) }
         else if(it.kind==="vpnAdd"){ root.openAdd() }
     }
     function updateModels(){

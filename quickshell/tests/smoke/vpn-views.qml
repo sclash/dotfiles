@@ -17,6 +17,7 @@ ShellRoot {
     property var tv: null
     property var iv: null
     property var sp: null
+    property var mp: null
     property var fv: null
     property var fv2: null
     property string importedUuid: ""
@@ -50,6 +51,14 @@ ShellRoot {
         }
         return out
     }
+    function findByName(item, name) {
+        if (item.objectName === name) return item
+        for (let i = 0; i < item.children.length; i++) {
+            const hit = findByName(item.children[i], name)
+            if (hit) return hit
+        }
+        return null
+    }
 
     property var steps: [
         function () {
@@ -68,6 +77,15 @@ ShellRoot {
                   NetworkService.vpnNeedUuid === "uuid-l2tp" && NetworkService.vpnNeedName === "Office" && NetworkService.vpnNeedType === "l2tp")
             check("service: not connecting while it asks", !NetworkService.connecting)
             NetworkService.vpnConnect("uuid-l2tp", { "ipsec-psk": "smoke-secret-1" })
+        },
+        function () {
+            NetworkService.vpnConnect("uuid-l2tp", {}, "split")
+        },
+        function () {
+            check("service: the mode survives the need handshake",
+                  NetworkService.vpnNeedMode === "split", NetworkService.vpnNeedMode)
+            NetworkService.vpnConnect("uuid-l2tp", { "ipsec-psk": "smoke-secret-1" },
+                                      NetworkService.vpnNeedMode)
         },
         function () {
             check("service: need cleared once connected", NetworkService.vpnNeed.length === 0)
@@ -227,6 +245,26 @@ ShellRoot {
             f.destroy()
         },
         function () {
+            shell.mp = shell.make("VpnModePrompt.qml")
+            if (!shell.mp) return
+            const got = []
+            shell.mp.picked.connect((u, m) => got.push([u, m]))
+            shell.mp.open("uuid-l2tp", "Office")
+            check("mode prompt: opens at All traffic", shell.mp.visible && shell.mp.selectedMode === "full")
+            shell.key(shell.mp, Qt.Key_J)
+            check("mode prompt: j selects VPN-only", shell.mp.selectedMode === "split")
+            shell.key(shell.mp, Qt.Key_Return)
+            check("mode prompt: Enter emits the choice",
+                  got.length === 1 && got[0][0] === "uuid-l2tp" && got[0][1] === "split", JSON.stringify(got))
+            check("mode prompt: hides after choosing", !shell.mp.visible)
+            let cancelled = false
+            shell.mp.cancelled.connect(() => cancelled = true)
+            shell.mp.open("uuid-l2tp", "Office")
+            shell.key(shell.mp, Qt.Key_Escape)
+            check("mode prompt: Esc cancels", cancelled && !shell.mp.visible)
+            shell.mp.destroy()
+        },
+        function () {
             check("service: no nm-connection-editor entry points left",
                   typeof NetworkService.launchEditor === "undefined" && typeof NetworkService.vpnAdd === "undefined")
             const c = Qt.createComponent("components/launchers/NetworkCenter.qml")
@@ -255,6 +293,49 @@ ShellRoot {
             for (const f of shell.ncFields) f.text = "typed-secret"
             check("network: the form has masked fields to fill", shell.ncFields.length > 0)
             NetworkService.vpnConnect("uuid-l2tp", {})
+        },
+        function () {
+            const nc = shell.nc
+            if (!nc) return
+            NetworkService.vpnCancelNeed()
+            nc.resetVpnViews()
+            nc.view = "vpn"
+            nc.updateModels()
+            const vpnIdx = nc.navItems.findIndex(it => it.kind === "vpn")
+            check("network: /vpn has a selectable VPN", vpnIdx !== -1, JSON.stringify(nc.navItems))
+            NetworkService.vpnActive = false
+            NetworkService.vpnName = ""
+            nc.selIndex = vpnIdx
+            nc.activate()
+            check("network: activating a VPN opens the mode prompt", nc.modePromptOpen)
+            const mp = shell.findByName(nc.contentItem, "vpnModePrompt")
+            check("network: the mode prompt is reachable", mp !== null && mp.visible)
+            if (mp) { mp.sel = 0; mp.choose() }
+        },
+        function () {
+            const nc = shell.nc
+            if (!nc) return
+            check("network: the prompt's mode reaches the service",
+                  NetworkService.vpnNeedMode === "full", NetworkService.vpnNeedMode)
+            NetworkService.vpnCancelNeed()
+            nc.resetVpnViews()
+            const wgIdx = nc.navItems.findIndex(it => it.kind === "vpn" && nc.filteredVpn[it.idx].type === "wireguard")
+            check("network: the list carries the WireGuard profile", wgIdx !== -1, JSON.stringify(nc.navItems))
+            nc.selIndex = wgIdx
+            nc.activate()
+            check("network: WireGuard skips the mode prompt", !nc.modePromptOpen)
+            const vpnIdx = nc.navItems.findIndex(it => it.kind === "vpn")
+            NetworkService.vpnActive = true
+            NetworkService.vpnName = "Office"
+            nc.selIndex = vpnIdx
+            nc.activate()
+            check("network: an active VPN disconnects without the prompt", !nc.modePromptOpen)
+            NetworkService.vpnActive = false
+            NetworkService.vpnName = ""
+            NetworkService.helperAvailable = false
+            nc.activate()
+            check("network: without nm-vpn the prompt is skipped", !nc.modePromptOpen)
+            NetworkService.helperAvailable = true
         },
         function () {
             const nc = shell.nc

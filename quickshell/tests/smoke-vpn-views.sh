@@ -61,8 +61,11 @@ elif cmd in ("add", "update"):
 elif cmd == "import":
     out = {"ok": True, "uuid": "uuid-imported"}
 elif cmd == "connect":
-    has = "ipsec-psk" in (req.get("secrets") or {})
-    out = {"ok": True} if has else {"ok": False, "need": ["ipsec-psk"], "type": "l2tp"}
+    if req.get("uuid") == "uuid-wg":
+        out = {"ok": True}
+    else:
+        has = "ipsec-psk" in (req.get("secrets") or {})
+        out = {"ok": True} if has else {"ok": False, "need": ["ipsec-psk"], "type": "l2tp"}
 else:
     out = {"ok": False, "error": "usage"}
 print(json.dumps(out))
@@ -91,6 +94,8 @@ ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-1" for 
    "an Ask secret reaches nm-vpn on stdin")
 ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for c in connects),
    "the prompt's secret reaches nm-vpn on stdin")
+ok(any(c["req"].get("mode") == "full" for c in connects),
+   "the mode prompt's choice reaches nm-vpn")
 imports = [c for c in calls if c["argv"][:1] == ["import"]]
 ok(any(c["req"].get("type") == "openvpn" and c["req"].get("path", "").endswith("office.ovpn") for c in imports),
    "the .ovpn file is imported as openvpn")

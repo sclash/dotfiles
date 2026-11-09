@@ -55,8 +55,8 @@ The **Current Connection** status card (§3.1) and the scan/filter row are alway
 Native: no `nm-connection-editor`, no `nm-applet`. Design: `docs/superpowers/specs/2026-11-09-native-vpn-design.md`.
 
 * **List:** `nmcli -t -f NAME,UUID,TYPE connection show` rows whose type is `vpn` or `wireguard`: name, plus `active` when connected. An active WireGuard connection counts as the active VPN.
-* **Row keys:** `Enter` connect / disconnect · `e` edit · `x` delete (`y/n`).
-* **Connect:** `NetworkService.vpnConnect(uuid)` → `nm-vpn connect`. Secrets set to **Ask** come back as `need`. That covers flag `2`, and also `1` (agent-owned), since no agent is left to supply it. An inline prompt (`network/VpnSecretPrompt.qml`) asks for them: one masked field per secret, labelled from the schema, `Ctrl+s` show/hide, `Enter` next / connect, `Esc` cancel. It clears its fields at once, and the values go through `nmcli … passwd-file` on a pipe. The Current Connection card shows `Connecting to {name}…`.
+* **Row keys:** `Enter` connect (opens the route chooser) / disconnect · `e` edit · `x` delete (`y/n`).
+* **Connect:** activating a non-active VPN opens `network/VpnModePrompt.qml`: **All traffic through the VPN** (preselected) or **Only the VPN's own network**; `j/k` choose, `Enter` connects, `Esc` cancels. The choice goes to `nm-vpn connect` as `mode` (`full`/`split`) and is applied to `ipv4.never-default`/`ipv6.never-default` before activation. WireGuard and a missing `nm-vpn` skip the chooser and connect directly. `NetworkService.vpnConnect(uuid, secrets, mode)` → `nm-vpn connect`. Secrets set to **Ask** come back as `need`. That covers flag `2`, and also `1` (agent-owned), since no agent is left to supply it. An inline prompt (`network/VpnSecretPrompt.qml`) asks for them: one masked field per secret, labelled from the schema, `Ctrl+s` show/hide, `Enter` next / connect, `Esc` cancel. It clears its fields at once, and the values go through `nmcli … passwd-file` on a pipe. The chosen mode is kept across this second connect. The Current Connection card shows `Connecting to {name}…`.
 * **`Add VPN…`** opens `network/VpnTypeView.qml`: `Import from file…` first, then the installed types (every plugin in `networking.networkmanager.plugins`, plus WireGuard). Types without a schema show `advanced`.
 * **Form** (`network/VpnFormView.qml`): Name, the type's fields from `services/vpnSchema.js`, `Use only for resources on its network` (`ipv4.never-default`), then a collapsed **Advanced** section. Advanced lists every other `vpn.data` key as `key = value`; `+ Add row` adds one, with a `Data | Secret` chip; clearing a key removes it. Each secret has a **`Save | Ask`** chip (default Save). Saved secrets never come back: their box reads `saved · leave empty to keep`. Keys: `Tab`/`Shift+Tab`/`Enter` move, `Enter` on the last stop saves, `Space` toggles, `h`/`l` cycle choices, `Ctrl+s` show/hide, `Esc` back. `Esc` asks `Discard changes? y / n` when something changed. A WireGuard profile with several peers shows `N peers · re-import to change`. Editing never adds a setting the profile lacks (such as `ipsec-enabled`) unless that field is changed; the field shows what the plugin assumes when it's missing.
 * **Import** (`network/VpnImportView.qml`): config files from `~/Downloads` and `~/Documents` (depth 2, newest first), plus a path field; there's no file-picker window. The extension picks the type. When several installed types claim it, a short picker asks. The profile is created at once, with autoconnect off (like an added one, it connects only from here), and opens in the form; `Esc` there returns to the list.
@@ -85,7 +85,7 @@ function connectScanned(ssid: string, password?: string): void
 // known → nmcli connection up (password ignored); unknown → device wifi connect.
 function forget(name: string): void
 function rescanWifi(): void
-function vpnConnect(uuid: string, secrets?: var): void   // nm-vpn connect; Ask secrets → vpnNeed
+function vpnConnect(uuid: string, secrets?: var, mode?: string): void   // nm-vpn connect; mode full|split; Ask secrets → vpnNeed
 function vpnCancelNeed(): void
 function vpnDisconnect(uuid: string): void
 function vpnDelete(uuid: string): void
@@ -93,7 +93,7 @@ function vpnLoad(uuid: string, cb: function): void        // nm-vpn get (secret 
 function vpnSave(request: var, cb: function): void        // nm-vpn add | update
 function vpnImport(type: string, path: string, cb: function): void
 function refreshImportCandidates(): void
-// properties: helperAvailable, vpnTypes, vpnNeed, vpnNeedUuid, vpnNeedName, vpnNeedType, importCandidates
+// properties: helperAvailable, vpnTypes, vpnNeed, vpnNeedUuid, vpnNeedName, vpnNeedType, vpnNeedMode, importCandidates
 ```
 
 DBus `PropertiesChanged` or next poll propagates changes back to the `Wifi` icon.
@@ -109,6 +109,7 @@ DBus `PropertiesChanged` or next poll propagates changes back to the `Wifi` icon
 * [ ] Submitting the password closes the dialog immediately; Current Connection shows `"Connecting to {ssid}…"` until the attempt resolves.
 * [ ] Every new wifi connection appears in Known (NM default).
 * [ ] VPN add (every installed type), import (`.ovpn`, `.conf`), edit, delete and connect work in the shell. Saved secrets are never shown; each secret is Save or Ask; Ask prompts at connect.
+* [ ] Activating a VPN asks All traffic (default) or VPN only; the choice changes the default route; Ask secrets still connect.
 * [ ] No `nm-connection-editor` or `nm-applet` window ever opens (`networkmanagerapplet` is not installed).
 * [ ] An active WireGuard connection shows as the active VPN.
 * [ ] Vim nav + `/` filter + view commands + `r` rescan + `Esc` close all work.

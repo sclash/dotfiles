@@ -34,7 +34,7 @@ Rectangle {
         for (let i = 0; i < rep.count; i++) { const f = fieldAt(i); if (f) secrets[prompt.keys[i]] = f.text }
         const uuid = NetworkService.vpnNeedUuid
         clear()
-        NetworkService.vpnConnect(uuid, secrets)
+        NetworkService.vpnConnect(uuid, secrets, NetworkService.vpnNeedMode)
         prompt.done()
     }
     function cancel() { clear(); NetworkService.vpnCancelNeed(); prompt.done() }

@@ -37,6 +37,7 @@ QtObject {
     property string vpnNeedUuid: ""
     property string vpnNeedName: ""
     property string vpnNeedType: ""
+    property string vpnNeedMode: ""           // route choice kept across an Ask-secrets round trip
     property var importCandidates: []         // config files found by refreshImportCandidates()
     property var _helperCb: null
     property var _helperResult: null          // parsed answer, handed to the callback once the process has exited
@@ -123,7 +124,7 @@ QtObject {
     // Connects through nm-vpn. Secrets set to Ask come back as `need`: the
     // Network Center prompts and calls this again with them. Without nm-vpn,
     // plain nmcli (no prompt).
-    function vpnConnect(uuid, secrets) {
+    function vpnConnect(uuid, secrets, mode) {
         const v = root.vpnConnections.filter(x => x.uuid === uuid)[0]
         const name = v ? v.name : ""
         root.lastError = ""
@@ -134,7 +135,7 @@ QtObject {
         }
         root.connecting = true
         root.connectingSsid = name
-        root._runHelper("connect", { uuid: uuid, secrets: secrets || {} }, r => {
+        root._runHelper("connect", { uuid: uuid, mode: mode || "", secrets: secrets || {} }, r => {
             root.connecting = false
             root.connectingSsid = ""
             if (r.ok) root.vpnCancelNeed()
@@ -142,6 +143,7 @@ QtObject {
                 root.vpnNeedUuid = uuid
                 root.vpnNeedName = name
                 root.vpnNeedType = r.type || ""
+                root.vpnNeedMode = mode || ""
                 root.vpnNeed = r.need             // last: listeners see the fields above
             } else {
                 root.vpnCancelNeed()
@@ -151,7 +153,7 @@ QtObject {
             root.dataUpdated()
         })
     }
-    function vpnCancelNeed() { root.vpnNeed = []; root.vpnNeedUuid = ""; root.vpnNeedName = ""; root.vpnNeedType = "" }
+    function vpnCancelNeed() { root.vpnNeed = []; root.vpnNeedUuid = ""; root.vpnNeedName = ""; root.vpnNeedType = ""; root.vpnNeedMode = "" }
     function vpnLoad(uuid, cb) { root._runHelper("get", { uuid: uuid }, cb) }
     function vpnSave(request, cb) {
         root._runHelper(request.uuid ? "update" : "add", request, r => { if (r.ok) root.vpnProc.running = true; if (cb) cb(r) })
