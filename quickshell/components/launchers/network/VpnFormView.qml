@@ -23,6 +23,8 @@ Item {
     property var values: ({})
     property var modes: ({})
     property var stored: ({})
+    property var absent: ({})                 // schema keys the loaded profile lacks
+    property var touched: ({})                // fields edited since opening
     property var advanced: []
     property bool advancedOpen: false
     property int formRev: 0                   // rebuilds every stop
@@ -51,7 +53,7 @@ Item {
     function reset() {
         clearSecrets()
         type = ""; uuid = ""; profileName = ""; name = ""; nameInit = ""
-        values = ({}); modes = ({}); stored = ({}); advanced = []
+        values = ({}); modes = ({}); stored = ({}); absent = ({}); touched = ({}); advanced = []
         advancedOpen = false; dirty = false; busy = false; reveal = false
         formError = ""; confirmText = ""
         formRev++; advRev++
@@ -70,7 +72,7 @@ Item {
     function startEdit(profile) {
         reset()
         const s = Schema.fromProfile(profile)
-        values = s.values; modes = s.modes; stored = s.stored; advanced = s.advanced
+        values = s.values; modes = s.modes; stored = s.stored; absent = s.absent; advanced = s.advanced
         uuid = s.uuid; profileName = s.name; name = s.name; nameInit = s.name
         type = s.type
         advancedOpen = !Schema.hasSchema(s.type)
@@ -87,6 +89,7 @@ Item {
     }
     function fieldEdited(field, v) {
         if (field.kind !== "secret") values[field.key] = v
+        touched[field.key] = true
         dirty = true
         formError = ""
         if (field.kind === "bool" || field.kind === "choice") shownRev++
@@ -119,7 +122,7 @@ Item {
     function save() {
         if (busy || type === "") return
         const st = { type: type, uuid: uuid, name: name, values: values, modes: modes, stored: stored,
-                     secretValues: collectSecrets(), advanced: advanced }
+                     secretValues: collectSecrets(), advanced: advanced, absent: absent, touched: touched }
         const err = Schema.validate(st)
         if (err) {
             formError = err.message

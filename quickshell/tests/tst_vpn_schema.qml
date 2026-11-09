@@ -131,6 +131,57 @@ TestCase {
         compare(cp.stored, false)
         verify(cp.existing)
     }
+    // Keys a loaded profile lacks keep the plugin's meaning (absent
+    // ipsec-enabled = IPsec off), so a save leaves them out until edited.
+    function l2tpNoIpsec() {
+        return { uuid: "u", name: "Office", type: "l2tp",
+            data: { gateway: "g", user: "alice", "password-flags": "0" },
+            secrets: { password: "save" }, native: { "ipv4.never-default": "no" }, user: {} }
+    }
+    function editState(p) {
+        const s = Schema.fromProfile(p)
+        return { type: s.type, uuid: s.uuid, name: s.name, values: s.values, modes: s.modes, stored: s.stored,
+                 secretValues: {}, advanced: s.advanced, absent: s.absent, touched: {} }
+    }
+    function test_from_profile_absent_bool_reads_off_and_stays_absent() {
+        const st = editState(l2tpNoIpsec())
+        compare(st.values["ipsec-enabled"], false)
+        verify(st.absent["ipsec-enabled"])
+        verify(!st.absent.gateway)
+        st.name = "Office renamed"
+        const r = Schema.buildRequest(st)
+        compare(r.name, "Office renamed")
+        verify(!r.data.hasOwnProperty("ipsec-enabled"))
+        compare(r.data.gateway, "g")
+        compare(r.native["ipv4.never-default"], "no")
+    }
+    function test_absent_key_is_sent_once_edited() {
+        const st = editState(l2tpNoIpsec())
+        st.values["ipsec-enabled"] = true
+        st.touched["ipsec-enabled"] = true
+        compare(Schema.buildRequest(st).data["ipsec-enabled"], "yes")
+        st.values["ipsec-enabled"] = false
+        compare(Schema.buildRequest(st).data["ipsec-enabled"], "no")
+    }
+    function test_from_profile_absent_choice_and_bool_elsewhere() {
+        const ov = editState({ uuid: "o", name: "W", type: "openvpn", data: { remote: "r", cert: "/c", key: "/k" },
+                               secrets: {}, native: { "ipv4.never-default": "no" }, user: {} })
+        compare(ov.values["connection-type"], "tls")          // the plugin's meaning when absent
+        verify(Schema.fieldsFor("openvpn", ov.values).some(f => f.key === "cert"))   // showIf still works
+        verify(!Schema.buildRequest(ov).data.hasOwnProperty("connection-type"))
+        const sw = editState({ uuid: "s", name: "I", type: "strongswan", data: { address: "a", method: "eap" },
+                               secrets: {}, native: { "ipv4.never-default": "no" }, user: {} })
+        compare(sw.values.virtual, false)
+        verify(!Schema.buildRequest(sw).data.hasOwnProperty("virtual"))
+        const wg = editState({ uuid: "w", name: "H", type: "wireguard", data: {}, secrets: { "wireguard.private-key": "save" },
+                               native: { "ipv4.addresses": "10.0.0.2/32", "peer.public-key": "P", "peer.count": "1", "ipv4.never-default": "no" }, user: {} })
+        compare(wg.values["peer.allowed-ips"], "")
+        verify(!Schema.buildRequest(wg).native.hasOwnProperty("peer.allowed-ips"))
+    }
+    function test_new_profile_has_no_absent_keys() {
+        const r = Schema.buildRequest(l2tpState())
+        compare(r.data["ipsec-enabled"], "yes")
+    }
     function test_from_profile_unknown_type_is_all_advanced() {
         const s = Schema.fromProfile({ uuid: "u", name: "F", type: "fortisslvpn",
             data: { gateway: "g", "password-flags": "2" }, secrets: { password: "ask" }, native: {}, user: {} })

@@ -10,6 +10,10 @@
 // stored as "yes"/"no". WireGuard (`native: true`) and COMMON fields use the
 // setting paths nm-vpn understands. A type with no entry here is still usable:
 // its form is Name plus the Advanced rows.
+// `default` is for new profiles only. When an existing profile lacks a key,
+// the form shows `absent` (else off for a bool, the default for a choice,
+// empty otherwise) and a save leaves the key out until that field is edited:
+// the plugin's own meaning of a missing key (no IPsec, no inner IP, TLS) wins.
 // tests/test-vpn-schema-keys.sh reads this file line by line: keep each type
 // header (`    name: { … fields: [`) and each field (`{ key: "…", … }`) on one line.
 
@@ -32,7 +36,7 @@ var TYPES = {
     ] },
     openvpn: { label: "OpenVPN", service: "org.freedesktop.NetworkManager.openvpn", importExt: [".ovpn", ".conf"], fields: [
         { key: "remote", label: "Gateway", kind: "text", required: true, placeholder: "vpn.example.com:1194" },
-        { key: "connection-type", label: "Authentication", kind: "choice", default: "password", options: [{ value: "password", label: "Password" }, { value: "tls", label: "Certificates" }, { value: "password-tls", label: "Password and certificates" }, { value: "static-key", label: "Static key" }] },
+        { key: "connection-type", label: "Authentication", kind: "choice", default: "password", absent: "tls", options: [{ value: "password", label: "Password" }, { value: "tls", label: "Certificates" }, { value: "password-tls", label: "Password and certificates" }, { value: "static-key", label: "Static key" }] },
         { key: "username", label: "Username", kind: "text", showIf: { "connection-type": ["password", "password-tls"] } },
         { key: "password", label: "Password", kind: "secret", showIf: { "connection-type": ["password", "password-tls"] } },
         { key: "ca", label: "CA certificate", kind: "file", showIf: { "connection-type": ["password", "tls", "password-tls"] } },
@@ -118,11 +122,21 @@ function choiceLabel(field, value) {
     return o ? o.label : String(value || "")
 }
 
+// Form value shown for a key an existing profile lacks.
+function absentValue(f) {
+    if (f.absent !== undefined) return f.absent
+    if (f.kind === "bool") return false
+    if (f.kind === "choice" && f.default !== undefined) return f.default
+    return ""
+}
+
 // `nm-vpn get` profile → form state. Secret values never come back, only
 // their modes ("save" | "ask" | "unset"); `stored` marks saved ones.
+// `absent` marks the schema keys the profile lacks (see `absent` above).
 function fromProfile(p) {
     const name = p.type
-    const values = defaults(name)
+    const values = {}
+    const absent = {}
     const modes = defaultModes(name)
     const stored = {}
     const data = p.data || {}
@@ -130,6 +144,11 @@ function fromProfile(p) {
     const src = {}
     for (const k in data) src[k] = data[k]
     for (const k in native) src[k] = native[k]
+    allFields(name).forEach(f => {
+        if (f.kind === "secret" || src.hasOwnProperty(f.key)) return
+        values[f.key] = absentValue(f)
+        absent[f.key] = true
+    })
     for (const k in src) {
         const f = fieldByKey(name, k)
         if (f && f.kind === "secret") continue
@@ -147,17 +166,20 @@ function fromProfile(p) {
         advanced.push({ key: k, value: String(data[k]), secret: false, mode: "save", stored: false, existing: true })
     }
     advanced.sort((a, b) => a.key < b.key ? -1 : (a.key > b.key ? 1 : 0))
-    return { type: name, uuid: p.uuid || "", name: p.name || "", values: values, modes: modes, stored: stored, advanced: advanced }
+    return { type: name, uuid: p.uuid || "", name: p.name || "", values: values, modes: modes, stored: stored, advanced: advanced, absent: absent }
 }
 
 // Form state → `nm-vpn add|update` request. Hidden fields are left out, so on
 // update nm-vpn removes their data keys; secrets left out are kept as they are.
+// Keys in `state.absent` stay out unless `state.touched` marks them edited.
 function buildRequest(state) {
     const name = state.type
     const native = isNative(name)
     const req = { type: name, name: String(state.name || "").trim(), data: {}, secrets: {}, native: {}, user: {} }
     if (state.uuid) req.uuid = state.uuid
     const sv = state.secretValues || {}
+    const absent = state.absent || {}
+    const touched = state.touched || {}
     const shown = fieldsFor(name, state.values)
     shown.forEach(f => {
         if (f.kind === "secret") {
@@ -165,6 +187,7 @@ function buildRequest(state) {
             req.secrets[f.key] = { mode: mode, value: String(sv[f.key] || "") }
             return
         }
+        if (absent[f.key] && !touched[f.key]) return
         const v = state.values[f.key]
         const s = f.kind === "bool" ? (toBool(v) ? "yes" : "no") : String(v === undefined || v === null ? "" : v).trim()
         if (s === "") return
