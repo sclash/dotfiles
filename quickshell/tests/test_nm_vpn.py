@@ -75,6 +75,19 @@ class PureLogic(unittest.TestCase):
               "native": {"peer.public-key": "P", "wireguard.private-key-flags": "2", "peer.preshared-key-flags": "2"}, "user": {}}
         self.assertEqual(nv.ask_keys(wg), ["wireguard.private-key"])   # a peer PSK is never asked
 
+    def test_ask_keys_openvpn_challenge_only_with_static_challenge(self):
+        # The OpenVPN importer adds challenge-response-flags 2 to every file;
+        # nm-openvpn only asks for it when the profile has a static-challenge.
+        ovpn = {"uuid": "o", "name": "Work", "type": "openvpn", "service": "org.freedesktop.NetworkManager.openvpn",
+                "data": {"remote": "r", "connection-type": "password", "password-flags": "2",
+                         "challenge-response-flags": "2"},
+                "secrets": {}, "native": {}, "user": {}}
+        self.assertEqual(nv.ask_keys(ovpn), ["password"])
+        ovpn["data"]["static-challenge"] = "Enter code, 1"
+        self.assertEqual(nv.ask_keys(ovpn), ["challenge-response", "password"])
+        other = l2tp(data={"gateway": "g", "challenge-response-flags": "2"})
+        self.assertEqual(nv.ask_keys(other), ["challenge-response"])   # only OpenVPN is special-cased
+
     def test_apply_keeps_flags_and_removes_absent_data(self):
         rec = nv.apply_request(l2tp(), edit(name="Office 2"))
         self.assertEqual(rec["name"], "Office 2")

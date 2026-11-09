@@ -95,6 +95,11 @@ pkgs.testers.runNixOSTest {
         p = ok(vpn("get", {"uuid": uuid}))["profile"]
         assert p["type"] == "openvpn" and "vpn.example.invalid" in p["data"].get("remote", ""), p
         print("VM FINDING imported openvpn: " + json.dumps(p))
+        # imports are created with autoconnect off, like added profiles
+        assert machine.succeed(f"nmcli -g connection.autoconnect connection show uuid {uuid}").strip() == "no"
+        # the importer marks challenge-response Ask, but without a static-challenge it is never asked
+        r = vpn("connect", {"uuid": uuid})
+        assert r == {"ok": False, "need": ["password"], "type": "openvpn"}, r
         # a profile with no stored secrets can still be edited (secrets read as empty)
         ok(vpn("update", {"uuid": uuid, "type": "openvpn", "name": "office-renamed", "secrets": {}, "native": {}, "user": {},
                           "data": {k: v for k, v in p["data"].items() if not k.endswith("-flags")}}))
@@ -127,6 +132,7 @@ pkgs.testers.runNixOSTest {
         uuid2 = ok(vpn("import", {"type": "wireguard", "path": "/tmp/two.conf"}))["uuid"]
         p = ok(vpn("get", {"uuid": uuid2}))["profile"]
         assert p["native"]["peer.count"] == "2", p
+        assert machine.succeed(f"nmcli -g connection.autoconnect connection show uuid {uuid2}").strip() == "no"
         ok(vpn("update", {"uuid": uuid2, "type": "wireguard", "name": "wg-renamed", "data": {}, "secrets": {}, "user": {},
                           "native": {"ipv4.addresses": "10.8.0.2/32", "ipv4.never-default": "no"}}))
         # this nmcli prints every peer on one line: "KEY allowed-ips=... endpoint=..., KEY ..."

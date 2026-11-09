@@ -33,6 +33,7 @@ FLAG_NOT_SAVED = 2
 FLAG_NOT_REQUIRED = 4
 ASK_FLAGS = FLAG_AGENT_OWNED | FLAG_NOT_SAVED
 WIREGUARD = "wireguard"
+OPENVPN = "openvpn"
 WG_SECRETS = ("wireguard.private-key", "peer.preshared-key")
 WG_ASKABLE = ("wireguard.private-key",)
 NATIVE_KEEP = ("peer.count", "connection.interface-name")
@@ -125,10 +126,15 @@ def describe(rec):
 
 
 def ask_keys(rec):
-    """Secrets a connect must be given (a WireGuard peer PSK is never asked)."""
+    """Secrets a connect must be given (a WireGuard peer PSK is never asked,
+    nor an OpenVPN challenge-response without a static-challenge)."""
     keys = [k for k, m in describe(rec)["secrets"].items() if m == "ask"]
     if rec["type"] == WIREGUARD:
         keys = [k for k in keys if k in WG_ASKABLE]
+    elif rec["type"] == OPENVPN and not rec["data"].get("static-challenge"):
+        # The importer marks challenge-response Ask on every file; nm-openvpn
+        # only asks for it when the profile has a static challenge.
+        keys = [k for k in keys if k != "challenge-response"]
     return sorted(keys)
 
 
@@ -697,6 +703,9 @@ class LibnmBackend:
                 conn = p["_editor"].import_(path)
         except GLib.Error as e:
             raise Failure(e.message)
+        # Like create(): profiles are connected on purpose from the Network
+        # Center, never on their own (a WireGuard import would come up at once).
+        conn.get_setting_connection().set_property("autoconnect", False)
         return self._add(conn)
 
 
