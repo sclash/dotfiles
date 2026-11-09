@@ -224,6 +224,27 @@ ShellRoot {
             check("form: switching a secret to Ask clears it", ps.asking && pf.length === 1 && pf[0].text === "" && f.collectSecrets()["ipsec-psk"] === undefined, JSON.stringify(f.collectSecrets()))
             f.destroy()
         },
+        function () {
+            check("service: no nm-connection-editor entry points left",
+                  typeof NetworkService.launchEditor === "undefined" && typeof NetworkService.vpnAdd === "undefined")
+            const c = Qt.createComponent("components/launchers/NetworkCenter.qml")
+            check("NetworkCenter.qml compiles", c.status === Component.Ready, c.errorString())
+            if (c.status !== Component.Ready) return
+            const nc = c.createObject(shell)
+            check("NetworkCenter instantiates closed", nc !== null && nc.isOpen === false)
+            if (!nc) return
+            check("network: starts on the main view", nc.top === "home")
+            nc.openAdd()
+            check("network: Add VPN opens the type picker", nc.top === "types", nc.top)
+            nc.openForm("openvpn")
+            check("network: picking a type opens the form above it", nc.top === "form" && nc.stack.length === 2, JSON.stringify(nc.stack))
+            check("network: views below the top park left", nc.parkFor("types") === -60 && nc.parkFor("home") === -60 && nc.parkFor("import") === 60)
+            nc.popView()
+            check("network: Esc returns one level", nc.top === "types")
+            nc.resetVpnViews()
+            check("network: closing resets the stack", nc.top === "home" && nc.stack.length === 0)
+            nc.destroy()
+        },
         // --- view checks are added below by later tasks ---
         function () {
             console.log("SMOKE DONE failures=" + shell.failures)

@@ -204,8 +204,6 @@ QtObject {
     function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
     function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
     function refresh() { root.pollProc.running = true; root.knownProc.running = true; root.vpnProc.running = true; if (root.helperAvailable) root.loadVpnTypes() }
-    function launchEditor() { root.vpnEditorProc.running = true }
-    function vpnAdd() { root.vpnAddProc.running = true }
 
     property Process pollProc: Process {
         running: true
@@ -339,8 +337,6 @@ QtObject {
             }
         }
     }
-    property Process vpnEditorProc: Process { command: ["nm-connection-editor"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
-    property Process vpnAddProc: Process { command: ["nm-connection-editor", "-c", "-t", "vpn"]; stdout: StdioCollector { onStreamFinished: { root.vpnProc.running = true; root.knownProc.running = true } } }
 
     // nm-vpn is its own package (quickshell/scripts/nm-vpn.nix). Without it,
     // VPNs can still be listed, connected and deleted through nmcli.

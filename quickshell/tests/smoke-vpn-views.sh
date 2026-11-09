@@ -73,6 +73,7 @@ chmod +x "$tmp/bin/nmcli" "$tmp/bin/nm-vpn"
 HOME="$tmp/hm" PATH="$tmp/bin:$PATH" NMVPN_LOG="$tmp/nm-vpn.log" QS_NO_POLKIT_AGENT=1 \
   QT_QPA_PLATFORM=offscreen timeout 120 quickshell -p "$root/shell.qml" > "$tmp/log" 2>&1
 
+if grep -rn "nm-connection-editor" "$here/../components" "$here/../services"; then echo "FAIL nm-connection-editor is still referenced"; exit 1; fi
 grep -oE 'SMOKE (OK|FAIL|DONE).*' "$tmp/log"
 fail=0
 python3 - "$tmp/nm-vpn.log" <<'PY' || fail=1

@@ -6,6 +6,8 @@ import Quickshell.Io
 import Quickshell.Wayland
 import "../../theme"
 import "../../services"
+import "../../services/vpnSchema.js" as Schema
+import "network"
 
 WlrLayershell {
     id: root
@@ -17,8 +19,72 @@ WlrLayershell {
     property var navItems: []
     property int selIndex: 0
     function open(){ isOpen=true }
-    function close(){ isOpen=false; filterActive=false }
+    function close(){ isOpen=false; filterActive=false; resetVpnViews() }
     function toggle(){ if(isOpen) close(); else open() }
+
+    // VPN views (docs/superpowers/specs/2026-11-09-native-vpn-design.md §9):
+    // a stack above the main view. Views below the top park at x -60, the
+    // rest at +60 (STYLE.md §2.5).
+    property var stack: []                    // "types" | "form" | "import"
+    readonly property string top: stack.length > 0 ? stack[stack.length - 1] : "home"
+    readonly property string titleSuffix: top === "types" ? "  ·  Add VPN"
+        : top === "import" ? "  ·  Import"
+        : top === "form" ? (formView.isEdit ? "  ·  Edit " + formView.profileName : "  ·  Add " + Schema.typeLabel(formView.type))
+        : ""
+    function parkFor(name) {
+        if (name === "home") return -60
+        const i = stack.indexOf(name)
+        return i !== -1 && i < stack.length - 1 ? -60 : 60
+    }
+    function currentView() { return top === "types" ? typeView : (top === "form" ? formView : importView) }
+    function refocusTop() {
+        Qt.callLater(() => {
+            if (root.top === "home") mainCol.forceActiveFocus()
+            else if (root.top === "form") formView.focusFirst()
+            else viewHost.forceActiveFocus()
+        })
+    }
+    function pushView(name) { stack = stack.concat([name]); refocusTop() }
+    function popView() { stack = stack.slice(0, stack.length - 1); refocusTop() }
+    function resetVpnViews() { stack = []; typeView.reset(); formView.reset(); importView.reset(); secretPrompt.clear() }
+    function openAdd() {
+        if (!NetworkService.helperAvailable) { NetworkService.lastError = "nm-vpn is not installed — run update"; return }
+        typeView.reset()
+        pushView("types")
+    }
+    function openForm(type) { formView.startAdd(type); pushView("form") }
+    function openImport() { importView.reset(); NetworkService.refreshImportCandidates(); pushView("import") }
+    function editProfile(uuid) {
+        NetworkService.vpnLoad(uuid, r => {
+            if (!r.ok) { NetworkService.reportError(r.error || "Could not read the VPN profile"); root.stack = []; root.refocusTop(); return }
+            importView.reset()
+            formView.startEdit(r.profile)
+            root.stack = ["form"]                 // after an import too: Esc returns to the list
+            root.refocusTop()
+        })
+    }
+    function editSelected() {
+        const it = navItems[selIndex]
+        if (!it || it.kind !== "vpn") return
+        const v = filteredVpn[it.idx]
+        if (!v) return
+        if (!NetworkService.helperAvailable) { NetworkService.lastError = "nm-vpn is not installed — run update"; return }
+        editProfile(v.uuid)
+    }
+    function formSaved() { formView.reset(); stack = []; NetworkService.refresh(); refocusTop() }
+
+    // A view slot of the stack (STYLE.md §2.5 slide + cross-fade).
+    component Slide: Item {
+        property string name: ""
+        readonly property bool active: root.top === name
+        width: parent ? parent.width : 0
+        x: active ? 0 : root.parkFor(name)
+        opacity: active ? 1 : 0
+        enabled: active
+        visible: opacity > 0.01
+        Behavior on x { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+    }
 
     anchors { top:true; bottom:true; left:true; right:true }
     color: "transparent"
@@ -28,8 +94,9 @@ WlrLayershell {
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
 
     Rectangle {
-        width: 640
+        width: 620
         height: Math.min(640, mainCol.implicitHeight + Theme.padL*2)
+        Behavior on height { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
         anchors.centerIn: parent
         radius: Theme.roundingLauncher
         color: Theme.bgLauncher
@@ -55,8 +122,23 @@ WlrLayershell {
                 width: scrollView.width
                 spacing: Theme.gapM
                 focus: true
-                Text { text: "Network"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2 }
+                Text { text: "Network" + root.titleSuffix; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fgMuted; font.capitalization: Font.AllUppercase; font.letterSpacing: 1.2 }
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+
+            Item {
+                id: viewHost
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.top === "types" ? typeView.implicitHeight
+                    : root.top === "form" ? formView.implicitHeight
+                    : root.top === "import" ? importView.implicitHeight
+                    : homeCol.implicitHeight
+            Slide {
+                name: "home"
+                implicitHeight: homeCol.implicitHeight
+            ColumnLayout {
+                id: homeCol
+                width: parent.width
+                spacing: Theme.gapM
 
             RowLayout {
                 Layout.fillWidth: true
@@ -354,21 +436,18 @@ WlrLayershell {
                 color: isSel ? Theme.bgSelected : Theme.bgHover
                 border.color: isSel ? Theme.borderSelected : Theme.border
                 border.width: 1
-                Text { anchors.centerIn: parent; text: "Add VPN…"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                MouseArea { anchors.fill: parent; onClicked: NetworkService.vpnAdd() }
+                Text {
+                    anchors.centerIn: parent
+                    text: NetworkService.helperAvailable ? "Add VPN…" : "Add VPN… · Not available"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 11
+                    color: NetworkService.helperAvailable ? Theme.fg : Theme.fgDim
+                }
+                MouseArea { anchors.fill: parent; onClicked: root.openAdd() }
             }
-            Rectangle {
-                id: editorRow
-                visible: root.view === "vpn"
-                Layout.fillWidth: true
-                height: 32
-                radius: Theme.roundingItem
-                readonly property bool isSel: root.navItems[root.selIndex] !== undefined && root.navItems[root.selIndex].kind === "editor"
-                color: isSel ? Theme.bgSelected : Theme.bgHover
-                border.color: isSel ? Theme.borderSelected : Theme.border
-                border.width: 1
-                Text { anchors.centerIn: parent; text: "Open connection editor…"; font.family: Theme.fontFamily; font.pixelSize: 11; color: Theme.fg }
-                MouseArea { anchors.fill: parent; onClicked: NetworkService.launchEditor() }
+            VpnSecretPrompt {
+                id: secretPrompt
+                onDone: mainCol.forceActiveFocus()
             }
             Rectangle {
                 id: pwdDialog
@@ -507,6 +586,7 @@ WlrLayershell {
                 text: {
                     if (confirmText) return confirmText
                     if (NetworkService.busy) return "Working…"
+                    if (root.view === "vpn") return "j/k · Enter connect · e edit · x delete · /nearby /known /vpn · Esc back"
                     return "j/k · Enter act · /nearby /known /vpn · x delete · d disc · r rescan · Esc back · Esc close"
                 }
                 font.family: Theme.fontFamily
@@ -514,15 +594,54 @@ WlrLayershell {
                 color: confirmText ? Theme.critical : (NetworkService.busy ? Theme.fgMuted : Theme.fgDim)
                 Layout.alignment: Qt.AlignHCenter
             }
+            }   // homeCol
+            }   // Slide home
+                Slide {
+                    name: "types"
+                    implicitHeight: typeView.implicitHeight
+                    VpnTypeView {
+                        id: typeView
+                        width: parent.width
+                        onPickType: (t) => root.openForm(t)
+                        onImportRequested: root.openImport()
+                        onBack: root.popView()
+                        onRefocus: viewHost.forceActiveFocus()
+                    }
+                }
+                Slide {
+                    name: "form"
+                    implicitHeight: formView.implicitHeight
+                    VpnFormView {
+                        id: formView
+                        width: parent.width
+                        onSaved: root.formSaved()
+                        onBack: root.popView()
+                        onRefocus: viewHost.forceActiveFocus()
+                    }
+                }
+                Slide {
+                    name: "import"
+                    implicitHeight: importView.implicitHeight
+                    VpnImportView {
+                        id: importView
+                        width: parent.width
+                        onImported: (uuid) => root.editProfile(uuid)
+                        onBack: root.popView()
+                        onRefocus: viewHost.forceActiveFocus()
+                    }
+                }
+            }   // viewHost
         }
         }
         Keys.onPressed: (e)=>{
+            if (root.top !== "home") { root.currentView().handleKey(e); return }
             if (confirmText !== "") {
                 if(e.key===Qt.Key_Y) { confirmYes(); e.accepted=true; return }
                 else if(e.key===Qt.Key_N || e.key===Qt.Key_Escape) { confirmText=""; e.accepted=true; return }
             }
             if(e.key===Qt.Key_Escape) {
-                if(pwdDialog.visible){ cancelPwd(); e.accepted=true }
+                if(secretPrompt.visible){ secretPrompt.cancel(); e.accepted=true }
+                else if(pwdDialog.visible){ cancelPwd(); e.accepted=true }
                 else if(filterActive){ filterActive=false; clearFilter(); mainCol.forceActiveFocus(); e.accepted=true }
                 else if(root.view !== "nearby"){ root.view="nearby"; updateModels(); e.accepted=true }
                 else root.close()
@@ -533,11 +652,12 @@ WlrLayershell {
             else if(e.key===Qt.Key_Return || e.key===Qt.Key_Enter) { root.activate(); e.accepted=true }
             else if(e.key===Qt.Key_D) { NetworkService.disconnect(); e.accepted=true }
             else if(e.key===Qt.Key_X) { root.requestDelete(); e.accepted=true }
+            else if(e.key===Qt.Key_E) { root.editSelected(); e.accepted=true }
             else if(e.text==="/") { filterActive=true; filterField.forceActiveFocus(); e.accepted=true }
             else if(e.key===Qt.Key_R) { NetworkService.rescanWifi(); e.accepted=true }
         }
     }
-    onIsOpenChanged: if(isOpen) { NetworkService.lastError = ""; NetworkService.refresh(); NetworkService.rescanWifi(); filterField.text=""; root.view="nearby"; selIndex=0; confirmText=""; updateModels(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
+    onIsOpenChanged: if(isOpen) { root.resetVpnViews(); NetworkService.lastError = ""; NetworkService.refresh(); NetworkService.rescanWifi(); filterField.text=""; root.view="nearby"; selIndex=0; confirmText=""; updateModels(); Qt.callLater(()=> mainCol.forceActiveFocus()) }
     property var filteredKnown: []
     property var filteredScan: []
     property var filteredVpn: []
@@ -621,7 +741,6 @@ WlrLayershell {
         else if(it.kind==="power") anchor = powerBtn
         else if(it.kind==="scan") anchor = scanBtn
         else if(it.kind==="vpnAdd") anchor = vpnAddRow
-        else if(it.kind==="editor") anchor = editorRow
         if(anchor && scrollView) Qt.callLater(()=> scrollToAnchor(anchor))
     }
     function scrollToAnchor(item){
@@ -641,8 +760,7 @@ WlrLayershell {
         else if(it.kind==="known"){ const n=filteredKnown[it.idx]; if(n) NetworkService.connectKnown(n.uuid) }
         else if(it.kind==="nearby"){ const n=filteredScan[it.idx]; if(n) connectNearby(n) }
         else if(it.kind==="vpn"){ const v=filteredVpn[it.idx]; if(v){ if(NetworkService.vpnActive && NetworkService.vpnName===v.name) NetworkService.vpnDisconnect(v.uuid); else NetworkService.vpnConnect(v.uuid) } }
-        else if(it.kind==="vpnAdd"){ NetworkService.vpnAdd() }
-        else if(it.kind==="editor"){ NetworkService.launchEditor() }
+        else if(it.kind==="vpnAdd"){ root.openAdd() }
     }
     function updateModels(){
         const raw = filterField.text.trim().toLowerCase()
@@ -676,11 +794,21 @@ WlrLayershell {
         items.push({kind:"scan"})
         if(root.view==="nearby"){ for(let i=0;i<s.length;i++) items.push({kind:"nearby", idx:i}) }
         else if(root.view==="known"){ for(let i=0;i<k.length;i++) items.push({kind:"known", idx:i}) }
-        else if(root.view==="vpn"){ for(let i=0;i<v.length;i++) items.push({kind:"vpn", idx:i}); items.push({kind:"vpnAdd"}); items.push({kind:"editor"}) }
+        else if(root.view==="vpn"){ for(let i=0;i<v.length;i++) items.push({kind:"vpn", idx:i}); items.push({kind:"vpnAdd"}) }
         navItems=items
         selIndex=Math.max(0, Math.min(selIndex, items.length-1))
         Qt.callLater(()=> ensureVisible(selIndex))
     }
-    Connections { target: NetworkService; function onDataUpdated(){ updateModels() } }
+    Connections {
+        target: NetworkService
+        function onDataUpdated(){ updateModels() }
+        function onVpnNeedChanged(){
+            if (NetworkService.vpnNeed.length === 0 || !root.isOpen) return
+            root.stack = []
+            root.view = "vpn"
+            root.updateModels()
+            Qt.callLater(() => secretPrompt.focusFirst())
+        }
+    }
     Component.onCompleted: updateModels()
 }
