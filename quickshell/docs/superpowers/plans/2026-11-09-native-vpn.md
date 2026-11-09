@@ -14,6 +14,9 @@
 - `import` is a reserved word for Qt 6.11's QML parser: quote every `import` object key (`"import":`) and use `t["import"]` in all QML/JS.
 - SSTP is dropped: `networkmanager-sstp` is flagged insecure (CVE-2026-91838) in the pinned nixpkgs and broke evaluation of the whole system. It isn't installed, has no schema entry, and docs must not list it as offered. Spec §11, §13 and §14 mention it and are amended in Task 10.
 - `nixos/tests/test-vpn.sh` also asserts that the whole system evaluates (`systemEvaluates`).
+- `VpnChip`'s property is `isSecond`, not `onSecond`: a property named `on<Name>` clashes with QML's change handler for `<name>`, so the chip failed to load.
+- `NetworkService` runs a helper callback only after the helper process has exited, so a callback can start the next request.
+- `nixos/configuration.nix` creates an empty `/etc/strongswan.conf`: without it charon-nm and nm-l2tp's IPsec starter can't start.
 - `LibnmBackend.load()` marks `secrets_unreadable` when the secrets fetch fails, and `save()` then refuses (fix approved by the user).
 
 **Plan 2 (not this plan):** the OpenConnect plugin and its login step (spec §10). It's written after Task 5, because it depends on two answers the VM test gives: whether `passwd-file` works through a pipe, and whether `nm-openconnect` accepts `form:*` secrets. Until then `networkmanager-openconnect` isn't installed, so nothing half-works.
