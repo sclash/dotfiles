@@ -69,7 +69,14 @@
   # wifi backend defaults to wpa_supplicant: iwd renamed the interface
   # (wlp1s0 -> wlan0), breaking existing connection profiles, and failed
   # SAE handshakes against WPA3-transition hotspots.
-  networking.networkmanager.plugins = with pkgs; [ networkmanager-l2tp ];
+  # VPN types the Quickshell Network Center offers (/vpn); WireGuard is
+  # built into NetworkManager.
+  networking.networkmanager.plugins = with pkgs; [
+    networkmanager-openvpn
+    networkmanager-strongswan
+    networkmanager-l2tp
+    networkmanager-sstp
+  ];
   services.strongswan.enable = true;
 
   nix.settings.experimental-features = [

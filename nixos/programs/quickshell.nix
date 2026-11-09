@@ -26,6 +26,11 @@ let
   identity-passwd = pkgs.writers.writePython3Bin "identity-passwd" {
     flakeIgnore = [ "E501" ];
   } (builtins.readFile ../../quickshell/scripts/identity-passwd.py);
+
+  # VPN profiles for the Network Center (NetworkService.qml): libnm through
+  # PyGObject, secrets on stdin only. Tested by quickshell/tests/test-nm-vpn.sh
+  # and nixos/tests/test-vpn-vm.sh.
+  nm-vpn = import ../../quickshell/scripts/nm-vpn.nix { inherit pkgs; };
 in
 {
   programs.quickshell = {
@@ -77,6 +82,7 @@ in
     wl-gammarelay-rs   # per-output gamma brightness and color temperature
     gnome-network-displays # Miracast/Chromecast daemon for ScreenCastService
     identity-passwd    # password changes for IdentityService (Identity Manager)
+    nm-vpn             # VPN add/import/edit/connect for NetworkService (Network Center)
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
