@@ -24,6 +24,7 @@ mkdir -p "$tmp/bin"
 cat > "$tmp/bin/nmcli" <<'STUB'
 #!/bin/sh
 # Stand-in nmcli: three saved profiles and nothing else.
+printf '%s\n' "$*" >> "$NMCLI_LOG"
 case "$*" in
   *"connection show"*) printf 'Office:uuid-l2tp:vpn\nHome WG:uuid-wg:wireguard\nCafe:uuid-wifi:802-11-wireless\n' ;;
 esac
@@ -72,14 +73,15 @@ print(json.dumps(out))
 STUB
 chmod +x "$tmp/bin/nmcli" "$tmp/bin/nm-vpn"
 : > "$tmp/nm-vpn.log"
+: > "$tmp/nmcli.log"
 
-HOME="$tmp/hm" PATH="$tmp/bin:$PATH" NMVPN_LOG="$tmp/nm-vpn.log" QS_NO_POLKIT_AGENT=1 \
+HOME="$tmp/hm" PATH="$tmp/bin:$PATH" NMVPN_LOG="$tmp/nm-vpn.log" NMCLI_LOG="$tmp/nmcli.log" QS_NO_POLKIT_AGENT=1 \
   QT_QPA_PLATFORM=offscreen timeout 120 quickshell -p "$root/shell.qml" > "$tmp/log" 2>&1
 
 if grep -rn "nm-connection-editor" "$here/../components" "$here/../services"; then echo "FAIL nm-connection-editor is still referenced"; exit 1; fi
 grep -oE 'SMOKE (OK|FAIL|DONE).*' "$tmp/log"
 fail=0
-python3 - "$tmp/nm-vpn.log" <<'PY' || fail=1
+python3 - "$tmp/nm-vpn.log" "$tmp/nmcli.log" <<'PY' || fail=1
 import json, sys
 calls = [json.loads(l) for l in open(sys.argv[1]) if l.strip()]
 bad = 0
@@ -96,6 +98,11 @@ ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for 
    "the prompt's secret reaches nm-vpn on stdin")
 ok(any(c["req"].get("mode") == "full" for c in connects),
    "the mode prompt's choice reaches nm-vpn")
+ok(any(c["req"].get("mode") == "split" and (c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for c in connects),
+   "the selected mode reaches the connect that carries the prompt's secret")
+nmcli = open(sys.argv[2]).read().splitlines()
+ok(any("connection down uuid uuid-l2tp" in l for l in nmcli),
+   "an active VPN disconnects through nmcli")
 imports = [c for c in calls if c["argv"][:1] == ["import"]]
 ok(any(c["req"].get("type") == "openvpn" and c["req"].get("path", "").endswith("office.ovpn") for c in imports),
    "the .ovpn file is imported as openvpn")

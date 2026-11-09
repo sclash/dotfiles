@@ -151,7 +151,7 @@ ShellRoot {
             check("import: a second Esc goes back", back)
             iv.destroy()
             shell.sp = shell.make("VpnSecretPrompt.qml")
-            NetworkService.vpnConnect("uuid-l2tp", {})
+            NetworkService.vpnConnect("uuid-l2tp", {}, "split")
         },
         function () {
             const sp = shell.sp
@@ -253,6 +253,8 @@ ShellRoot {
             check("mode prompt: opens at All traffic", shell.mp.visible && shell.mp.selectedMode === "full")
             shell.key(shell.mp, Qt.Key_J)
             check("mode prompt: j selects VPN-only", shell.mp.selectedMode === "split")
+            check("mode prompt: unrelated keys are swallowed", shell.key(shell.mp, Qt.Key_X))
+            check("mode prompt: X does not change the choice", shell.mp.selectedMode === "split")
             shell.key(shell.mp, Qt.Key_Return)
             check("mode prompt: Enter emits the choice",
                   got.length === 1 && got[0][0] === "uuid-l2tp" && got[0][1] === "split", JSON.stringify(got))
@@ -310,13 +312,29 @@ ShellRoot {
             check("network: activating a VPN opens the mode prompt", nc.modePromptOpen)
             const mp = shell.findByName(nc.contentItem, "vpnModePrompt")
             check("network: the mode prompt is reachable", mp !== null && mp.visible)
+            nc.close()
+            nc.open()
+            nc.view = "vpn"
+            nc.updateModels()
+            check("network: reopening does not restore a stale mode prompt", !nc.modePromptOpen)
+            NetworkService.vpnActive = false
+            NetworkService.vpnName = ""
+            nc.selIndex = nc.navItems.findIndex(it => it.kind === "vpn")
+            nc.activate()
+            check("network: reactivating reopens the mode prompt", nc.modePromptOpen)
+        },
+        function () {
+            const nc = shell.nc
+            if (!nc) return
+            const mp = shell.findByName(nc.contentItem, "vpnModePrompt")
             if (mp) { mp.sel = 0; mp.choose() }
         },
         function () {
             const nc = shell.nc
             if (!nc) return
             check("network: the prompt's mode reaches the service",
-                  NetworkService.vpnNeedMode === "full", NetworkService.vpnNeedMode)
+                  NetworkService.vpnNeedMode === "full",
+                  JSON.stringify({ mode: NetworkService.vpnNeedMode, need: NetworkService.vpnNeed, err: NetworkService.lastError }))
             NetworkService.vpnCancelNeed()
             nc.resetVpnViews()
             const wgIdx = nc.navItems.findIndex(it => it.kind === "vpn" && nc.filteredVpn[it.idx].type === "wireguard")

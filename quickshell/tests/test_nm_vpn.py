@@ -336,6 +336,16 @@ class Cli(unittest.TestCase):
         self.assertEqual(self.run_cli("connect", {"uuid": "u-office"}), {"ok": True})
         self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "yes")
 
+    def test_connect_empty_mode_leaves_profile_unchanged(self):
+        self.saved_psk()
+        with open(self.state) as f:
+            st = json.load(f)
+        st["profiles"]["u-office"]["native"]["ipv4.never-default"] = "yes"
+        with open(self.state, "w") as f:
+            json.dump(st, f)
+        self.assertEqual(self.run_cli("connect", {"uuid": "u-office", "mode": ""}), {"ok": True})
+        self.assertEqual(self.stored("u-office")["native"]["ipv4.never-default"], "yes")
+
     def test_connect_mode_is_not_applied_when_secrets_are_missing(self):
         r = self.run_cli("connect", {"uuid": "u-office", "mode": "split"})
         self.assertEqual(r, {"ok": False, "need": ["ipsec-psk"], "type": "l2tp"})

@@ -49,7 +49,7 @@ WlrLayershell {
     function popView() { stack = stack.slice(0, stack.length - 1); refocusTop() }
     // Clear the stack and every view that leaves it (typed secrets die with them).
     function leaveViews() { stack = []; typeView.reset(); formView.reset(); importView.reset() }
-    function resetVpnViews() { leaveViews(); secretPrompt.clear() }
+    function resetVpnViews() { leaveViews(); secretPrompt.clear(); modePrompt.close() }
     function openAdd() {
         if (!NetworkService.helperAvailable) { NetworkService.lastError = "nm-vpn is not installed — run update"; return }
         typeView.reset()
@@ -470,6 +470,7 @@ WlrLayershell {
             }
             VpnModePrompt {
                 id: modePrompt
+                visible: modePrompt.uuid !== "" && root.view === "vpn"
                 onPicked: (uuid, mode) => {
                     NetworkService.vpnConnect(uuid, {}, mode)
                     Qt.callLater(() => mainCol.forceActiveFocus())
@@ -834,6 +835,7 @@ WlrLayershell {
             if (NetworkService.vpnNeed.length === 0) return
             if (!root.isOpen) { NetworkService.vpnCancelNeed(); return }   // the user left; don't prompt on the next visit
             root.leaveViews()
+            modePrompt.close()
             root.view = "vpn"
             root.updateModels()
             Qt.callLater(() => secretPrompt.focusFirst())

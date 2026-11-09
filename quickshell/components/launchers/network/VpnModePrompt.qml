@@ -45,7 +45,10 @@ Rectangle {
         if (e.key === Qt.Key_K || e.key === Qt.Key_Up) { move(-1); e.accepted = true; return true }
         if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { choose(); e.accepted = true; return true }
         if (e.key === Qt.Key_Escape) { cancel(); e.accepted = true; return true }
-        return false
+        // The prompt owns the keyboard while it is open: never let x/e/d/r
+        // reach the global list handler behind it.
+        e.accepted = true
+        return true
     }
     Keys.onPressed: (e) => { handleKey(e) }
 
