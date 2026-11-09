@@ -21,6 +21,7 @@ ShellRoot {
     property string importedUuid: ""
     property bool fvSaved: false
     property bool loaded: false
+    property bool chained: false
 
     function check(name, cond, detail) {
         console.log((cond ? "SMOKE OK   " : "SMOKE FAIL ") + name + (cond || !detail ? "" : " — " + detail))
@@ -74,6 +75,13 @@ ShellRoot {
             check("service: import candidates found",
                   c.some(p => p.endsWith("/Downloads/office.ovpn")) && c.some(p => p.endsWith("/Downloads/wg0.conf")), JSON.stringify(c))
             check("service: other files are not candidates", !c.some(p => p.endsWith("notes.txt")))
+        },
+        function () {
+            const c = NetworkService.importCandidates.filter(p => p.endsWith("/Downloads/office.ovpn"))[0]
+            NetworkService.vpnImport("openvpn", c, r => NetworkService.vpnLoad(r.uuid, r2 => { shell.chained = r2.ok === true }))
+        },
+        function () {
+            check("service: a callback can start the next helper request", shell.chained)
         },
         // --- view checks are added below by later tasks ---
         function () {

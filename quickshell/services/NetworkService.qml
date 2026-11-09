@@ -39,6 +39,8 @@ QtObject {
     property string vpnNeedType: ""
     property var importCandidates: []         // config files found by refreshImportCandidates()
     property var _helperCb: null
+    property var _helperResult: null          // parsed answer, handed to the callback once the process has exited
+    property bool _helperExited: false
     property string _helperPayload: ""
     readonly property bool busy: nmUpProc.running || nmScanConnectProc.running || nmDownProc.running || helperProc.running
     signal dataUpdated()
@@ -170,18 +172,34 @@ QtObject {
         if (!root.helperAvailable) { done({ ok: false, error: "nm-vpn is not installed — run update" }); return }
         if (root.helperProc.running) { done({ ok: false, error: "Busy — try again" }); return }
         root._helperCb = done
+        root._helperResult = null
+        root._helperExited = false
         root._helperPayload = JSON.stringify(request || {})
         root.helperProc.command = ["nm-vpn", cmd]
         root.helperProc.running = true
+        root.helperWatch.restart()
     }
+    // Parses the answer. The callback is not run here: the process is still
+    // running, so a callback that starts another request would get "Busy".
     function _helperDone(text) {
-        const cb = root._helperCb
-        root._helperCb = null
         const lines = (text || "").trim().split("\n")
         let r = null
         try { r = JSON.parse(lines[lines.length - 1]) } catch (e) { r = null }
         if (!r || typeof r !== "object") r = { ok: false, error: "nm-vpn gave no answer" }
-        if (cb) cb(r)
+        root._helperResult = r
+        root._helperFinish(false)
+    }
+    // Runs the callback once, after both the answer and the exit have arrived
+    // (force: the process failed to start, so neither will).
+    function _helperFinish(force) {
+        const cb = root._helperCb
+        if (!cb) return
+        if (!force && (root._helperResult === null || !root._helperExited || root.helperProc.running)) return
+        const r = root._helperResult || { ok: false, error: "nm-vpn could not start" }
+        root._helperCb = null
+        root._helperResult = null
+        root.helperWatch.stop()
+        cb(r)
     }
     function vpnDisconnect(uuid) { root.nmVpnDownProc.command = ["nmcli", "connection", "down", "uuid", uuid]; root.nmVpnDownProc.running = true }
     function vpnDelete(uuid) { root.nmVpnDelProc.command = ["nmcli", "connection", "delete", "uuid", uuid]; root.nmVpnDelProc.running = true }
@@ -349,7 +367,16 @@ QtObject {
         onExited: (exitCode, exitStatus) => {
             root._helperPayload = ""
             root.helperProc.stdinEnabled = true   // ready for the next request
+            root._helperExited = true
+            Qt.callLater(root._helperFinish, false)   // after `running` has dropped
         }
+    }
+    // FailedToStart never emits `exited`; `running` still drops to false. If a
+    // request is still pending shortly after start and the process is gone,
+    // finish it with an error.
+    property Timer helperWatch: Timer {
+        interval: 1500
+        onTriggered: { if (root._helperCb && !root.helperProc.running) root._helperFinish(true) }
     }
     // Config files for the import view, newest first. EXTS holds the
     // extensions vpnSchema.js gives for the installed, import-capable types.
