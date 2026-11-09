@@ -24,6 +24,7 @@ WlrLayershell {
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
+    layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
     // WlrLayershell full-screen overlay: keyboardFocus Exclusive grabs keys when mapped; Ignore avoids reserving space.
 

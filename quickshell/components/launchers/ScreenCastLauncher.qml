@@ -37,6 +37,7 @@ WlrLayershell {
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
+    layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
 
     Rectangle {

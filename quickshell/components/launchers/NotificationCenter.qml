@@ -17,6 +17,7 @@ WlrLayershell {
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
+    layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
     Rectangle { anchors.fill: parent; color: Theme.overlay; MouseArea { anchors.fill: parent; onClicked: root.close() } }
     onIsOpenChanged: if(isOpen) { notifList.currentIndex=0; notifList.positionViewAtIndex(0, ListView.Beginning); notifList.forceActiveFocus() }

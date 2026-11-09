@@ -257,6 +257,7 @@ WlrLayershell {
         left: true
         right: true
     }
+    layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
     keyboardFocus: WlrKeyboardFocus.Exclusive
     color: "transparent"

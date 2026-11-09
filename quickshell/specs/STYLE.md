@@ -263,7 +263,8 @@ property string fingerprint:      String.fromCodePoint(0xF0237) // nf-md-fingerp
 ### 5.1 Window & chrome
 
 * **Window:** full-screen `WlrLayershell` — `anchors` all edges, `color: "transparent"`,
-  `keyboardFocus: WlrKeyboardFocus.Exclusive`, `exclusionMode: ExclusionMode.Ignore`.
+  `keyboardFocus: WlrKeyboardFocus.Exclusive`, `exclusionMode: ExclusionMode.Ignore`,
+  `layer: WlrLayer.Overlay` (the default Top layer is hidden behind fullscreen windows).
 * **Dim overlay:** `Rectangle { anchors.fill: parent, color: Theme.overlay }` with a
   `MouseArea` that closes on click.
 * **Card:** centered `Rectangle { radius: Theme.roundingLauncher, color: Theme.bgLauncher,

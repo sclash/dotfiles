@@ -26,6 +26,7 @@ WlrLayershell {
     color: "transparent"
     visible: isOpen
     keyboardFocus: WlrKeyboardFocus.Exclusive
+    layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
     // Single key-routing stage: the focused child bubbles unhandled keys
     // here so r/s stay available from the settings view.
