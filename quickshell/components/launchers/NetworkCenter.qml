@@ -663,6 +663,7 @@ WlrLayershell {
         }
         }
         Keys.onPressed: (e)=>{
+            if(e.key===Qt.Key_Q) { root.close(); e.accepted=true; return }
             if (root.top !== "home") { root.currentView().handleKey(e); return }
             if (confirmText !== "") {
                 if(e.key===Qt.Key_Y) { confirmYes(); e.accepted=true; return }

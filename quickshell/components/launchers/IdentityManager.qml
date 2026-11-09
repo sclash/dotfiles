@@ -140,7 +140,10 @@ WlrLayershell {
             }
         }
 
-        Keys.onPressed: (e) => root.current.handleKey(e)
+        Keys.onPressed: (e) => {
+            if (e.key === Qt.Key_Q) { root.close(); e.accepted = true }
+            else root.current.handleKey(e)
+        }
     }
 
     onIsOpenChanged: if (isOpen) {

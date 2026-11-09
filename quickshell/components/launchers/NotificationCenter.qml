@@ -204,7 +204,8 @@ WlrLayershell {
             Text { text: "/ filter · j/k move · d dismiss · Enter open · c clear · Ctrl+s silence · Ctrl+t toasts · Ctrl+m sound · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.fillWidth: true; wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter }
         }
         Keys.onPressed: (e)=>{
-            if(e.key===Qt.Key_Escape) {
+            if(e.key===Qt.Key_Q) { root.close(); e.accepted=true }
+            else if(e.key===Qt.Key_Escape) {
                 if(filterActive){ filterActive=false; filterField.text=""; notifList.forceActiveFocus(); e.accepted=true }
                 else root.close()
             }

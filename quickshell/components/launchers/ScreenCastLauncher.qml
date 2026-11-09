@@ -611,7 +611,9 @@ WlrLayershell {
         }
 
         Keys.onPressed: (e) => {
-            if (e.key === Qt.Key_Escape) {
+            if (e.key === Qt.Key_Q) {
+                root.close(); e.accepted = true
+            } else if (e.key === Qt.Key_Escape) {
                 if (root.pickerOpen) { root.closePicker(); e.accepted = true }
                 else if (root.view === "settings") { root.showMain(); e.accepted = true }
                 else if (root.filterActive) { root.filterActive = false; root.clearFilter(); column.forceActiveFocus(); e.accepted = true }

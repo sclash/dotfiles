@@ -284,7 +284,7 @@ WlrLayershell {
                     else if(e.key===Qt.Key_Left) { root.selectSection((root.currentSection + root.sections.length - 1) % root.sections.length); e.accepted=true }
                     else if(e.key===Qt.Key_Right) { root.selectSection((root.currentSection + 1) % root.sections.length); e.accepted=true }
                     else if(e.key>=Qt.Key_1 && e.key<=Qt.Key_9 && e.key-Qt.Key_1 < root.sections.length) { root.selectSection(e.key-Qt.Key_1); e.accepted=true }
-                    else if(e.key===Qt.Key_Escape) root.close()
+                    else if(e.key===Qt.Key_Escape || e.key===Qt.Key_Q) root.close()
                     else if(e.text==="/") { filterBar.visible=true; filterField.forceActiveFocus(); e.accepted=true }
                 }
             }

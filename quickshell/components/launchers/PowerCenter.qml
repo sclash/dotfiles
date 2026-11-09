@@ -367,7 +367,8 @@ WlrLayershell {
             Text { text: "j/k select · Enter apply · Esc close"; font.family: Theme.fontFamily; font.pixelSize: 10; color: Theme.fgDim; Layout.alignment: Qt.AlignHCenter }
 
             Keys.onPressed: (e) => {
-                if (e.key === Qt.Key_Escape) { root.close(); e.accepted = true }
+                if (e.key === Qt.Key_Q) { root.close(); e.accepted = true }
+                else if (e.key === Qt.Key_Escape) { root.close(); e.accepted = true }
                 else if (e.key === Qt.Key_J || e.key === Qt.Key_Down) { root.profileSel = Math.min(root.profileRows.length - 1, root.profileSel + 1); e.accepted = true }
                 else if (e.key === Qt.Key_K || e.key === Qt.Key_Up) { root.profileSel = Math.max(0, root.profileSel - 1); e.accepted = true }
                 else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { root.applyRow(root.profileSel); e.accepted = true }
@@ -377,7 +378,7 @@ WlrLayershell {
         }
         }
 
-        Keys.onEscapePressed: root.close()
+        Keys.onPressed: (e) => { if (e.key === Qt.Key_Escape || e.key === Qt.Key_Q) { root.close(); e.accepted = true } }
         onVisibleChanged: if (visible) mainCol.forceActiveFocus()
     }
 

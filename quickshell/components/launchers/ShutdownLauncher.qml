@@ -137,7 +137,8 @@ WlrLayershell {
 
             Keys.onPressed: (e)=>{
                 let idx=root.currentIndex
-                if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { idx=Math.max(0,idx-1); e.accepted=true }
+                if(e.key===Qt.Key_Q) { root.close(); e.accepted=true }
+                else if(e.key===Qt.Key_H || e.key===Qt.Key_Left) { idx=Math.max(0,idx-1); e.accepted=true }
                 else if(e.key===Qt.Key_L || e.key===Qt.Key_Right) { idx=Math.min(5,idx+1); e.accepted=true }
                 else if(e.key===Qt.Key_J || e.key===Qt.Key_Down) { idx=Math.min(5,idx+1); e.accepted=true }
                 else if(e.key===Qt.Key_K || e.key===Qt.Key_Up) { idx=Math.max(0,idx-1); e.accepted=true }
@@ -147,7 +148,7 @@ WlrLayershell {
             }
             Component.onCompleted: forceActiveFocus()
         }
-        Keys.onEscapePressed: { if(confirmIndex!==-1) confirmIndex=-1; else root.close() }
+        Keys.onPressed: (e) => { if (e.key === Qt.Key_Escape || e.key === Qt.Key_Q) { if(confirmIndex!==-1) confirmIndex=-1; else root.close(); e.accepted = true } }
         onVisibleChanged: if(visible) mainCol.forceActiveFocus()
     }
 

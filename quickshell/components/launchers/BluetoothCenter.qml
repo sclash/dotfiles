@@ -286,6 +286,7 @@ WlrLayershell {
         }
         }
         Keys.onPressed: (e)=>{
+            if(e.key===Qt.Key_Q) { root.close(); e.accepted=true; return }
             if (confirmText !== "") {
                 if(e.key===Qt.Key_Y) { confirmYes(); e.accepted=true; return }
                 else if(e.key===Qt.Key_N || e.key===Qt.Key_Escape) { confirmText=""; e.accepted=true; return }

@@ -444,6 +444,7 @@ WlrLayershell {
     onAvailableMonitorsChanged: updateNav()
 
     function handleKey(e){
+        if(e.key === Qt.Key_Q){ root.close(); e.accepted = true; return }
         if(root.view === "settings"){
             if(settingsPanel.handleKey(e)){ e.accepted = true; return }
             if(e.key === Qt.Key_R){ root.probeHardware(true); root.refresh(); e.accepted = true }

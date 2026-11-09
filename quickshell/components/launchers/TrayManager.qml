@@ -291,6 +291,7 @@ WlrLayershell {
         focus: true
 
         Keys.onPressed: (e) => {
+            if (e.key === Qt.Key_Q) { root.close(); e.accepted = true; return }
             const inApps = root.view === 0;
             const list = inApps ? root.appRows : root.menuRows;
             const idxProp = inApps ? "appsIndex" : "menuIndex";

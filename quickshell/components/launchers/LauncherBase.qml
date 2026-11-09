@@ -60,7 +60,9 @@ WlrLayershell {
             spacing: Theme.gapM
         }
 
-        Keys.onEscapePressed: root.close()
+        Keys.onPressed: (e) => {
+            if (e.key === Qt.Key_Escape || e.key === Qt.Key_Q) { root.close(); e.accepted = true }
+        }
     }
 
     onIsOpenChanged: {

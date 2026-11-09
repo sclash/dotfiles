@@ -238,7 +238,7 @@ WlrLayershell {
 
             Keys.onPressed: (e) => {
                 const shift = (e.modifiers & Qt.ShiftModifier) !== 0
-                if (e.key === Qt.Key_Escape) { root.close(); e.accepted = true }
+                if (e.key === Qt.Key_Escape || e.key === Qt.Key_Q) { root.close(); e.accepted = true }
                 else if (e.key === Qt.Key_H || e.key === Qt.Key_Left) {
                     if (e.key === Qt.Key_Left || !shift) root.addDays(-1)
                     else root.addMonths(-1)

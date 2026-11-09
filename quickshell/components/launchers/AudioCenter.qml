@@ -365,7 +365,8 @@ WlrLayershell {
             }
         }
         Keys.onPressed: (e)=>{
-            if(e.key===Qt.Key_Escape) {
+            if(e.key===Qt.Key_Q) { root.close(); e.accepted=true }
+            else if(e.key===Qt.Key_Escape) {
                 if(root.filterActive){ root.filterActive=false; root.clearFilter(); mainCol.forceActiveFocus(); e.accepted=true }
                 else root.close()
             }
