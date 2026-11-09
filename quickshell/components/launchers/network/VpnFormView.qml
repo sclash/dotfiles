@@ -55,6 +55,7 @@ Item {
         advancedOpen = false; dirty = false; busy = false; reveal = false
         formError = ""; confirmText = ""
         formRev++; advRev++
+        syncName()
     }
     function startAdd(t) {
         reset()
@@ -63,6 +64,7 @@ Item {
         type = t
         advancedOpen = !Schema.hasSchema(t)
         formRev++; advRev++
+        syncName()
         Qt.callLater(focusFirst)
     }
     function startEdit(profile) {
@@ -73,8 +75,10 @@ Item {
         type = s.type
         advancedOpen = !Schema.hasSchema(s.type)
         formRev++; advRev++
+        syncName()
         Qt.callLater(focusFirst)
     }
+    function syncName() { nameStop.setText(view.name) }
     function focusFirst() { nameStop.focusInput() }
     function next(from) {
         if (!from) return
@@ -108,7 +112,7 @@ Item {
         const sv = {}
         for (let i = 0; i < rep.count; i++) {
             const it = rep.itemAt(i)
-            if (it && it.kind === "secret" && it.visible) sv[it.field.key] = it.secretText()
+            if (it && it.kind === "secret" && it.visible && !it.asking) sv[it.field.key] = it.secretText()
         }
         return sv
     }

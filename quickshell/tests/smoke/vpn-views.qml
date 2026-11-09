@@ -18,6 +18,7 @@ ShellRoot {
     property var iv: null
     property var sp: null
     property var fv: null
+    property var fv2: null
     property string importedUuid: ""
     property bool fvSaved: false
     property bool loaded: false
@@ -196,6 +197,32 @@ ShellRoot {
             shell.key(fv, Qt.Key_Y)
             check("form: y discards and goes back", back && fv.type === "")
             fv.destroy()
+        },
+        function () {
+            const f = shell.make("VpnFormView.qml")
+            if (!f) return
+            shell.fv2 = f
+            f.startAdd("l2tp")
+            f.stopFor("name").edited("Stale")
+            f.reset()
+            f.startAdd("l2tp")
+            check("form: a reused form clears the Name box", f.stopFor("name").boxText() === "" && f.name === "", f.stopFor("name").boxText())
+            f.stopFor("name").edited("X")
+            f.stopFor("gateway").edited("g.example.com")
+            f.save()
+            check("form: a reused form saves a new name", f.formError === "" && f.busy, f.formError)
+            f.destroy()
+        },
+        function () {
+            const f = shell.make("VpnFormView.qml")
+            if (!f) return
+            f.startAdd("l2tp")
+            const ps = f.stopFor("ipsec-psk")
+            const pf = shell.findFields(ps, [])
+            if (pf.length === 1) pf[0].text = "typed-then-ask"
+            ps.modeToggled()
+            check("form: switching a secret to Ask clears it", ps.asking && pf.length === 1 && pf[0].text === "" && f.collectSecrets()["ipsec-psk"] === undefined, JSON.stringify(f.collectSecrets()))
+            f.destroy()
         },
         // --- view checks are added below by later tasks ---
         function () {

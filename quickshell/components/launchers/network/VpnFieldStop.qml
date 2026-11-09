@@ -33,6 +33,9 @@ ColumnLayout {
         else if (kind === "choice") choice.forceActiveFocus()
         else box.forceActiveFocus()
     }
+    function boxText() { return box.text }
+    function setText(t) { box.text = t }
+    onAskingChanged: if (asking) secret.text = ""
     function secretText() { return secret.text }
     function clearSecret() { secret.text = "" }
     function setChoice(step) {

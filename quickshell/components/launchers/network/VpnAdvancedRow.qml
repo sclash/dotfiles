@@ -20,6 +20,7 @@ RowLayout {
     signal escaped()
 
     function focusKey() { keyBox.forceActiveFocus() }
+    Component.onCompleted: if (row.isSecret) secretBox.text = row.entry.value || ""
 
     Layout.fillWidth: true
     spacing: Theme.gapS
@@ -108,6 +109,7 @@ RowLayout {
         onToggled: {
             row.entry.mode = row.mode === "ask" ? "save" : "ask"
             row.mode = row.entry.mode
+            if (row.mode === "ask") { row.entry.value = ""; secretBox.text = "" }
             row.changed()
         }
         onAdvance: (from) => row.advance(from)
