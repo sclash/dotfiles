@@ -124,6 +124,7 @@ bash quickshell/tests/test-vpn-schema-keys.sh
 bash tests/check-no-hardcoded-home.sh
 bash tests/test-user.sh
 bash tests/test-guard.sh
+bash nixos/tests/test-statusline.sh
 ```
 
 When `nm-vpn`, the VPN plugins or `services.strongswan` change, also run `bash nixos/tests/test-vpn-vm.sh`. It's a NixOS VM test, needs KVM and takes a few minutes.

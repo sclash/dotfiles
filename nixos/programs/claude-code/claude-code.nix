@@ -65,6 +65,17 @@ let
     rev = "c4b82b0ad771190355eb8e204b1329732a18449a";
     sha256 = "05axmkblh6hq0q3czsyalksiwq1z5gvllp18sa6c499fgmsl3fpz";
   };
+  # Two-line status bar: repo/branch/worktree, then context, 5h/7d usage,
+  # elapsed time and estimated session cost. See statusline.sh.
+  statusline = pkgs.writeShellApplication {
+    name = "claude-statusline";
+    runtimeInputs = [
+      pkgs.jq
+      pkgs.git
+      pkgs.coreutils
+    ];
+    text = builtins.readFile ./statusline.sh;
+  };
 in
 {
   programs.claude-code = {
@@ -75,6 +86,13 @@ in
       teammateMode = "tmux";
       env = {
         CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
+      };
+      statusLine = {
+        type = "command";
+        command = lib.getExe statusline;
+        padding = 0;
+        # Re-run while idle so the elapsed time keeps moving.
+        refreshInterval = 30;
       };
     };
     mcpServers = {
