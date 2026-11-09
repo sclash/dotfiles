@@ -95,6 +95,12 @@ Connect to DP
 - Selection index starts at 0 (`full`) every time the prompt opens.
 - `Enter` emits `picked(uuid, "full"|"split")`; `Esc` emits `cancelled`.
 - After either, focus returns to the main column and the prompt hides.
+- Closing the Network Center, leaving `/vpn`, or a `need` arriving from
+  another connect clears the prompt (`resetVpnViews`/`onVpnNeedChanged`).
+  The prompt is only visible while `view === "vpn"`, so it cannot reappear
+  stale or connect a choice the user abandoned.
+- While open, the prompt owns the keyboard: keys it does not use are
+  swallowed, so `x`, `e`, `d` and `r` never reach the list behind it.
 - Mouse: each option row is clickable.
 - The card scrolls the prompt into view (`scrollToAnchor`).
 
