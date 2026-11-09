@@ -87,7 +87,7 @@ Delete and disconnect stay on plain `nmcli` (no secrets), so they work without t
 
 **Secret flags.** Save writes `K-flags = 0`; Ask writes `K-flags = 2` (not saved). Reading: flag `2` → ask; flag `1` (agent-owned) → **also ask**, because no agent is left to supply it once `nm-applet` is gone (profiles made with `nm-connection-editor` are usually agent-owned); otherwise save. WireGuard uses `wireguard.private-key-flags` and each peer's `preshared-key-flags`.
 
-**Connect.** `nmcli --wait 90 connection up uuid U passwd-file <pipe>`, with lines `vpn.secrets.<key>:<value>` (or `wireguard.private-key:…`). If `nmcli` turns out not to accept a pipe (unverified, §14), the helper writes a 0600 file in `$XDG_RUNTIME_DIR`, passes it and deletes it as soon as `nmcli` exits.
+**Connect.** `nmcli --wait 90 connection up uuid U passwd-file <pipe>`, with lines `vpn.secrets.<key>:<value>` (or `wireguard.private-key:…`). `nmcli` accepts the pipe (verified in the VM test, §14), so no secret ever touches disk. strongSwan's secret names come from its auth dialog in external-UI mode, which needs a display: the desktop session has one, a headless shell does not.
 
 **Our own metadata** (OpenConnect login method, username, pinned server certificate) goes in NetworkManager's generic `user` setting (`user.data`, keys `quickshell.vpn.*`), never as `vpn.data` keys: OpenVPN and OpenConnect reject data keys they don't recognise.
 
@@ -173,7 +173,7 @@ The saved OpenConnect password is a `vpn.secrets` key named as the plugin's own 
 
 | File | Change |
 |---|---|
-| `nixos/configuration.nix` | `networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn networkmanager-openconnect networkmanager-strongswan networkmanager-l2tp networkmanager-sstp ];` `services.strongswan` stays |
+| `nixos/configuration.nix` | `networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn networkmanager-openconnect networkmanager-strongswan networkmanager-l2tp networkmanager-sstp ];` `services.strongswan` stays; an empty `environment.etc."strongswan.conf"` so `charon-nm` can start |
 | `nixos/programs/quickshell.nix` | Remove `networkmanagerapplet` (editor, tray applet, its XDG autostart). Add the `nm-vpn` package (§7) |
 | `quickshell/services/NetworkService.qml` | Remove `vpnEditorProc`, `vpnAddProc`, `launchEditor()`, `vpnAdd()`. Add `helperAvailable`, `vpnTypes`, `vpnLoad(uuid)`, `vpnSave(request)`, `vpnImport(type, path)`, `vpnConnect(uuid, secrets)`, `ocAnswer(id, answer)` and `ocCancel()`. Errors use the existing `lastError` |
 | `quickshell/services/NetworkService.qml` (fix) | The poll's active-VPN check greps `vpn` only, so an active **WireGuard** connection never shows as `vpnActive`. Match `wireguard` too, as `vpnProc` already does |
@@ -203,8 +203,8 @@ Left alone: the commented-out `nm-applet` line in `hypr/hyprland.lua` and `hypr/
 
 ## 14. Not verified (answered by the VM test or by you)
 
-- Whether `nmcli … passwd-file` accepts a pipe (`nmcli` resolves the connection before reading the file, so this can't be checked without a real profile). Fallback in §7.
-- Whether `charon-nm` (`networkmanager-strongswan`) coexists with `services.strongswan`: both may bind UDP 500/4500. If not, drop `networkmanager-strongswan` and report back; L2TP stays as it is.
+- ~~Whether `nmcli … passwd-file` accepts a pipe~~: it does (VM test, 2026-11-09).
+- ~~Whether `charon-nm` coexists with `services.strongswan`~~: it does, once `/etc/strongswan.conf` exists; charon-nm aborts without it, and NixOS creates none (VM test, 2026-11-09; §11).
 - Key names for OpenVPN, OpenConnect, strongSwan and SSTP (checked against each plugin before its schema is written).
 - Whether `nm-openconnect` accepts `form:*` secrets.
 - That libnm import loads only each plugin's core library, not its GTK editor.
