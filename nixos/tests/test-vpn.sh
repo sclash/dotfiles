@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Asserts the VPN wiring of the evaluated config: the NetworkManager VPN
 # plugins the Network Center offers (/vpn), the nm-vpn helper in the user's
-# packages, and services.strongswan kept for L2TP/IPsec.
+# packages, services.strongswan kept for L2TP/IPsec, and /etc/strongswan.conf.
 # Run: bash nixos/tests/test-vpn.sh
 set -uo pipefail
 
@@ -23,6 +23,7 @@ in
   plugins = names c.networking.networkmanager.plugins;
   home = names c.home-manager.users.${user}.home.packages;
   strongswan = c.services.strongswan.enable;
+  strongswanConf = c.environment.etc ? "strongswan.conf";
   systemEvaluates = (builtins.tryEval c.system.build.toplevel.drvPath).success;
 }
 NIX
@@ -45,6 +46,7 @@ expect '[.plugins[] | test("l2tp")] | any'       "the L2TP plugin is installed"
 expect '[.plugins[] | test("strongswan")] | any' "the strongSwan (IKEv2) plugin is installed"
 expect '.home | index("nm-vpn") != null'         "nm-vpn is in the user's packages"
 expect '.strongswan'                             "services.strongswan stays enabled (L2TP/IPsec)"
+expect '.strongswanConf'                         "/etc/strongswan.conf exists (charon-nm aborts without it)"
 expect '.systemEvaluates'                        "the full NixOS system evaluates (no insecure or broken packages)"
 
 if ((failures)); then echo "$failures VPN config checks failed"; exit 1; fi
