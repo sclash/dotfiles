@@ -507,6 +507,14 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  # TODO(ssh-keys-only): turn off password logins once every machine you SSH
+  # into has your key in ~/.ssh/authorized_keys (ssh-copy-id).
+
+  # Tailscale joins this machine to your private network (tailnet), which works
+  # through NAT and CGNAT without port forwarding. Log each machine in once
+  # with `sudo tailscale up`, then reach the others by hostname.
+  services.tailscale.enable = true;
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
