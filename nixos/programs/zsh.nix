@@ -39,6 +39,10 @@
       			export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_pat)"
       			export GH_TOKEN="$(cat /run/secrets/github_pat)"
     		fi
+		if [ -f /run/secrets/github_pat_classic ]; then
+      			export GITHUB_PERSONAL_ACCESS_TOKEN="$(cat /run/secrets/github_pat_classic)"
+      			export GH_TOKEN="$(cat /run/secrets/github_pat_classic)"
+    		fi
 		if [ -f /run/secrets/hf_token ]; then
       			export HF_TOKEN="$(cat /run/secrets/hf_token)"
     		fi
