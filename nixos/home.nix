@@ -145,6 +145,7 @@ in
       # python313Packages.markitdown
       playwright
       telegram-desktop
+      sshfs
     ])
     ++ (with pkgs-unstable; [
       # markitdown-mcp
