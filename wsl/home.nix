@@ -31,7 +31,7 @@ in
 
   home.username = user.username;
   home.homeDirectory = user.homeDirectory;
-
+nix.settings.experimental-features = [ "nix-command" "flakes" ];
   # Linux, not NixOS: XDG data dirs, locale archive and terminfo for Nix
   # programs. Nothing here is GUI, so skip the GPU driver integration (it
   # would otherwise ask for a one-time sudo setup).
