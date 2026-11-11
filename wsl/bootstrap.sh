@@ -330,7 +330,9 @@ ensure_nix() {
 
 ensure_submodules() {
   [[ "$(git -C "$REPO" submodule status neovimrc 2>/dev/null)" == -* ]] || return 0
-  run git -C "$REPO" submodule update --init neovimrc
+  # run git -C "$REPO" submodule update --init neovimrc
+  run git -C "$REPO" -c url.https://github.com/.insteadOf=git@github.com:
+  submodule update --init neovimrc
 }
 
 # Generate this instance's age key (never copied between instances).
