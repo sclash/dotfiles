@@ -46,6 +46,7 @@ Rectangle {
                 width: Math.max(6, Math.round(field.font.pixelSize * 0.65))
                 height: Math.round(field.font.pixelSize * 1.5)
                 color: Theme.fg
+                opacity: parent.activeFocus ? 1 : 0
             }
             onAccepted: box.accepted()
             Keys.onEscapePressed: (e) => { box.escaped(); e.accepted = true }

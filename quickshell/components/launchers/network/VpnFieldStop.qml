@@ -82,6 +82,8 @@ ColumnLayout {
                 width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
                 height: Math.round(parent.font.pixelSize * 1.5)
                 color: Theme.fg
+                // Qt leaves the delegate visible after focus moves to another field.
+                opacity: parent.activeFocus ? 1 : 0
             }
             activeFocusOnTab: true
             onTextEdited: stop.edited(text)

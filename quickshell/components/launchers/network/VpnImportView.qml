@@ -134,6 +134,7 @@ Item {
                         width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
                         height: Math.round(parent.font.pixelSize * 1.5)
                         color: Theme.fg
+                        opacity: parent.activeFocus ? 1 : 0
                     }
                     onTextChanged: { view.filter = text; view.sel = 0 }
                     onAccepted: { filterBox.visible = false; view.refocus() }
@@ -182,6 +183,7 @@ Item {
                     width: Math.max(6, Math.round(parent.font.pixelSize * 0.65))
                     height: Math.round(parent.font.pixelSize * 1.5)
                     color: Theme.fg
+                    opacity: parent.activeFocus ? 1 : 0
                 }
                 onAccepted: view.importPath(text)
             }
