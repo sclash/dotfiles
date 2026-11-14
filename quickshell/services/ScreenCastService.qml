@@ -218,7 +218,10 @@ QtObject {
         if (!name) return
         root.dpmsTargetState = on
         root.localPanelOff = !on
-        root.dpmsProc.command = ["hyprctl", "dispatch", "dpms", on ? "on" : "off", name]
+        // Hyprland 0.57 takes Lua dispatchers, not the classic `dpms on <name>`.
+        root.dpmsProc.command = ["hyprctl", "dispatch",
+            "hl.dsp.dpms({ action = " + HyprService.luaQuote(on ? "on" : "off")
+                + ", monitor = " + HyprService.luaQuote(name) + " })"]
         root.dpmsProc.running = true
     }
 
