@@ -31,6 +31,39 @@ let
   # PyGObject, secrets on stdin only. Tested by quickshell/tests/test-nm-vpn.sh
   # and nixos/tests/test-vpn-vm.sh.
   nm-vpn = import ../../quickshell/scripts/nm-vpn.nix { inherit pkgs; };
+
+  # Elephant indexes desktop entries once at startup, so an app installed by a
+  # rebuild stays invisible to the App Launcher until the daemon rescans.
+  # Walker dials the elephant socket on every query, so restarting elephant
+  # alone is enough. Run after a rebuild that adds or removes an app.
+  refresh-launcher = pkgs.writeShellApplication {
+    name = "refresh-launcher";
+    runtimeInputs = [
+      pkgs.procps
+      pkgs.util-linux
+    ];
+    text = ''
+      if ! command -v elephant >/dev/null 2>&1; then
+        echo "refresh-launcher: elephant not found in PATH" >&2
+        exit 1
+      fi
+
+      # Match the wrapper's comm (".elephant-wrapp") and, for package variants
+      # that do not wrap, the plain binary.
+      running() { pgrep -x .elephant-wrapp >/dev/null || pgrep -x elephant >/dev/null; }
+
+      if running; then
+        pkill -x .elephant-wrapp || pkill -x elephant || true
+        for _ in $(seq 1 50); do
+          running || break
+          sleep 0.1
+        done
+      fi
+
+      setsid elephant >/dev/null 2>&1 </dev/null &
+      echo "launcher index refreshed"
+    '';
+  };
 in
 {
   programs.quickshell = {
@@ -82,6 +115,7 @@ in
     gnome-network-displays # Miracast/Chromecast daemon for ScreenCastService
     identity-passwd    # password changes for IdentityService (Identity Manager)
     nm-vpn             # VPN add/import/edit/connect for NetworkService (Network Center)
+    refresh-launcher   # re-index desktop entries after a rebuild adds an app
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
