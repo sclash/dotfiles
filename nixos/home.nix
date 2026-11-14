@@ -145,6 +145,8 @@ in
       # python313Packages.markitdown
       playwright
       telegram-desktop
+      slack
+
       sshfs
     ])
     ++ (with pkgs-unstable; [
