@@ -136,7 +136,7 @@ Expected: a store path; `bin/librepods` and `bin/librepods-ctl` exist.
 out=$(nix build --impure --no-link --print-out-paths --expr '
 let pkgs = (builtins.getFlake "nixpkgs").legacyPackages.x86_64-linux;
 in pkgs.callPackage ./nixos/programs/librepods.nix {}')
-strings "$out/bin/.librepods-wrapped" | grep -F "AirPods 5"
+strings -a -e l "$out/bin/.librepods-wrapped" | grep -F "AirPods 5"
 ```
 
 Expected: `grep` exits 1, no output. This is the failing test for the patch.
@@ -173,7 +173,7 @@ Then:
 out=$(nix build --impure --no-link --print-out-paths --expr '
 let pkgs = (builtins.getFlake "nixpkgs").legacyPackages.x86_64-linux;
 in pkgs.callPackage ./nixos/programs/librepods.nix {}')
-strings "$out/bin/.librepods-wrapped" | grep -F "AirPods 5"
+strings -a -e l "$out/bin/.librepods-wrapped" | grep -F "AirPods 5"
 ```
 
 Expected: the string is printed and `grep` exits 0.
@@ -242,10 +242,10 @@ Add the unit after the existing `gnome-network-displays-daemon` service:
 
 ```bash
 git add nixos/programs/librepods.nix nixos/patches/librepods-airpods5.patch nixos/programs/quickshell.nix
-nix flake check ./nixos --no-write-lock-file
+NIXPKGS_ALLOW_UNFREE=1 nix flake check ./nixos --no-write-lock-file --impure
 ```
 
-Expected: evaluation succeeds. The full `dry-build` runs in Task 10.
+Expected: evaluation succeeds. The pure check is red at HEAD on the unrelated unfree `slack` package; the allowance is the repo baseline. The full `dry-build` runs in Task 10.
 
 - [ ] **Step 7: Commit**
 
@@ -986,13 +986,13 @@ Expected: no QML errors; the new `AirPodsCenter` and badge load. If the live she
 - [ ] **Step 4: Evaluate the NixOS configuration**
 
 ```bash
-nix flake check ./nixos --no-write-lock-file
+NIXPKGS_ALLOW_UNFREE=1 nix flake check ./nixos --no-write-lock-file --impure
 nix build --impure --no-link --print-out-paths --expr '
 let pkgs = (builtins.getFlake "nixpkgs").legacyPackages.x86_64-linux;
 in pkgs.callPackage ./nixos/programs/librepods.nix {}'
 ```
 
-Expected: evaluation succeeds; the package builds.
+Expected: evaluation succeeds; the package builds. The allowance is required because the baseline has the unrelated unfree `slack` package.
 
 - [ ] **Step 5: Dry-build the real machine (no switch)**
 
