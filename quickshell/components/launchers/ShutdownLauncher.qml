@@ -12,6 +12,9 @@ WlrLayershell {
     property bool isOpen: false
     property int confirmIndex: -1
     property int currentIndex: 0
+    // greetd starts the session through `uwsm start hyprland.desktop`; when
+    // uwsm is present, logging out must tear down the whole user session.
+    readonly property bool uwsmSession: (Quickshell.env("UWSM_WAIT_VARNAMES") || Quickshell.env("UWSM_FINALIZE_VARNAMES") || "") !== ""
     function open(){ isOpen=true; currentIndex=0 }
     function close(){ isOpen=false; confirmIndex=-1 }
     function toggle(){ if(isOpen) close(); else open() }
@@ -179,7 +182,9 @@ WlrLayershell {
         else if(idx===1) { if(!root.canHibernate) return; cmd=["systemctl","hibernate"] }
         else if(idx===2) cmd=["systemctl","reboot"]
         else if(idx===3) cmd=["systemctl","poweroff"]
-        else if(idx===6) cmd=["hyprctl","dispatch","exit"]
+        // Hyprland 0.57 takes Lua dispatchers, so the old "dispatch exit" string
+        // is rejected; under a uwsm session let uwsm end the whole session.
+        else if(idx===6) cmd = root.uwsmSession ? ["uwsm","stop"] : ["hyprctl","dispatch","hl.dsp.exit()"]
         if(cmd.length>0){
             console.log("[ShutdownLauncher] exec:", JSON.stringify(cmd))
             execProc.command=cmd

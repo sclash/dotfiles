@@ -155,7 +155,6 @@ in
       # rtk init -g
       # rtk init -g opencode
       # rtk
-      zennotes-desktop
       agent-browser
     ]);
 

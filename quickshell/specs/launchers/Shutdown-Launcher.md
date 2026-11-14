@@ -22,7 +22,7 @@ Center-screen confirmation grid for power/plane actions. Minimal chrome, large h
 | 2 | **Reboot** | `󰜉` | `systemctl reboot` | yes — highlight in `Theme.warning` |
 | 3 | **Shutdown** | `` | `systemctl poweroff` | yes — highlight in `Theme.critical` |
 | 4 | **Plane Mode** (toggle) | `󰀞` when off, `󰀝` when on | `rfkill block all` / `rfkill unblock all` (or `nmcli radio all off/on`) | no — toggle with inline state |
-| 5 | **Logout** (optional, not in original spec but conventional) | `󰍃` | `hyprctl dispatch exit` | yes |
+| 5 | **Logout** (optional, not in original spec but conventional) | `󰍃` | `uwsm stop` in a uwsm session, else `hyprctl dispatch 'hl.dsp.exit()'` | yes |
 
 > Original spec lists Sleep, Shutdown, Reboot, Plane Mode — keep exactly those four as required. Logout is optional addition; if omitted, grid is 2×2.
 
