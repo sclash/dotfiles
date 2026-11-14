@@ -32,6 +32,9 @@ let
   # and nixos/tests/test-vpn-vm.sh.
   nm-vpn = import ../../quickshell/scripts/nm-vpn.nix { inherit pkgs; };
 
+  # AirPods daemon (librepods fork, GPL-3.0) with generic AirPods 5 support.
+  librepods = pkgs.callPackage ./librepods.nix { };
+
   # Elephant indexes desktop entries once at startup, so an app installed by a
   # rebuild stays invisible to the App Launcher until the daemon rescans.
   # Walker dials the elephant socket on every query, so restarting elephant
@@ -97,6 +100,48 @@ in
     };
   };
 
+  # AirPods daemon. Started and stopped on demand by AirPodsService; not
+  # enabled at login, so it costs nothing while the AirPods are away.
+  systemd.user.services.librepods = {
+    Unit = {
+      Description = "librepods AirPods daemon";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${librepods}/bin/librepods --headless";
+      Restart = "on-failure";
+      RestartSec = 5;
+      UMask = "0077";
+      StateDirectory = "librepods";
+      StateDirectoryMode = "0700";
+      ConfigurationDirectory = "AirPodsTrayApp";
+      ConfigurationDirectoryMode = "0700";
+      ProtectSystem = "strict";
+      ProtectHome = "read-only";
+      ReadWritePaths = [ "%t" ];
+      PrivateTmp = true;
+      NoNewPrivileges = true;
+      CapabilityBoundingSet = [ "" ];
+      RestrictSUIDSGID = true;
+      RestrictNamespaces = true;
+      LockPersonality = true;
+      SystemCallArchitectures = "native";
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectKernelLogs = true;
+      ProtectControlGroups = true;
+      ProtectClock = true;
+      ProtectHostname = true;
+      RestrictAddressFamilies = [ "AF_UNIX" "AF_BLUETOOTH" "AF_NETLINK" ];
+      Environment = [
+        "PATH=${librepods}/bin:${pkgs.bluez}/bin:${pkgs.coreutils}/bin"
+        "QT_LOGGING_RULES=openpods.debug=false"
+      ];
+    };
+  };
+
   # Runtime deps for Quickshell services (SPECS.md:2.2)
   home.packages = with pkgs; [
     networkmanager      # nmcli for NetworkService
@@ -116,6 +161,7 @@ in
     identity-passwd    # password changes for IdentityService (Identity Manager)
     nm-vpn             # VPN add/import/edit/connect for NetworkService (Network Center)
     refresh-launcher   # re-index desktop entries after a rebuild adds an app
+    librepods          # AirPods AAP daemon + librepods-ctl for AirPodsService
   ] ++ (with pkgs-unstable; [
     # elephant or walker backend for AppLauncher — whichever is packaged
   ]);
