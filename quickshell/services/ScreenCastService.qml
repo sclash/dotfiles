@@ -44,6 +44,7 @@ QtObject {
     property string pollUnit: ""
     property bool dpmsTargetState: true
     property bool closePending: false
+    property bool launcherOpen: false
     property int scanTicks: 0
     property int displayRetries: 0
 
@@ -73,6 +74,7 @@ QtObject {
         root.sessionState = "error"
         root.lastError = String(message || "The stream ended")
         root.dataUpdated()
+        root.resumeDiscovery()
     }
     function clearError() {
         if (root.lastError !== "") { root.lastError = ""; root.dataUpdated() }
@@ -80,17 +82,22 @@ QtObject {
 
     // Lifecycle --------------------------------------------------------------
     function open() {
+        root.launcherOpen = true
         root.closePending = false
-        root.scanTicks = 0
-        root.displayRetries = 0
-        root.scanTimer.restart()
-        root.ensureDaemon()
+        // A running cast keeps discovery paused (see pauseDiscovery).
+        if (root.active) return
+        root.resumeDiscovery()
     }
 
     function close() {
-        // Keep the daemon alive while a stream is running; its list is needed
-        // when the launcher reopens.
-        if (root.active || root.sessionState === "connecting" || root.startProc.running) return
+        root.launcherOpen = false
+        // A session already paused discovery; a connect in flight pauses it
+        // as soon as StartStream returns. If that connect fails instead,
+        // closePending lets the failure path stop the daemon.
+        if (root.active || root.sessionState === "connecting" || root.startProc.running) {
+            root.closePending = true
+            return
+        }
         root.pendingSink = null
         if (root.busy) { root.closePending = true; return }
         root.scanTimer.stop()
@@ -114,7 +121,33 @@ QtObject {
         root.daemonActiveProc.running = true
     }
 
+    // The daemon's Wi-Fi P2P provider issues StartFind on every NetworkManager
+    // device state change while it runs, and a P2P find during GO negotiation
+    // cancels the connect (wpa_supplicant goes CONNECT -> SEARCH; NM then times
+    // out with "connecting took too long"). GNOME Network Displays' own window
+    // turns discovery off while connecting; the daemon has no such switch, so
+    // stop it for the whole session. The stream unit does not need it.
+    function pauseDiscovery() {
+        root.scanTimer.stop()
+        root.retryTimer.stop()
+        root.scanning = false
+        if (root.daemonRunning || root.daemonStartProc.running || root.daemonActiveProc.running)
+            root.daemonStopProc.running = true
+    }
+
+    function resumeDiscovery() {
+        if (!root.launcherOpen || root.active) {
+            Qt.callLater(() => root.maybeFinishClose())
+            return
+        }
+        root.scanTicks = 0
+        root.displayRetries = 0
+        root.scanTimer.restart()
+        root.ensureDaemon()
+    }
+
     function refresh() {
+        if (root.active) return
         if (root.displaysProc.running) return
         if (!root.daemonRunning) { root.ensureDaemon(); return }
         root.scanning = true
@@ -169,7 +202,7 @@ QtObject {
         root.sessionState = "idle"
         root.idleTicks = 0
         root.dataUpdated()
-        Qt.callLater(() => root.maybeFinishClose())
+        root.resumeDiscovery()
     }
 
     // Session tracking -------------------------------------------------------
@@ -365,6 +398,7 @@ QtObject {
                     root.pollTimer.restart()
                     root.hyprMonitorsProc.running = true
                     root.dataUpdated()
+                    root.pauseDiscovery()
                     return
                 }
             }
@@ -398,6 +432,7 @@ QtObject {
         onExited: (code, status) => {
             if (code !== 0) {
                 root.fail("Could not create the virtual output")
+                Qt.callLater(() => root.maybeFinishClose())
                 return
             }
             root.extendOutputCreated = true
@@ -445,6 +480,7 @@ QtObject {
                 root.idleTicks = 0
                 root.pollTimer.restart()
                 root.dataUpdated()
+                root.pauseDiscovery()
             }
         }
         onExited: (code, status) => {
@@ -455,6 +491,7 @@ QtObject {
             }
             if (root.extendOutputCreated) root.extendRemoveProc.running = true
             root.fail(root.lastError || "The daemon refused the connection")
+            root.resumeDiscovery()
         }
         stderr: StdioCollector {
             onStreamFinished: {

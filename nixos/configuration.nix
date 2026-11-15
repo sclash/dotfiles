@@ -69,6 +69,43 @@
   # wifi backend defaults to wpa_supplicant: iwd renamed the interface
   # (wlp1s0 -> wlan0), breaking existing connection profiles, and failed
   # SAE handshakes against WPA3-transition hotspots.
+  #
+  # The wpa_supplicant module adds a udev rule that restarts the daemon
+  # whenever a wlan interface is added or removed. That is only needed when
+  # wpa_supplicant picks interfaces itself; under NetworkManager it is
+  # D-Bus controlled and NM attaches interfaces on its own. The restart
+  # breaks Wi-Fi Direct (Miracast, the Screen Cast launcher): connecting
+  # creates a p2p-<iface>-N group interface, the restart tears it down and
+  # the stream fails with "Sink error". The GOTO skips that one rule and
+  # leaves every other RUN (IPv6 privacy, systemd-sysctl) in place. Both
+  # halves live in 99-local.rules; mkBefore/mkAfter wrap the module's rule.
+  services.udev.extraRules = lib.mkIf config.networking.wireless.dbusControlled (lib.mkMerge [
+    (lib.mkBefore ''
+      ACTION=="add|remove", SUBSYSTEM=="net", ENV{DEVTYPE}=="wlan", GOTO="dotfiles_skip_wpa_restart"
+    '')
+    (lib.mkAfter ''
+      LABEL="dotfiles_skip_wpa_restart"
+    '')
+  ]);
+  # NixOS runs wpa_supplicant as the unprivileged wpa_supplicant user, but
+  # NetworkManager's D-Bus policy lets non-root senders reach it only on a
+  # fixed list of interfaces (org.freedesktop.DBus.Properties and NM's own).
+  # The bus then silently drops wpa_supplicant's own signals to NM
+  # (fi.w1.wpa_supplicant1.*: DeviceFound, BSSAdded, ...). Property changes
+  # still arrive, so Wi-Fi works, but Wi-Fi P2P peers never reach NM and the
+  # Screen Cast launcher lists no displays. Allow signals only, the access
+  # wpa_supplicant had when it ran as root; method calls stay denied.
+  services.dbus.packages = lib.mkIf config.networking.wireless.dbusControlled [
+    (pkgs.writeTextDir "share/dbus-1/system.d/wpa_supplicant-networkmanager-signals.conf" ''
+      <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+       "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+      <busconfig>
+        <policy group="wpa_supplicant">
+          <allow send_destination="org.freedesktop.NetworkManager" send_type="signal"/>
+        </policy>
+      </busconfig>
+    '')
+  ];
   # VPN types the Quickshell Network Center offers (/vpn); WireGuard is
   # built into NetworkManager.
   networking.networkmanager.plugins = with pkgs; [

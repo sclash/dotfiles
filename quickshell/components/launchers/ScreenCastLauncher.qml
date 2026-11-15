@@ -220,6 +220,8 @@ WlrLayershell {
                         text: {
                             if (!ScreenCastService.available)
                                 return "Network Displays unavailable — run `update` to install the daemon."
+                            if (ScreenCastService.active)
+                                return "Discovery is paused while casting — disconnect to pick another display."
                             if (!ScreenCastService.daemonRunning || ScreenCastService.scanning)
                                 return "Scanning for displays…"
                             if (ScreenCastService.sinks.length === 0)

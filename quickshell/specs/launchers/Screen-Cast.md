@@ -99,8 +99,8 @@ readonly property var castOutput        // mapped monitor for the cast source
 signal dataUpdated()
 
 // lifecycle
-function open()                  // ensure the daemon is running
-function close()                 // stop the daemon if no session is active
+function open()                  // ensure the daemon is running (not while casting)
+function close()                 // stop the daemon if it still runs
 function ensureDaemon()
 function refresh()               // re-read Displays
 function rescan()
@@ -126,7 +126,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
   * `StartStream(uuid) → unit_name`, `StopStream(unit_name)`.
   The service reads `Displays` with `busctl --user --json=short get-property` and parses it with `services/screenCastParse.js`.
 * **NixOS packaging.** GND 0.99.0 hardcodes `/usr/libexec/gnome-network-displays-stream`, which does not exist on NixOS. `nixos/programs/quickshell.nix` overrides the package and substitutes the store `libexec` path. The `wrapGAppsHook` already wraps that binary, so the transient unit gets `GST_PLUGIN_SYSTEM_PATH_1_0`, `GI_TYPELIB_PATH` and `XDG_DATA_DIRS`.
-* **Daemon lifecycle.** The service defines `gnome-network-displays-daemon.service` as a user unit, deliberately not enabled at login. `open()` starts it; `close()` stops it when no session is active. This avoids continuous Wi-Fi P2P discovery on machines that never cast.
+* **Daemon lifecycle.** The service defines `gnome-network-displays-daemon.service` as a user unit, deliberately not enabled at login. `open()` starts it; `close()` stops it. This avoids continuous Wi-Fi P2P discovery on machines that never cast. The daemon is also stopped as soon as `StartStream` returns a unit (or a running unit is adopted), for the whole session: its Wi-Fi P2P provider calls `StartFind` on every NetworkManager device state change, and a find during GO negotiation cancels the connect (wpa_supplicant `CONNECT -> SEARCH`, then NM `connecting took too long`, `Sink error`). GNOME Network Displays' own window turns discovery off while connecting; the daemon's D-Bus API has no such switch. `refresh()` does nothing while a session is active, and discovery resumes when the session ends with the launcher open.
 * **Startup race.** The unit is `Type=dbus` with `BusName=org.gnome.NetworkDisplays.Manager`. With the default `Type=simple`, `systemctl start` returns as soon as the process forks — before GApplication acquires the name — so the first `get-property` races and fails with *"The name is not activatable"*. `Type=dbus` blocks `start` until the name is owned. `TimeoutStartSec=15s` keeps a stuck daemon from holding the call for 90 s. The service also retries a transient "not activatable"/`ServiceUnknown` reply up to six times at 250 ms before setting `available = false`, covering a daemon that crashes between `is-active` and `get-property`.
 * **Empty stderr.** `StdioCollector` fires even when stderr is empty, and it runs after stdout. The failure decision therefore lives in `displaysProc.onExited`, keyed on the exit code, so a successful `get-property` is never overwritten by the generic "Network Displays daemon unavailable" message.
 * **Stream tracking.** `StartStream` returns a transient unit named `gnome-network-displays-stream-<uuid>.service`. `sessionState` is derived from `systemctl --user is-active <unit>` (1.5 s timer while a session exists), **not** from the daemon's `state` field: the daemon only refreshes `Displays` on sink add/remove, so that field is stale during a stream.
@@ -137,11 +137,14 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 * **Extend output.** `hyprctl output create headless SCREENCAST` before connecting; `hyprctl output remove SCREENCAST` after disconnect. Resolution/scale are applied through `HyprService.applyMonitor`, which composes `hyprctl eval` rules and preserves every other output's rule.
 * **Only remote.** A manual **Local panel** toggle in session settings (default `On`) runs `hl.dsp.dpms({ action = "off"/"on", monitor = <built-in> })` through `hyprctl dispatch`; `dpms on` also runs on disconnect. It is never automatic: the ScreenCast share picker is displayed on that panel, so turning it off before the picker is answered would lock the user out. The built-in output is resolved through `HyprService.refMonitorName` (never hard-coded). If DPMS freezes the captured frames on a given machine, the fallback is brightness 0 — recorded here as an open validation item.
 * **Discovery scope.** `Displays` includes Wi-Fi Display P2P, Wi-Fi Display MICE (mDNS) and Chromecast sinks. No ports are opened here: the project's firewall is disabled; if it is ever enabled, allow `p2p-wl+`, TCP 7236/7250 and UDP 7236/5353.
+* **wpa_supplicant restarts.** NixOS's wpa_supplicant module restarts the daemon from udev whenever a wlan interface is added or removed. A Wi-Fi Display P2P connect creates a `p2p-<iface>-N` group interface, so the restart tore the link down and the stream exited with `NdStream: Sink error`. `nixos/configuration.nix` skips that rule while wpa_supplicant is D-Bus controlled by NetworkManager.
+* **wpa_supplicant signals.** NixOS runs wpa_supplicant as the unprivileged `wpa_supplicant` user, and NetworkManager's D-Bus policy only accepts non-root messages on a fixed list of interfaces, so the bus silently dropped `fi.w1.wpa_supplicant1.Interface.P2PDevice.DeviceFound`. wpa_supplicant found the TV (`P2P-DEVICE-FOUND`) while NM's `Peers` stayed empty and the launcher listed nothing. `nixos/configuration.nix` adds a policy that lets the `wpa_supplicant` group send signals (not method calls) to NetworkManager.
 * **Runtime-only.** No state file, no `hyprland.lua` writes, no persistence of mode or cast settings.
 
 ## 7. Empty / Error States
 
 * Daemon missing or unreachable → list empty, muted `Network Displays unavailable — run \`update\` to install the daemon.`
+* Session active → muted `Discovery is paused while casting — disconnect to pick another display.`
 * Daemon starting or scanning → muted `Scanning for displays…`
 * No sinks → muted `No displays found — put the TV in Screen Mirroring / Wireless Display mode and press r.`
 * Filter matches nothing → muted `No display matches the filter.`
@@ -160,7 +163,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 * [ ] Only-remote exposes the Local panel toggle after streaming starts; the toggle turns the panel off/on and Disconnect restores it.
 * [ ] Settings → Resolution/Scale write through `HyprService.applyMonitor` only for the Extend output; other modes show the "follows the built-in panel" note.
 * [ ] Disconnect stops the unit and cleans up the headless output and DPMS state.
-* [ ] Daemon starts on open and stops on close when idle; an active session keeps it alive.
+* [ ] Daemon starts on open and stops on close; it stops when a stream starts and restarts when the session ends with the launcher open.
 * [ ] Reopening the launcher while streaming adopts the transient unit.
 * [ ] Degraded states render as §7; no spinner or stale session is left behind.
 * [ ] Uses `Theme.*` / `Icons.*` only; no hard-coded hex or glyphs.
