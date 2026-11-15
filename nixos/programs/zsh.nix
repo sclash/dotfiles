@@ -50,6 +50,10 @@
       			export OPENROUTER_API="$(cat /run/secrets/openrouter)"
       			export OPENROUTER_API_KEY="$(cat /run/secrets/openrouter)"
     		fi
+		if [ -f /run/secrets/openrouter_management_key ]; then
+      			export OPENROUTER_MANAGEMENT_API="$(cat /run/secrets/openrouter_management_key)"
+      			export OPENROUTER_MANAGEMENT_API_KEY="$(cat /run/secrets/openrouter_management_key)"
+    		fi
             show_eza_tree() {
             	level_arg=''${1:-2}
             	eza --tree --level="$level_arg" --long --icons --git
