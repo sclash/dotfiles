@@ -83,6 +83,19 @@ ShellRoot {
             view.handleKey({ key: Qt.Key_Escape, text: "", modifiers: 0, accepted: false })
             check("view: second Esc closes", closed)
         },
+        // The bar badge, also created by path. The fixture's lowest known
+        // level is the case at 82 %.
+        function () {
+            const c = Qt.createComponent("components/bar/AirPodsIcon.qml")
+            const badge = c.status === Component.Ready
+                ? c.createObject(win.contentItem)
+                : null
+            check("badge: loads", badge !== null, c.errorString())
+            if (!badge) return
+            check("badge: visible with battery", badge.visible)
+            check("badge: lowest level is the case", badge.lowestLevel === 82)
+            check("badge: text carries the percentage", badge.batteryText.indexOf("82%") !== -1)
+        },
         function () {
             console.log("SMOKE DONE failures=" + shell.failures)
             Qt.quit()
