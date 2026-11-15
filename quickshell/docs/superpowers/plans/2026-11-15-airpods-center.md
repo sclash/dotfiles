@@ -627,7 +627,7 @@ if ! grep -q 'SMOKE DONE failures=0' "$tmp/log"; then
   grep -iE 'error|warn|unavailable|cannot|failed' "$tmp/log" | head -20
   exit 1
 fi
-for verb in noise:anc adaptive:65 ca:on onebud:on ear:both; do
+for verb in adaptive:65 ca:on onebud:on ear:both; do
   grep -qxF "$verb" "$tmp/ctl.log" || { echo "FAIL missing verb $verb"; exit 1; }
 done
 echo "OK (AirPods smoke tests)"
@@ -769,6 +769,8 @@ property string airpods: String.fromCodePoint(0xF184F)
 
 - [ ] **Step 3: Run the smoke to verify it passes**
 
+The view's `n` key is the producer of `noise:anc` (Task 5's service smoke deliberately leaves the fixture in Adaptive). Extend the smoke script's `for verb` list with `noise:anc` before this run.
+
 ```bash
 bash quickshell/tests/smoke-airpods.sh
 ```
@@ -780,7 +782,8 @@ Expected: `SMOKE DONE failures=0`, including the view checks and the ctl verbs.
 ```bash
 git add quickshell/components/launchers/airpods/AirPodsView.qml \
         quickshell/components/launchers/AirPodsCenter.qml \
-        quickshell/theme/Icons.qml quickshell/tests/smoke/airpods.qml
+        quickshell/theme/Icons.qml quickshell/tests/smoke/airpods.qml \
+        quickshell/tests/smoke-airpods.sh
 git commit -m "feat(quickshell): add the AirPods launcher"
 ```
 
