@@ -48,6 +48,7 @@
     		fi
 		if [ -f /run/secrets/openrouter ]; then
       			export OPENROUTER_API="$(cat /run/secrets/openrouter)"
+      			export OPENROUTER_API_KEY="$(cat /run/secrets/openrouter)"
     		fi
             show_eza_tree() {
             	level_arg=''${1:-2}
