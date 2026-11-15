@@ -265,6 +265,22 @@ QtObject {
         return HyprService.monitors.find(m => m.name === name) || null
     }
 
+    // The catch-all monitor rule (position "auto") lets Hyprland put a new
+    // headless output anywhere, e.g. stacked above the panel, and
+    // "auto-right" does not keep it adjacent when the main output has an
+    // offset. Pin SCREENCAST flush right of the main output, top edges
+    // aligned, so the cursor and windows can cross onto the cast desktop.
+    function placeExtendOutput() {
+        const mons = HyprService.monitors || []
+        const ref = mons.find(m => m.name === HyprService.refMonitorName)
+            || mons.find(m => m.name !== root.extendOutput)
+        const position = ref
+            ? (ref.x + HyprService.logicalSize(ref).w) + "x" + ref.y
+            : "auto-right"
+        HyprService.applyLua("hl.monitor({output=" + HyprService.luaQuote(root.extendOutput)
+            + ", mode=\"preferred\", position=" + HyprService.luaQuote(position) + ", scale=1})")
+    }
+
     function applyOutput(key, value) {
         const monitor = root.castOutput
         if (!monitor) return
@@ -436,6 +452,7 @@ QtObject {
                 return
             }
             root.extendOutputCreated = true
+            root.placeExtendOutput()
             if (root.pendingSink) root.startStream(root.pendingSink)
         }
         stderr: StdioCollector {

@@ -25,7 +25,7 @@ Three mutually exclusive chips, always visible:
 | Chip | Value | Runtime behaviour |
 |---|---|---|
 | **Duplicate** (default) | `duplicate` | No pre-action. The share dialog is used to pick the built-in panel; the desktop is cloned. |
-| **Extend** | `extend` | `hyprctl output create headless SCREENCAST` runs before `StartStream`; the share dialog offers `SCREENCAST` as an extra monitor. |
+| **Extend** | `extend` | `hyprctl output create headless SCREENCAST` runs before `StartStream`, then `SCREENCAST` is placed flush right of the main output (`HyprService.refMonitorName`), top edges aligned, so the cursor and windows can cross onto it. The catch-all `position = "auto"` rule otherwise lets Hyprland stack it anywhere, e.g. above the panel. The share dialog offers `SCREENCAST` as an extra monitor. |
 | **Only remote** | `only-remote` | Same as Duplicate; after streaming starts, session settings exposes a **Local panel** toggle. The panel is never turned off automatically — the share picker is displayed on that panel. |
 
 The selected mode is stored in `ScreenCastService.mode`. The hint line under the chips states, in plain language, which source to pick in the share dialog.
@@ -162,6 +162,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 * [ ] Extend creates `SCREENCAST` before connecting and removes it after disconnect.
 * [ ] Only-remote exposes the Local panel toggle after streaming starts; the toggle turns the panel off/on and Disconnect restores it.
 * [ ] Settings → Resolution/Scale write through `HyprService.applyMonitor` only for the Extend output; other modes show the "follows the built-in panel" note.
+* [ ] Extend places `SCREENCAST` right of the main output; the cursor crosses onto it.
 * [ ] Disconnect stops the unit and cleans up the headless output and DPMS state.
 * [ ] Daemon starts on open and stops on close; it stops when a stream starts and restarts when the session ends with the launcher open.
 * [ ] Reopening the launcher while streaming adopts the transient unit.
