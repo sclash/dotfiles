@@ -20,6 +20,8 @@ QtObject {
     property string audioMedium:      "󰖀"
     property string audioLow:         "󰕿"
     property string audioMuted:       "󰖁"
+    // AirPods — nf-md-earbuds (U+F184F)
+    property string airpods:          String.fromCodePoint(0xF184F)
     // Keyboard
     property string keyboard:         "󰌌"
     // Notification

@@ -28,11 +28,11 @@ Read top-to-bottom; do not skip `STYLE.md` — every component must use its toke
 | 3 | `AGENTIC-SETUP.md` | Herdr orchestration: topology `AGENTIC-SETUP.md:8`, workstreams `AGENTIC-SETUP.md:28`, orchestrator/tester protocols, git policy `AGENTIC-SETUP.md:138`. Read only if you will spawn agents. |
 | 4 | `bar/Bar.md` | Bar shell geometry + three-pill layout (`bar/Bar.md:12`). Read before any bar icon. |
 | 5 | `bar/Date.md` + `bar/desktop-environnment/Bar-Desktop-Environment.md` + `Bar-App-Tray.md` | Center + left pill (clock `bar/Date.md:12`, workspaces `Bar-Desktop-Environment.md:12`, tray `Bar-App-Tray.md:8`). |
-| 6 | `bar/Wifi.md`, `Bluetooth.md`, `Audio.md`, `KeyBoard.md` | Right-group icons + shared service contracts (`NetworkService`, `BluetoothService`, `Pipewire`, Hyprland IPC). |
+| 6 | `bar/Wifi.md`, `Bluetooth.md`, `Audio.md`, `AirPods.md`, `KeyBoard.md` | Right-group icons + shared service contracts (`NetworkService`, `BluetoothService`, `Pipewire`, Hyprland IPC). |
 | 7 | `bar/Bar-performance.md` | Collapsible perf drawer (`bar/Bar-performance.md:12`, polling paused when hidden). |
 | 8 | `launchers/LauncherBase` (implicit via `SPECS.md:96` + each launcher §2) + `launchers/App-Launcher.md` | Shared launcher chrome + first launcher (backend `elephant`/`walker`/`DesktopEntries`). |
 | 9 | `launchers/Network-Center.md`, `Bluetooth-Center.md` | Bar↔launcher state sync is critical here — read together. |
-| 10 | `launchers/Audio-Center.md`, `Display-manager.md`, `Screen-Cast.md`, `Usb-Manager.md` | Audio graph + `hyprctl monitors -j` + GND daemon casting (`SUPER+SHIFT+K`) + udisks2 USB mount/storage listing. |
+| 10 | `launchers/Audio-Center.md`, `launchers/AirPods-Center.md`, `Display-manager.md`, `Screen-Cast.md`, `Usb-Manager.md` | Audio graph + AirPods battery/modes + `hyprctl monitors -j` + GND daemon casting (`SUPER+SHIFT+K`) + udisks2 USB mount/storage listing. |
 | 11 | `launchers/Notification-Center.md`, `Shutdown-Launcher.md`, `Key-Launcher.md` | System + meta. |
 | 12 | `launchers/Control-Center.md` | Last — dispatches to all others (`Control-Center.md:12`). |
 

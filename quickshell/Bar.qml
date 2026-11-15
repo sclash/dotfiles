@@ -193,6 +193,10 @@ Scope {
                         }
                     }
 
+                    AirPodsIcon {
+                        onClicked: root.launcherToggleRequested("airpods")
+                    }
+
                     Rectangle {
                         width: Theme.barIconSlot
                         height: Theme.barIconSlot

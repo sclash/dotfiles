@@ -1,0 +1,80 @@
+diff -u -r a/ble/blemanager.cpp b/ble/blemanager.cpp
+--- a/ble/blemanager.cpp	2026-11-15 00:37:18.907880820 +0100
++++ b/ble/blemanager.cpp	2026-11-15 00:37:18.946383317 +0100
+@@ -23,7 +23,8 @@
+         {0x1420, AirPodsModel::AirPodsPro2Lightning},
+         {0x2420, AirPodsModel::AirPodsPro2USBC},
+         // Apple product 0x2027 arrives byte-swapped, so data[3] is 0x27 and this key is 0x2720.
+-        {0x2720, AirPodsModel::AirPodsPro3}
++        {0x2720, AirPodsModel::AirPodsPro3},
++        {0x3020, AirPodsModel::AirPods5},
+         // No AirPods Max 2 id yet: AAP names it instead, and an unrecognized id is ignored.
+     };
+ 
+diff -u -r a/enums.h b/enums.h
+--- a/enums.h	2026-11-15 00:37:18.908095557 +0100
++++ b/enums.h	2026-11-15 00:37:18.946197194 +0100
+@@ -36,7 +36,8 @@
+             AirPods4ANC,
+             AirPodsPro3,
+             // Appended, never inserted: this int is persisted and published as model_int.
+-            AirPodsMax2
++            AirPodsMax2,
++            AirPods5
+         };
+         Q_ENUM_NS(AirPodsModel)
+ 
+@@ -69,6 +70,13 @@
+                 {"A3056", AirPodsModel::AirPods4ANC},
+                 {"A3055", AirPodsModel::AirPods4ANC},
+                 {"A3057", AirPodsModel::AirPods4ANC},
++                // A3531-A3533 are the AirPods 5; A3439-A3441 are the same earbuds with the wireless charging case.
++                {"A3531", AirPodsModel::AirPods5},
++                {"A3532", AirPodsModel::AirPods5},
++                {"A3533", AirPodsModel::AirPods5},
++                {"A3439", AirPodsModel::AirPods5},
++                {"A3440", AirPodsModel::AirPods5},
++                {"A3441", AirPodsModel::AirPods5},
+                 // A3064 verified on a real device 2026-05-21; A3063 and A3065 are its published siblings.
+                 {"A3063", AirPodsModel::AirPodsPro3},
+                 {"A3064", AirPodsModel::AirPodsPro3},
+@@ -87,6 +95,7 @@
+                     return {"pod3.png", "pod3_case.png"};
+                 case AirPodsModel::AirPods4:
+                 case AirPodsModel::AirPods4ANC:
++                case AirPodsModel::AirPods5:
+                     return {"pod3.png", "pod4_case.png"};
+                 case AirPodsModel::AirPodsPro:
+                 case AirPodsModel::AirPodsPro2Lightning:
+@@ -129,6 +138,7 @@
+                 case AirPodsModel::AirPodsMaxLightning:    return QStringLiteral("AirPods Max");
+                 case AirPodsModel::AirPodsMaxUSBC:         return QStringLiteral("AirPods Max (USB-C)");
+                 case AirPodsModel::AirPodsMax2:            return QStringLiteral("AirPods Max 2");
++                case AirPodsModel::AirPods5:               return QStringLiteral("AirPods 5");
+                 case AirPodsModel::AirPodsPro3:            return QStringLiteral("AirPods Pro 3");
+                 case AirPodsModel::Unknown:                return QString();
+             }
+@@ -157,6 +167,7 @@
+         inline bool supportsNoiseControl(AirPodsModel model) {
+             switch (model) {
+                 case AirPodsModel::AirPods4ANC:
++                case AirPodsModel::AirPods5:
+                 case AirPodsModel::AirPodsPro:
+                 case AirPodsModel::AirPodsPro2Lightning:
+                 case AirPodsModel::AirPodsPro2USBC:
+@@ -176,6 +187,7 @@
+         inline bool hasH2ListeningFeatures(AirPodsModel model) {
+             switch (model) {
+                 case AirPodsModel::AirPods4ANC:
++                case AirPodsModel::AirPods5:
+                 case AirPodsModel::AirPodsPro2Lightning:
+                 case AirPodsModel::AirPodsPro2USBC:
+                 case AirPodsModel::AirPodsPro3:
+@@ -199,6 +211,7 @@
+         inline bool supportsOneBudANC(AirPodsModel model) {
+             switch (model) {
+                 case AirPodsModel::AirPods4ANC:
++                case AirPodsModel::AirPods5:
+                 case AirPodsModel::AirPodsPro:
+                 case AirPodsModel::AirPodsPro2Lightning:
+                 case AirPodsModel::AirPodsPro2USBC:

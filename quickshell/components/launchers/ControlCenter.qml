@@ -168,6 +168,7 @@ WlrLayershell {
         { label: "Network", key: "SUPER+w", icon: Icons.network, target: "network" },
         { label: "Bluetooth", key: "SUPER+b", icon: Icons.bluetoothOn, target: "bluetooth" },
         { label: "Audio", key: "SUPER+a", icon: Icons.audioVolume, target: "audio" },
+        { label: "AirPods", key: "SUPER+ALT+A", icon: Icons.airpods, target: "airpods" },
         { label: "Display", key: "SUPER+d", icon: Icons.display, target: "display" },
         { label: "Screen Cast", key: "SUPER+SHIFT+k", icon: Icons.cast, target: "screencast" },
         { label: "Identity", key: "SUPER+i", icon: Icons.fingerprint, target: "identity" },

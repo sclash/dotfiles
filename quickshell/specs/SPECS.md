@@ -64,6 +64,7 @@ All dependencies must be declared in `nixos/programs/quickshell.nix` or `configu
 | `nm-vpn` | VPN add/import/edit/connect helper (libnm, secrets on stdin) | **yes** for VPN | `quickshell/scripts/nm-vpn.nix`, in `programs/quickshell.nix` |
 | `wireplumber` + `pipewire` + `wpctl` | Audio graph | **yes** | `pkgs.wireplumber` |
 | `bluez` + `bluez-tools` | Bluetooth | **yes** | `pkgs.bluez` |
+| `librepods` daemon + `librepods-ctl` | AirPods status over AAP: per-pod/case battery, listening modes, ear detection. GPL-3.0 and a separate work; our QML only reads its `status.json` and sends `ctl` verbs. Started on demand while AirPods are connected or the panel is open, never enabled at login. Its pairing key file is `~/.config/AirPodsTrayApp/AirPodsTrayApp.conf` (directory 0700, file 0600) and is **not** a SOPS credential | **yes** for AirPods | `nixos/programs/librepods.nix` (pinned omarchy-pods daemon + AirPods 5 patch) + `systemd.user.services.librepods` in `nixos/programs/quickshell.nix` |
 | `elephant` (or `walker`) | App index for App-Launcher | **yes** | already in autostart (`hyprland.lua:38`) — ensure packaged |
 | `upower` | Battery via `Quickshell.Services.UPower` | **yes** | `pkgs.upower` + `services.upower.enable` |
 | `power-profiles-daemon` | CPU/platform power profiles (performance/balanced/power-saver) | **yes** | `services.power-profiles-daemon.enable` (`configuration.nix`) |
@@ -235,11 +236,12 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 | Display indicator (next to USB) | Right | `launchers/Display-manager.md` | `HyprService` |
 | Wifi | Right | `bar/Wifi.md` | `NetworkService` |
 | Audio | Right | `bar/Audio.md` | `AudioService` (PipeWire) |
+| AirPods | Right | `bar/AirPods.md` | `AirPodsService` |
 | Battery | Right | `launchers/Power-Center.md` (§1 bar icon) | `BatteryService` + `PowerProfileService` (profile switcher in the card) |
 | Perf drawer (CPU/RAM/Disk/Temp) | Right (collapsible) | `bar/Bar-performance.md` | `PerfService` |
 | Notification bell (next to Date) | Center | `bar/Date.md` | `NotifService` |
 
-Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | Bluetooth | USB | Display | Wifi | Battery | Keyboard | Tray`.
+Detailed order in bar (left → right): `Workspaces | AppTray (system tray, after a separator when it has items) | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Bluetooth | USB | Display | Audio | AirPods | Wifi | VPN(name, only while active) | Battery | Keyboard`.
 
 ### 5.2 Launchers (`./launchers`)
 
@@ -250,6 +252,7 @@ Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | D
 | Network-Center | `SUPER+w` | `Network-Center.md` |
 | Bluetooth-Center | `SUPER+b` | `Bluetooth-Center.md` |
 | Audio-Center | `SUPER+a` | `Audio-Center.md` |
+| AirPods-Center | `SUPER+ALT+A` | `AirPods-Center.md` |
 | Display-Manager | `SUPER+d` | `Display-manager.md` |
 | Screen-Cast | `SUPER+SHIFT+K` | `Screen-Cast.md` |
 | Identity-Manager | `SUPER+I` | `Identity-Manager.md` |
@@ -284,10 +287,11 @@ Summary:
 
 1. `theme/Theme.qml` + `Icons.qml` + `services/*` skeletons (shared foundation).
 2. `Bar.qml` shell + `LauncherBase.qml` (so builders have the canvas).
-3. Bar workstreams: `Date` → `Workspaces/AppTray` → `Keyboard` → `Wifi`/`Bluetooth`/`Audio` → `PerfDrawer`.
-4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `Display-Manager` → `USB-Manager` → `Power-Center` → `Notification-Center` → `Calendar-Launcher` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
+3. Bar workstreams: `Date` → `Workspaces/AppTray` → `Keyboard` → `Wifi`/`Bluetooth`/`Audio`/`AirPods` → `PerfDrawer`.
+4. Launchers: `App-Launcher` → `Network-Center` → `Bluetooth-Center` → `Audio-Center` → `AirPods-Center` → `Display-Manager` → `USB-Manager` → `Power-Center` → `Notification-Center` → `Calendar-Launcher` → `Control-Center` → `Shutdown-Launcher` → `Key-Launcher`.
 5. Wire `hyprland.lua` keybindings + `quickshell ipc` handlers end-to-end.
-6. Final pass: perf/idle measurement, memory audit, Herdr demo.
+6. Wire the `librepods` user service on demand: `AirPodsService` starts it while the AirPods are connected or the panel is open and stops it when neither holds, so it is never enabled at login and adds nothing to idle memory.
+7. Final pass: perf/idle measurement, memory audit, Herdr demo.
 
 ---
 
@@ -297,7 +301,10 @@ Summary:
 * Bar renders on every `Quickshell.screens` output; workspaces track Hyprland correctly.
 * Each bar icon click (or key) opens its corresponding launcher; launcher actions mutate icon state.
 * All launchers toggle via `SUPER+<key>`, close on `Esc`, filter/navigate with vim keys.
-* No polling when perf drawer is hidden; memory < 200 MB idle (measured via `systemd-cgtop` or `ps`).
+* No polling when perf drawer is hidden; memory < 200 MB idle (measured via `systemd-cgtop` or `ps`); with the AirPods disconnected and the panel closed, no `librepods` process is left behind.
+* AirPods: the `AirPods` badge is visible only while the daemon is reachable, the AirPods are connected and a level is known; `SUPER+ALT+A` opens `AirPods-Center`, one mode change and one feature toggle reach the device, and the panel and badge agree without a reload.
+* AirPods daemon lifecycle: opening the panel starts `librepods.service`, closing it stops the service when no AirPods are connected, and a shell restart adopts a running daemon instead of starting a second one.
+* AirPods live-device check (with real AirPods, once): the status file reports the model name and the H2 capability flags, one verb of each kind is exercised, `journalctl --user -u librepods` is clean, and the daemon is stopped with its temporary state removed afterwards.
 * `nix flake check` (if present) and `home-manager switch` succeed after dep additions.
 
 ---
