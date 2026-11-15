@@ -29,6 +29,7 @@ Scope {
     NetworkCenter { id: networkCenter }
     BluetoothCenter { id: bluetoothCenter }
     AudioCenter { id: audioCenter }
+    AirPodsCenter { id: airPodsCenter }
     DisplayManager { id: displayManager }
     ScreenCastLauncher { id: screenCastLauncher }
     UsbManager { id: usbManager }
@@ -62,6 +63,7 @@ Scope {
             if (except !== "network") networkCenter.close()
             if (except !== "bluetooth") bluetoothCenter.close()
             if (except !== "audio") audioCenter.close()
+            if (except !== "airpods") airPodsCenter.close()
             if (except !== "display") displayManager.close()
             if (except !== "screencast") screenCastLauncher.close()
             if (except !== "usb") usbManager.close()
@@ -80,6 +82,7 @@ Scope {
             else if (name === "network") { if (networkCenter.isOpen) networkCenter.close(); else { closeAllExcept("network"); networkCenter.open() } }
             else if (name === "bluetooth") { if (bluetoothCenter.isOpen) bluetoothCenter.close(); else { closeAllExcept("bluetooth"); bluetoothCenter.open() } }
             else if (name === "audio") { if (audioCenter.isOpen) audioCenter.close(); else { closeAllExcept("audio"); audioCenter.open() } }
+            else if (name === "airpods") { if (airPodsCenter.isOpen) airPodsCenter.close(); else { closeAllExcept("airpods"); airPodsCenter.open() } }
             else if (name === "display") { if (displayManager.isOpen) displayManager.close(); else { closeAllExcept("display"); displayManager.open() } }
             else if (name === "screencast" || name === "cast") { if (screenCastLauncher.isOpen) screenCastLauncher.close(); else { closeAllExcept("screencast"); screenCastLauncher.open() } }
             else if (name === "usb") { if (usbManager.isOpen) usbManager.close(); else { closeAllExcept("usb"); usbManager.open() } }
@@ -96,7 +99,7 @@ Scope {
         }
 
         function closeAll(): void {
-            appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close()
+            appLauncher.close(); networkCenter.close(); bluetoothCenter.close(); audioCenter.close(); airPodsCenter.close()
             displayManager.close(); usbManager.close(); notificationCenter.close(); calendarLauncher.close(); shutdownLauncher.close(); powerCenter.close(); keyLauncher.close(); controlCenter.close(); trayManager.close(); screenCastLauncher.close(); identityManager.close()
         }
 
@@ -106,6 +109,7 @@ Scope {
             else if (name==="network") networkCenter.close()
             else if (name==="bluetooth") bluetoothCenter.close()
             else if (name==="audio") audioCenter.close()
+            else if (name==="airpods") airPodsCenter.close()
             else if (name==="display") displayManager.close()
             else if (name==="screencast" || name==="cast") screenCastLauncher.close()
             else if (name==="usb") usbManager.close()

@@ -660,6 +660,7 @@ hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("quickshell ipc call launcher tog
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("quickshell ipc call launcher toggle network"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("quickshell ipc call launcher toggle bluetooth"))
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle audio"))
+hl.bind(mainMod .. " + ALT + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle airpods"))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell ipc call launcher toggle display"))
 hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("quickshell ipc call launcher toggle notification"))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell ipc call launcher toggle calendar"))
