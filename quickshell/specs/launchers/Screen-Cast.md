@@ -24,11 +24,12 @@ Three mutually exclusive chips, always visible:
 
 | Chip | Value | Runtime behaviour |
 |---|---|---|
-| **Duplicate** (default) | `duplicate` | No pre-action. The share dialog is used to pick the built-in panel; the desktop is cloned. |
-| **Extend** | `extend` | `hyprctl output create headless SCREENCAST` runs before `StartStream`, then `SCREENCAST` is placed flush right of the main output (`HyprService.refMonitorName`), top edges aligned, so the cursor and windows can cross onto it. The catch-all `position = "auto"` rule otherwise lets Hyprland stack it anywhere, e.g. above the panel. The share dialog offers `SCREENCAST` as an extra monitor. |
-| **Only remote** | `only-remote` | Same as Duplicate; after streaming starts, session settings exposes a **Local panel** toggle. The panel is never turned off automatically — the share picker is displayed on that panel. |
+| **Duplicate** (default) | `duplicate` | No pre-action. The main output (`HyprService.refMonitorName`) is shared; the desktop is cloned. |
+| **Extend** | `extend` | `hyprctl output create headless SCREENCAST` runs before `StartStream`, then `SCREENCAST` is placed flush right of the main output (`HyprService.refMonitorName`), top edges aligned, so the cursor and windows can cross onto it. The catch-all `position = "auto"` rule otherwise lets Hyprland stack it anywhere, e.g. above the panel. `SCREENCAST` is shared. |
+| **Only remote** | `only-remote` | Same as Duplicate; after streaming starts, session settings exposes a **Local panel** toggle. The panel is never turned off automatically: if the share picker falls back to the dialog (§6), it is displayed on that panel. |
+| **Window** | `window` | Choosing a display opens the picker (§3.4) over the open windows (`Hyprland.toplevels`: title · app id); picking one connects and shares only that window. No window open → nothing happens. |
 
-The selected mode is stored in `ScreenCastService.mode`. The hint line under the chips states, in plain language, which source to pick in the share dialog.
+The selected mode is stored in `ScreenCastService.mode`. The hint line under the chips states, in plain language, what will be shared. No share dialog appears: the launcher answers the portal itself (§6, **Share source**).
 
 ### 3.2 Displays (scan)
 
@@ -40,7 +41,7 @@ The selected mode is stored in `ScreenCastService.mode`. The hint line under the
 ### 3.3 Session card (visible when a session exists)
 
 * Name, protocol, and mode; subline is mode-aware:
-  * `connecting` → `"<Mode> · waiting for the share dialog…"`
+  * `connecting` → `"<Mode> · waiting for the share dialog…"` (the dialog only appears when the share picker falls back, §6)
   * `streaming` → `"<Mode> · streaming"`
   * `error` → `"<Mode> · error"`
 * Buttons: `Settings` (opens §3.4) and `Disconnect` (`ScreenCastService.disconnect()`).
@@ -59,7 +60,7 @@ Rows, filtered by the active mode:
 
 A muted line under the rows reads `Resolution and scale follow the built-in panel in this mode.` when the mode is not `extend` — because in duplicate/only-remote the cast source *is* the built-in panel, so resizing it would resize the laptop screen too.
 
-The picker opens in place (list replaces the row navigation): `j/k` moves, `Enter`/`l` applies, `Esc`/`h` cancels.
+The picker opens in place (list replaces the row navigation, and the main view while picking a window): `j/k` moves, `Enter`/`l` applies, `Esc`/`h` cancels. The same picker lists windows for mode `window` before connecting.
 
 ### 3.5 Error line
 
@@ -69,12 +70,12 @@ The picker opens in place (list replaces the row navigation): `j/k` moves, `Ente
 
 * `j/k` moves across mode chips → Scan → display rows → session buttons (→ settings rows when in settings).
 * `Enter` activates the focused item.
-* `1` / `2` / `3` select Duplicate / Extend / Only remote directly.
+* `1` / `2` / `3` / `4` select Duplicate / Extend / Only remote / Window directly.
 * `s` opens session settings (only when a session exists); `d` disconnects; `r` rescans.
 * `/` focuses the filter; typing filters by display name; `Esc` clears the filter before closing.
 * `Esc` stack: picker → settings → main → close.
 * Footers are exact:
-  * main: `j/k move · Enter connect · 1/2/3 mode · s settings · d disconnect · r rescan · / filter · Esc close`
+  * main: `j/k move · Enter connect · 1-4 mode · s settings · d disconnect · r rescan · / filter · Esc close`
   * settings: `settings: j/k row · Enter act · Esc back`
   * picker: `picker: j/k option · Enter/l apply · h/Esc back`
 
@@ -106,7 +107,7 @@ function refresh()               // re-read Displays
 function rescan()
 
 // session
-function connectSink(sink)
+function connectSink(sink, windowAddress) // windowAddress required in mode "window"
 function disconnect()
 function setLocalPanel(on)
 function applyOutput(key, value) // mode | scale | position
@@ -133,7 +134,7 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 * **Disconnect.** Stops the transient unit with `systemctl --user stop` instead of `StopStream` — the unit outlives the daemon, and stopping it must work even if the daemon already exited. `StopStream` is equivalent while the daemon is running.
 * **Auto-cleanup.** If the unit reports `failed` or stays `inactive` for four polls (~6 s), the service clears the session, removes a `SCREENCAST` output it created, restores DPMS, and surfaces the error, so a dropped TV does not leave a phantom monitor or a dark panel behind.
 * **Reopen.** On refresh, the service scans `systemctl --user list-units 'gnome-network-displays-stream-*.service'` and adopts an already-running unit, so restarting the shell does not lose the session. The adopted mode is `duplicate` (the real mode is not recoverable from the unit).
-* **Share dialog.** The stream binary opens a ScreenCast portal session with `MONITOR | WINDOW | VIRTUAL`. Hyprland's portal advertises all three types (`AvailableSourceTypes = 7`) but its picker lists only screens and windows, so the user picks the source there. This is why Extend pre-creates a named headless output and the hint tells the user to pick it.
+* **Share source.** The stream binary opens a ScreenCast portal session with `MONITOR | WINDOW | VIRTUAL`, and xdg-desktop-portal-hyprland asks a picker program for the source. `hypr/xdph.conf` sets `screencopy:custom_picker_binary = quickshell-share-picker` (`quickshell/scripts/share-picker.sh`, packaged in `nixos/programs/quickshell.nix`). Right before `StartStream`, in the same process, the service writes the source to `$XDG_RUNTIME_DIR/quickshell-cast-source` (mode 0600): `screen:<main output>`, `screen:SCREENCAST` or `window:0x<Hyprland address>`. The picker answers XDPH with it (`[SELECTION]/screen:<name>`, or `[SELECTION]/window:<toplevel handle>` mapped through `XDPH_WINDOW_SHARING_LIST`) and deletes the file. With no file, a choice older than 30 s, an unknown choice or a window that has closed, it runs `hyprland-share-picker`, so every other share (browser, OBS) keeps the stock dialog. A failed connect also deletes the file. XDPH reads `xdph.conf` only at startup. Tested by `quickshell/tests/test-share-picker.sh`.
 * **Extend output.** `hyprctl output create headless SCREENCAST` before connecting; `hyprctl output remove SCREENCAST` after disconnect. Resolution/scale are applied through `HyprService.applyMonitor`, which composes `hyprctl eval` rules and preserves every other output's rule.
 * **Only remote.** A manual **Local panel** toggle in session settings (default `On`) runs `hl.dsp.dpms({ action = "off"/"on", monitor = <built-in> })` through `hyprctl dispatch`; `dpms on` also runs on disconnect. It is never automatic: the ScreenCast share picker is displayed on that panel, so turning it off before the picker is answered would lock the user out. The built-in output is resolved through `HyprService.refMonitorName` (never hard-coded). If DPMS freezes the captured frames on a given machine, the fallback is brightness 0 — recorded here as an open validation item.
 * **Discovery scope.** `Displays` includes Wi-Fi Display P2P, Wi-Fi Display MICE (mDNS) and Chromecast sinks. No ports are opened here: the project's firewall is disabled; if it is ever enabled, allow `p2p-wl+`, TCP 7236/7250 and UDP 7236/5353.
@@ -157,7 +158,9 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 
 * [ ] `SUPER+SHIFT+K` toggles the launcher through `quickshell ipc call launcher toggle screencast`.
 * [ ] Displays are listed automatically; `r` rescans; `/` filters by name.
-* [ ] Mode chips and `1/2/3` update `ScreenCastService.mode`; the hint matches the mode.
+* [ ] Mode chips and `1-4` update `ScreenCastService.mode`; the hint matches the mode.
+* [ ] Connecting shares the mode's source with no share dialog; a browser screen share still gets the dialog.
+* [ ] Window mode lists the open windows; picking one casts only that window.
 * [ ] `Enter` on a display starts a stream; the session card shows name, protocol, mode and state.
 * [ ] Extend creates `SCREENCAST` before connecting and removes it after disconnect.
 * [ ] Only-remote exposes the Local panel toggle after streaming starts; the toggle turns the panel off/on and Disconnect restores it.
@@ -173,7 +176,6 @@ The launcher never touches `busctl`, `systemctl`, `hyprctl` or `HyprService` dir
 ## 9. Not Verified (no cast device available)
 
 * Discovery and connection against a real Miracast TV (the daemon API was validated by source inspection; `Displays`/`StartStream` shapes are covered by parser tests and must be re-checked on hardware).
-* Whether Hyprland's share picker lists the `SCREENCAST` headless output.
 * Whether `dpms off` keeps the captured frames alive while casting the built-in panel.
 * Audio casting (the daemon creates a `Network-Displays` sink; this launcher does not route to it).
 * Chromecast sinks end-to-end (the daemon advertises support; untested here).

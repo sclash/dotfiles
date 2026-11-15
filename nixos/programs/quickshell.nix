@@ -32,6 +32,17 @@ let
   # and nixos/tests/test-vpn-vm.sh.
   nm-vpn = import ../../quickshell/scripts/nm-vpn.nix { inherit pkgs; };
 
+  # Share picker for xdg-desktop-portal-hyprland (hypr/xdph.conf,
+  # screencopy:custom_picker_binary). Answers the portal with the source the
+  # Screen Cast launcher chose, so casting shows no dialog; every other share
+  # falls back to hyprland-share-picker. Tested by
+  # quickshell/tests/test-share-picker.sh.
+  share-picker = pkgs.writeShellApplication {
+    name = "quickshell-share-picker";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = builtins.readFile ../../quickshell/scripts/share-picker.sh;
+  };
+
   # AirPods daemon (librepods fork, GPL-3.0) with generic AirPods 5 support.
   librepods = pkgs.callPackage ./librepods.nix { };
 
@@ -160,6 +171,7 @@ in
     gnome-network-displays # Miracast/Chromecast daemon for ScreenCastService
     identity-passwd    # password changes for IdentityService (Identity Manager)
     nm-vpn             # VPN add/import/edit/connect for NetworkService (Network Center)
+    share-picker       # portal share picker; the Screen Cast launcher picks the source
     refresh-launcher   # re-index desktop entries after a rebuild adds an app
     librepods          # AirPods AAP daemon + librepods-ctl for AirPodsService
   ] ++ (with pkgs-unstable; [

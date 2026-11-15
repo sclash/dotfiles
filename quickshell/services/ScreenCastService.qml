@@ -40,6 +40,7 @@ QtObject {
     // Internal ---------------------------------------------------------------
     property var pendingSink: null
     property string pendingMode: "duplicate"
+    property string pendingWindow: ""      // Hyprland address, mode "window"
     property int idleTicks: 0
     property string pollUnit: ""
     property bool dpmsTargetState: true
@@ -53,9 +54,11 @@ QtObject {
     function modeLabel(m) {
         if (m === "extend") return "Extend"
         if (m === "only-remote") return "Only remote"
+        if (m === "window") return "Window"
         return "Duplicate"
     }
     function fail(message) {
+        root.clearSourceProc.running = true
         root.pollTimer.stop()
         root.pendingSink = null
         root.lastError = String(message || "Cast operation failed")
@@ -158,11 +161,14 @@ QtObject {
     function rescan() { root.refresh() }
 
     // Connection -------------------------------------------------------------
-    function connectSink(sink) {
+    // windowAddress: the Hyprland window to cast in mode "window".
+    function connectSink(sink, windowAddress) {
         if (!sink || root.active || root.busy) return
+        if (root.mode === "window" && !windowAddress) return
         root.clearError()
         root.pendingSink = sink
         root.pendingMode = root.mode
+        root.pendingWindow = root.mode === "window" ? String(windowAddress) : ""
         root.sessionState = "connecting"
         root.scanTimer.stop()
         root.dataUpdated()
@@ -174,10 +180,30 @@ QtObject {
         root.startStream(sink)
     }
 
+    // What the portal should share, in quickshell-share-picker's syntax
+    // (scripts/share-picker.sh). Empty means "let the user pick": the picker
+    // then opens hyprland-share-picker.
+    function castSource() {
+        if (root.pendingMode === "extend") return "screen:" + root.extendOutput
+        if (root.pendingMode === "window")
+            return root.pendingWindow ? "window:0x" + root.pendingWindow.replace(/^0x/, "") : ""
+        const mons = HyprService.monitors || []
+        const ref = mons.find(m => m.name === HyprService.refMonitorName)
+            || mons.find(m => m.name !== root.extendOutput)
+        return ref ? "screen:" + ref.name : ""
+    }
+
     function startStream(sink) {
         if (!sink) { root.fail("No display selected"); return }
         root.pendingSink = sink
+        // Write the one-shot source file, then StartStream, in one process so
+        // the file exists before the stream asks the portal.
         root.startProc.command = [
+            "sh", "-c",
+            "umask 077; f=\"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/quickshell-cast-source\"; "
+                + "if [ -n \"$1\" ]; then printf '%s\\n' \"$1\" > \"$f\"; else rm -f \"$f\"; fi; "
+                + "shift; exec \"$@\"",
+            "sh", root.castSource(),
             "busctl", "--user", "--timeout=8", "call",
             "org.gnome.NetworkDisplays.Manager",
             "/org/gnome/NetworkDisplays/Manager",
@@ -516,6 +542,13 @@ QtObject {
                 if (t) root.lastError = t.split("\n")[0]
             }
         }
+    }
+
+    // A connect that failed before the portal asked leaves its one-shot
+    // source behind; drop it so it cannot answer an unrelated share. (The
+    // picker also ignores choices older than 30 s.)
+    property Process clearSourceProc: Process {
+        command: ["sh", "-c", "rm -f \"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/quickshell-cast-source\""]
     }
 
     property Process stopProc: Process {

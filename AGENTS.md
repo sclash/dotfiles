@@ -117,6 +117,7 @@ bash nixos/tests/test-face.sh
 bash nixos/tests/test-vpn.sh
 bash quickshell/tests/run.sh
 bash quickshell/tests/test-identity-passwd.sh
+bash quickshell/tests/test-share-picker.sh
 bash quickshell/tests/smoke-identity-views.sh
 bash quickshell/tests/test-nm-vpn.sh
 bash quickshell/tests/smoke-vpn-views.sh
