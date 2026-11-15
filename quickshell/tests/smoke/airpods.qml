@@ -1,6 +1,8 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "services"
+import "services/airPodsParse.js" as Parse
 
 // Smoke test for AirPodsService, run inside Quickshell from a temporary config
 // root (see tests/smoke-airpods.sh: fixture status.json, stub librepods-ctl,
@@ -13,9 +15,19 @@ ShellRoot {
     property int step: 0
     property var view: null
 
+    readonly property string headsetFixture: '{"schema_version":1,"connected":true,"device_name":"Test Max","model_name":"AirPods Max","model_number":"A3184","is_headset":true,"headset":{"available":true,"charging":false,"level":88}}'
+    readonly property string headsetOffFixture: '{"schema_version":1,"connected":false,"device_name":"Test Max","model_name":"AirPods Max","model_number":"A3184","is_headset":true,"headset":{"available":false,"charging":false,"level":0}}'
+
     function check(name, cond, detail) {
         console.log((cond ? "SMOKE OK   " : "SMOKE FAIL ") + name + (cond || !detail ? "" : " — " + detail))
         if (!cond) failures++
+    }
+
+    // The service reads one status path, so the second device shape replaces
+    // the fixture on disk; refresh() runs after the write finishes.
+    function writeStatus(json) {
+        writeProc.command = ["sh", "-c", "printf '%s' \"$1\" > \"$2\"", "sh", json, AirPodsService.statePath]
+        writeProc.running = true
     }
 
     property var steps: [
@@ -96,6 +108,40 @@ ShellRoot {
             check("badge: lowest level is the case", badge.lowestLevel === 82)
             check("badge: text carries the percentage", badge.batteryText.indexOf("82%") !== -1)
         },
+        // A headset has one battery row, connected or not; the second fixture
+        // is a readable disconnect that still says is_headset true.
+        function () {
+            shell.writeStatus(shell.headsetFixture)
+        },
+        function () {
+            check("service: headset fixture adopted",
+                  AirPodsService.isHeadset && AirPodsService.connected,
+                  "isHeadset=" + AirPodsService.isHeadset + " connected=" + AirPodsService.connected)
+        },
+        function () {
+            const rows = shell.view.batteryRows
+            check("view: connected headset has one row",
+                  rows.length === 1 && rows[0].label === "Headset", JSON.stringify(rows))
+            check("view: connected headset level",
+                  rows.length === 1 && rows[0].level === 88, JSON.stringify(rows))
+        },
+        function () {
+            shell.writeStatus(shell.headsetOffFixture)
+        },
+        function () {
+            check("service: disconnected headset keeps isHeadset",
+                  AirPodsService.isHeadset && !AirPodsService.connected,
+                  "isHeadset=" + AirPodsService.isHeadset + " connected=" + AirPodsService.connected)
+        },
+        function () {
+            const rows = shell.view.batteryRows
+            check("view: disconnected headset has one row",
+                  rows.length === 1 && rows[0].label === "Headset", JSON.stringify(rows))
+            check("view: disconnected headset level is --",
+                  rows.length === 1 && rows[0].level === Parse.LEVEL_UNKNOWN
+                      && Parse.levelText(rows[0].level) === "--",
+                  JSON.stringify(rows))
+        },
         function () {
             console.log("SMOKE DONE failures=" + shell.failures)
             Qt.quit()
@@ -107,6 +153,13 @@ ShellRoot {
         visible: true
         implicitWidth: 620
         implicitHeight: 640
+    }
+
+    // The headset fixtures replace the status file in place.
+    Process {
+        id: writeProc
+        command: []
+        onExited: AirPodsService.refresh()
     }
 
     Timer {

@@ -63,7 +63,10 @@ Item {
     readonly property var batteryRows: {
         const service = AirPodsService
         const on = view.live
-        if (service.connected && service.isHeadset) {
+        // A headset reports one level for the whole device. The row shape
+        // follows isHeadset alone: a disconnected AirPods Max still shows one
+        // Headset row with `--`, not three stale earbud/case rows.
+        if (service.isHeadset) {
             const headset = service.headsetBattery
             return [{
                 label: "Headset",
