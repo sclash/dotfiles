@@ -5,6 +5,8 @@ import Quickshell.Io
 import "airPodsParse.js" as Parse
 import "airPodsLifecycle.js" as Lifecycle
 
+// Adapted from omarchy-pods Service.qml (MIT), commit f35dbc4.
+//
 // AirPodsService — reads the one-line status file librepods publishes
 // ($XDG_STATE_HOME/librepods/status.json), sends librepods-ctl verbs and
 // starts/stops the user service only while the AirPods are connected or the
@@ -65,18 +67,26 @@ QtObject {
     // How long an optimistic value is held before the daemon's own state wins.
     readonly property int settleHoldMs: 4000
     readonly property int actionStatusMs: 2200
-    readonly property int startTimeoutMs: 8000
+    // 8 s in production; the lifecycle smoke shortens it through this hook.
+    readonly property int startTimeoutMs: {
+        const ms = Number(Quickshell.env("AIRPODS_START_TIMEOUT_MS"))
+        return ms > 0 ? ms : 8000
+    }
 
     // ---------- lifecycle state ----------
     property bool panelOpen: false
     // A start that failed must not be retried by the 5 s Bluetooth poll; the
     // next panel open or wantDaemon false→true transition clears it.
     property bool startFailed: false
-    readonly property bool wantDaemon: root.panelOpen || root.connected
-        || BluetoothService.devices.some(d => d.connected && d.isAirPods)
+    readonly property bool wantDaemon: Lifecycle.shouldRun(
+        BluetoothService.devices.some(d => d.connected && d.isAirPods),
+        root.panelOpen, root.connected)
     readonly property bool lifecycleBusy: root.lifecycleProc.running
     property bool _lifecycleQueued: false
     property string _lifecycleAction: ""
+    // A start that exited 0 but never wrote the status file may have left the
+    // unit running (or restarting); stop it before any later start.
+    property bool _stopAfterTimeout: false
 
     // ---------- ctl state ----------
     // Held over incoming reads until the daemon agrees, so a write already in
@@ -102,6 +112,10 @@ QtObject {
         root.daemonReachable = true
         root.daemonActive = true
         root.daemonStarting = false
+        // A late status proves the start succeeded, so a start that timed out
+        // earlier must not keep blocking the next restart.
+        root.startFailed = false
+        root._stopAfterTimeout = false
         root.startWatch.stop()
         if (status.ok) {
             root.lifecycleError = ""
@@ -264,7 +278,11 @@ QtObject {
 
     // ---------- daemon lifecycle ----------
     function notePanelOpen() {
+        // A user retry is allowed after a failed or timed-out start, and the
+        // old error must not stay under "Connecting…".
         root.startFailed = false
+        root.lifecycleError = ""
+        root._stopAfterTimeout = false
         root.panelOpen = true
         root.reconcile()
         root.refresh()
@@ -282,10 +300,21 @@ QtObject {
             root._lifecycleQueued = true
             return
         }
+        // A start that never wrote the status file may have left the unit
+        // running; stop it before deciding anything else.
+        if (root._stopAfterTimeout) {
+            root._stopAfterTimeout = false
+            root._runLifecycle("stop")
+            return
+        }
         const action = Lifecycle.nextAction(root.wantDaemon, root.daemonActive)
         if (action === "none") return
         // A failed start waits for the user (panel open) or a real reconnect.
         if (action === "start" && root.startFailed) return
+        root._runLifecycle(action)
+    }
+
+    function _runLifecycle(action) {
         root._lifecycleAction = action
         if (action === "start") {
             root.daemonStarting = true
@@ -372,6 +401,15 @@ QtObject {
             root.daemonStarting = false
             root.startFailed = true
             root.lifecycleError = "librepods did not start — journalctl --user -u librepods"
+            // The unit may be running (or crash-looping) without writing the
+            // status file, so stop it; "only while connected or the panel is
+            // open" must hold even after a failed watch.
+            if (root.lifecycleBusy) {
+                root._stopAfterTimeout = true
+                root._lifecycleQueued = true
+            } else {
+                root._runLifecycle("stop")
+            }
         }
     }
 
