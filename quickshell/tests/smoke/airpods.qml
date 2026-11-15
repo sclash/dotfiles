@@ -11,6 +11,7 @@ ShellRoot {
     id: shell
     property int failures: 0
     property int step: 0
+    property var view: null
 
     function check(name, cond, detail) {
         console.log((cond ? "SMOKE OK   " : "SMOKE FAIL ") + name + (cond || !detail ? "" : " — " + detail))
@@ -51,11 +52,49 @@ ShellRoot {
             check("service: ctl failure surfaces", AirPodsService.lastError.indexOf("stub failure") !== -1,
                   AirPodsService.lastError)
         },
+        // The view is created by path, like the VPN smoke creates its views.
+        // Its `n` key is the producer of the smoke's `noise:anc` verb.
+        function () {
+            const c = Qt.createComponent("components/launchers/airpods/AirPodsView.qml")
+            const view = c.status === Component.Ready
+                ? c.createObject(win.contentItem, { width: 600, height: 640 })
+                : null
+            shell.view = view
+            check("view: loads", view !== null, c.errorString())
+            if (!view) return
+            check("view: nav order",
+                  view.navItems.map(i => i.kind).join(",")
+                      === "mode,mode,mode,mode,adaptive,ca,onebud,ear,refresh",
+                  JSON.stringify(view.navItems))
+            check("view: mode labels",
+                  view.navItems.filter(i => i.kind === "mode").map(i => i.label).join(",")
+                      === "Off,Transparency,Adaptive,Noise Cancellation")
+            view.handleKey({ key: Qt.Key_J, text: "j", modifiers: 0, accepted: false })
+            check("view: j moves the cursor", view.selIndex === 1)
+            view.handleKey({ key: Qt.Key_N, text: "n", modifiers: 0, accepted: false })
+            view.handleKey({ key: Qt.Key_B, text: "b", modifiers: 0, accepted: false })
+            view.handleKey({ key: Qt.Key_E, text: "e", modifiers: 0, accepted: false })
+            view.handleKey({ key: Qt.Key_Slash, text: "/", modifiers: 0, accepted: false })
+            check("view: filter opens", view.filterActive)
+            let closed = false
+            view.closeRequested.connect(() => closed = true)
+            view.handleKey({ key: Qt.Key_Escape, text: "", modifiers: 0, accepted: false })
+            check("view: Esc clears the filter", !view.filterActive && !closed)
+            view.handleKey({ key: Qt.Key_Escape, text: "", modifiers: 0, accepted: false })
+            check("view: second Esc closes", closed)
+        },
         function () {
             console.log("SMOKE DONE failures=" + shell.failures)
             Qt.quit()
         }
     ]
+
+    FloatingWindow {
+        id: win
+        visible: true
+        implicitWidth: 620
+        implicitHeight: 640
+    }
 
     Timer {
         interval: 1000

@@ -34,7 +34,7 @@ if ! grep -q 'SMOKE DONE failures=0' "$tmp/log"; then
   grep -iE 'error|warn|unavailable|cannot|failed' "$tmp/log" | head -20
   exit 1
 fi
-for verb in adaptive:65 ca:on onebud:on ear:both; do
+for verb in adaptive:65 ca:on onebud:on ear:both noise:anc; do
   grep -qxF "$verb" "$tmp/ctl.log" || { echo "FAIL missing verb $verb"; exit 1; }
 done
 echo "OK (AirPods smoke tests)"
