@@ -97,6 +97,14 @@
       pkgs = nixpkgs.legacyPackages.${system};
       # pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       # pkgs-master = nixpkgs-master.legacyPackages.${system};
+      # Package set for the standalone homeConfigurations (and so checks.portable).
+      # legacyPackages carries nixpkgs' default config, which refuses unfree
+      # packages; the NixOS system allows them, and home-manager there uses the
+      # system's pkgs (useGlobalPkgs), so match it here.
+      pkgsHome = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
       mkPkgsUnstable = hostSystem: import nixpkgs-unstable {
         system = hostSystem;
         config.allowUnfree = true;
@@ -239,7 +247,7 @@
 
         homeConfigurations = {
           default = inputs.home-manager.lib.homeManagerConfiguration {
-            pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+            pkgs = pkgsHome;
             modules = [
               ./home.nix
               {
@@ -256,7 +264,7 @@
             };
           };
           check = inputs.home-manager.lib.homeManagerConfiguration {
-            pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+            pkgs = pkgsHome;
             modules = [
               ./home.nix
               {
