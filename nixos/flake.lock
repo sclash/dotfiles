@@ -289,6 +289,19 @@
     },
     "nixpkgs_4": {
       "locked": {
+        "lastModified": 1789632929,
+        "narHash": "sha256-j08lBbqaYwjsW0xy6Dh4MNZpQ/oSvLU1MLAo38OXphM=",
+        "rev": "a32edd7654519351e48e80372a928df336394670",
+        "type": "tarball",
+        "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1075288.a32edd765451/nixexprs.tar.xz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz"
+      }
+    },
+    "nixpkgs_5": {
+      "locked": {
         "lastModified": 1790185690,
         "narHash": "sha256-xJ+X4hBtOcAFGBOe5nAMyMUeF9foJBmIOu3NjBqBycU=",
         "owner": "NixOS",
@@ -318,6 +331,21 @@
         "ref": "v1.18.31",
         "repo": "opencode",
         "type": "github"
+      }
+    },
+    "rex": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
+      },
+      "locked": {
+        "lastModified": 1794692212,
+        "narHash": "sha256-GTlEb9ChSbpxIh+faIcAvq12saSYmy2uR3jSQqURgik=",
+        "type": "tarball",
+        "url": "https://pkgs.superlogical.com/rex/nix/snapshot/0.0.1794692212-g3cf0c1.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz"
       }
     },
     "ripwire-src": {
@@ -350,6 +378,7 @@
         "nixpkgs-master": "nixpkgs-master",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opencode-src": "opencode-src",
+        "rex": "rex",
         "ripwire-src": "ripwire-src",
         "sops-nix": "sops-nix",
         "walker": "walker"
@@ -431,7 +460,7 @@
         "elephant": [
           "elephant"
         ],
-        "nixpkgs": "nixpkgs_4",
+        "nixpkgs": "nixpkgs_5",
         "systems": "systems_2"
       },
       "locked": {

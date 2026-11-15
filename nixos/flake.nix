@@ -68,6 +68,10 @@
       flake = false;
     };
 
+    rex = {
+      url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
+    };
+
   };
 
   # outputs = inputs@{ self, nixpkgs, nixpkgs-unstable, flake-parts, home-manager
@@ -210,6 +214,7 @@
                   home-manager.users.${username} = ./home.nix;
                   home-manager.extraSpecialArgs = {
                     inherit my-dotfiles;
+                    inherit inputs;
                     # inherit neovimrc;
                     pkgs-unstable = hostPkgsUnstable;
                     pkgs-master = hostPkgsMaster;
@@ -245,6 +250,7 @@
             ];
             extraSpecialArgs = {
               inherit my-dotfiles;
+              inherit inputs;
               inherit pkgs-unstable pkgs-master;
               inherit (user) username homeDirectory dotfiles;
             };
@@ -261,6 +267,7 @@
             ];
             extraSpecialArgs = {
               inherit my-dotfiles pkgs-unstable pkgs-master;
+              inherit inputs;
               username = "checkuser";
               homeDirectory = "/tmp/checkuser";
               dotfiles = "/tmp/checkuser/dotfiles";

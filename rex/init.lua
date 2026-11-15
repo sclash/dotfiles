@@ -1,0 +1,2 @@
+-- Rex configuration. nixos/programs/rex.nix symlinks this directory to
+-- ~/.config/rex, so edits apply after `rex config reload`.
