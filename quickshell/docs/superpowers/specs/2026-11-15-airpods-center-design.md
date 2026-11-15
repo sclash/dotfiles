@@ -80,7 +80,7 @@ ControlCenter ─────┘            │
 | Badge | `quickshell/components/bar/AirPodsIcon.qml` | Lowest battery, tooltip, click to toggle | service, `BarToolTip` |
 | Wiring | `shell.qml`, `Bar.qml`, `ControlCenter.qml`, `hypr/hyprland.lua` | Toggle IPC, placement, keybind | launcher, badge |
 | Specs | `specs/launchers/AirPods-Center.md`, `specs/bar/AirPods.md`, `SPECS.md` | Normative component contracts | — |
-| Tests | `tests/tst_airpods_parse.qml`, `tests/smoke/airpods-center.qml` | Parser cases and offscreen load | parser, service fixture |
+| Tests | `tests/tst_airpods_parse.qml`, `tests/smoke/airpods.qml` | Parser cases and offscreen load | parser, service fixture |
 
 ## 7. Daemon package and unit
 

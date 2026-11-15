@@ -15,7 +15,7 @@ The panel owns no process and no timer. Opening it tells `AirPodsService` the pa
 * Overlay `WlrLayershell` in the Audio Center pattern: full-screen dim (`Theme.overlay`), `WlrLayer.Overlay`, `ExclusionMode.Ignore`, exclusive keyboard focus.
 * Card: `width: 620`, `height: Math.min(640, view.implicitHeight)`, centered, `Theme.bgLauncher`, `radius: Theme.roundingLauncher`, 1 px `Theme.borderActive`, clipped.
 * Content: `AirPodsView.qml` fills the card and owns the rows, the selection and every key; the overlay routes each key through its one `handleKey()`.
-* A click on the dim closes. `Esc` closes (after clearing the filter). `q` closes while the list has focus; the filter field takes it as text.
+* A click on the dim closes. `Esc` closes (after clearing the filter). `q` closes from the list; while the filter field has focus it types `q` into the query instead.
 * Opening resets the selection to the first row, clears the filter, refreshes the status file and takes focus.
 * Content taller than 640 px scrolls inside the card: a `Flickable` with a 4 px `ScrollBar` (`Theme.borderActive`), and the selected row is kept visible on every move.
 
@@ -68,7 +68,7 @@ Rows in this order, each one line with the current value spelled out:
 * **Vim nav:** `j`/`k` and `↓`/`↑` move `selIndex` across the flattened listening + feature rows, stopping at both ends. The selected row is `Theme.bgSelected` with a 1 px `Theme.borderSelected` border.
 * **Activate:** `Enter`, keypad `Enter` or `Space`. A row click selects and then activates, so both paths agree.
 * **Filter:** `/` opens an inline field above the list and filters row labels by case-insensitive substring. Battery rows are outside the list and are never hidden. `Enter` in the field returns focus to the list with the query kept. No match shows `No matching settings`.
-* **Clear and close:** `Esc` clears the filter when it is open; otherwise it asks the overlay to close. `q` closes from the list; the filter field consumes it as text.
+* **Clear and close:** `Esc` clears the filter when it is open; otherwise it asks the overlay to close. `q` closes from the list; the filter field types it into the query instead.
 * **Footer:** `j/k · Enter · o/t/a/n modes · c CA · b One-Bud · e ear · r refresh · / filter · Esc close` at `Theme.fgDim`.
 * **Refresh** is reachable three ways: the `Refresh` row, `r`, and opening the panel (the overlay calls the service).
 * Every value is a binding over `AirPodsService`; no `Process` and no `Timer` in `AirPodsCenter.qml` or `AirPodsView.qml`.
@@ -113,7 +113,7 @@ Each renders as one line under the header, with a hint where one helps:
 | Empty / malformed status | `The librepods status file is empty`, `Could not read the librepods status file`, or `… carried no schema_version` | `Theme.critical` |
 | `librepods-ctl` error | the verb's stderr behind `Icons.warning`; `librepods-ctl could not run` when the binary is missing | `Theme.critical` |
 
-* Battery rows fall back to `--`; the listening section disappears; `Ear detection` disappears; `Refresh` always stays, so the user can retry.
+* Battery rows fall back to `--`; the listening section disappears; `Ear detection` disappears; `Refresh` stays unless the filter query excludes it, so the user can retry.
 * A readable status that says `connected: false` is a real disconnect (`Not connected`); a starting, stopped or unreadable daemon gets its own line instead, so the title stays `AirPods`.
 * The panel never invents a level or a mode: a failed or too-new parse leaves the parser's defaults in place rather than the last good values.
 

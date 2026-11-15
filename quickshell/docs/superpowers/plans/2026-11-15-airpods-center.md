@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Repo root is the worktree `/home/asergi/.local/share/opencode/worktree/b53491/airpods-center` (branch `airpods-center`). All paths below are relative to it; the QML root is `quickshell/`.
+- Repo root is the isolated git worktree for the `airpods-center` branch. All paths below are relative to it; the QML root is `quickshell/`.
 - Never touch `~/dotfiles`, `/etc/nixos` or `~/.config/sops`. No `nixos-rebuild switch` and no `nix-env`; `nix build`, `nix eval` and `nixos-rebuild dry-build` are allowed.
 - `git add` every new file before any `nix eval`/`nix build` of the flake: a flake only sees tracked files.
 - No hard-coded colours or glyphs outside `quickshell/theme/Theme.qml` and `Icons.qml`. Use `Theme.*` and `Icons.*`. State is shown by borders/text, not colour alone where the spec says so.
@@ -160,7 +160,8 @@ Generate the diff from a throwaway copy of the pinned source, then copy it to th
 src=/nix/store/8wcwrw92hip5cid89m4a4v8f1rh6d024-source/daemon
 tmp=$(mktemp -d); cp -r "$src" "$tmp/a"; cp -r "$src" "$tmp/b"
 # edit "$tmp/b/..." with the eight changes above
-(cd "$tmp" && diff -u -r a b > /home/asergi/.local/share/opencode/worktree/b53491/airpods-center/nixos/patches/librepods-airpods5.patch)
+# from the worktree root:
+(cd "$tmp" && diff -u -r a b) > nixos/patches/librepods-airpods5.patch
 ```
 
 - [ ] **Step 4: Add the patch to `librepods.nix` and rebuild**
