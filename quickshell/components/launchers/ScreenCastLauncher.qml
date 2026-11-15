@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import "../../theme"
 import "../../services"
@@ -22,8 +23,9 @@ WlrLayershell {
 
     // Settings picker state (resolution / scale)
     property bool pickerOpen: false
-    property string pickerKind: ""
+    property string pickerKind: ""        // mode | scale | window
     property var pickerOptions: []
+    property var pickerSink: null         // display to connect once a window is picked
 
     readonly property var scales: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]
     readonly property bool active: ScreenCastService.active !== null
@@ -89,7 +91,7 @@ WlrLayershell {
 
                 // ---- Main view ------------------------------------------------
                 ColumnLayout {
-                    visible: root.view === "main"
+                    visible: root.view === "main" && !root.pickerOpen
                     Layout.fillWidth: true
                     spacing: Theme.gapM
 
@@ -101,7 +103,8 @@ WlrLayershell {
                             model: [
                                 { value: "duplicate", label: "Duplicate" },
                                 { value: "extend", label: "Extend" },
-                                { value: "only-remote", label: "Only remote" }
+                                { value: "only-remote", label: "Only remote" },
+                                { value: "window", label: "Window" }
                             ]
                             delegate: Rectangle {
                                 required property var modelData
@@ -144,10 +147,12 @@ WlrLayershell {
                         text: {
                             if (root.active) return "A session is active — disconnect to change mode."
                             if (ScreenCastService.mode === "extend")
-                                return "Connect, then pick \"" + ScreenCastService.extendOutput + "\" in the share dialog. It becomes a second desktop."
+                                return "Connect: \"" + ScreenCastService.extendOutput + "\" is shared and becomes a second desktop, right of your screen."
                             if (ScreenCastService.mode === "only-remote")
-                                return "Connect and pick your built-in display; once streaming, press s to turn the panel off."
-                            return "Connect, then pick your built-in display in the share dialog."
+                                return "Connect: your main display is shared; once streaming, press s to turn the panel off."
+                            if (ScreenCastService.mode === "window")
+                                return "Connect, then choose the window to cast."
+                            return "Connect: your main display is shared as it is."
                         }
                     }
 
@@ -287,7 +292,7 @@ WlrLayershell {
                                 id: sinkMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: ScreenCastService.connectSink(modelData)
+                                onClicked: root.connectOrPick(modelData)
                             }
                         }
                     }
@@ -549,7 +554,9 @@ WlrLayershell {
 
                     Text {
                         Layout.fillWidth: true
-                        text: root.pickerKind === "scale" ? "Select scale" : "Select resolution"
+                        text: root.pickerKind === "scale" ? "Select scale"
+                            : root.pickerKind === "window" ? "Select the window to cast"
+                            : "Select resolution"
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
                         color: Theme.fgMuted
@@ -574,6 +581,8 @@ WlrLayershell {
                                 anchors.left: parent.left
                                 anchors.leftMargin: Theme.padM
                                 text: String(modelData.label)
+                                width: parent.width - 2 * Theme.padM
+                                elide: Text.ElideRight
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 12
                                 color: Theme.fg
@@ -607,7 +616,7 @@ WlrLayershell {
                     text: {
                         if (root.pickerOpen) return "picker: j/k option · Enter/l apply · h/Esc back"
                         if (root.view === "settings") return "settings: j/k row · Enter act · Esc back"
-                        return "j/k move · Enter connect · 1/2/3 mode · s settings · d disconnect · r rescan · / filter · Esc close"
+                        return "j/k move · Enter connect · 1-4 mode · s settings · d disconnect · r rescan · / filter · Esc close"
                     }
                 }
             }
@@ -635,6 +644,9 @@ WlrLayershell {
                 e.accepted = true
             } else if (e.key === Qt.Key_3) {
                 if (!root.active) { ScreenCastService.mode = "only-remote"; root.updateNav() }
+                e.accepted = true
+            } else if (e.key === Qt.Key_4) {
+                if (!root.active) { ScreenCastService.mode = "window"; root.updateNav() }
                 e.accepted = true
             } else if (e.key === Qt.Key_L) {
                 if (root.pickerOpen) root.applyPicker(); else root.activate()
@@ -707,6 +719,7 @@ WlrLayershell {
             items.push({ kind: "mode", value: "duplicate" })
             items.push({ kind: "mode", value: "extend" })
             items.push({ kind: "mode", value: "only-remote" })
+            items.push({ kind: "mode", value: "window" })
             items.push({ kind: "scan" })
             for (let i = 0; i < sinks.length; i++) items.push({ kind: "sink", idx: i })
             if (root.active) {
@@ -739,7 +752,7 @@ WlrLayershell {
         if (!it) return
         if (it.kind === "mode") { if (!root.active) { ScreenCastService.mode = it.value; root.updateNav() } }
         else if (it.kind === "scan") ScreenCastService.rescan()
-        else if (it.kind === "sink") { const s = root.filteredSinks[it.idx]; if (s) ScreenCastService.connectSink(s) }
+        else if (it.kind === "sink") { const s = root.filteredSinks[it.idx]; if (s) root.connectOrPick(s) }
         else if (it.kind === "settings") root.openSettings()
         else if (it.kind === "disconnect") ScreenCastService.disconnect()
         else if (it.kind === "sres") root.openPicker("mode")
@@ -765,10 +778,36 @@ WlrLayershell {
         Qt.callLater(() => column.forceActiveFocus())
     }
 
-    function openPicker(kind) {
-        if (!root.active) return
+    // Window mode needs a window before connecting; every other mode
+    // connects straight away (the share picker answers with the main display
+    // or SCREENCAST, see scripts/share-picker.sh).
+    function connectOrPick(sink) {
+        if (ScreenCastService.mode !== "window") { ScreenCastService.connectSink(sink); return }
+        if (root.active || ScreenCastService.busy) return
+        root.pickerSink = sink
+        root.openPicker("window")
+    }
+
+    function windowOptions() {
         const options = []
-        if (kind === "scale") {
+        const list = Hyprland.toplevels ? Hyprland.toplevels.values : []
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i]
+            if (!t || !t.address) continue
+            const app = t.wayland && t.wayland.appId ? t.wayland.appId : ""
+            const title = t.title || app || t.address
+            options.push({ label: app && app !== title ? title + "  ·  " + app : title, value: t.address })
+        }
+        return options
+    }
+
+    function openPicker(kind) {
+        if (kind === "window" ? root.active : !root.active) return
+        let options = []
+        if (kind === "window") {
+            options = root.windowOptions()
+            if (options.length === 0) { root.pickerSink = null; return }
+        } else if (kind === "scale") {
             for (const s of root.scales) options.push({ label: String(s) + "×", value: s })
         } else {
             const monitor = ScreenCastService.castOutput
@@ -787,6 +826,7 @@ WlrLayershell {
     function closePicker() {
         root.pickerOpen = false
         root.pickerOptions = []
+        root.pickerSink = null
         root.selIndex = 0
         root.updateNav()
         Qt.callLater(() => column.forceActiveFocus())
@@ -797,6 +837,12 @@ WlrLayershell {
         if (!it || it.kind !== "popt") return
         const option = root.pickerOptions[it.idx]
         if (!option) return
+        if (root.pickerKind === "window") {
+            const sink = root.pickerSink
+            root.closePicker()
+            if (sink) ScreenCastService.connectSink(sink, option.value)
+            return
+        }
         ScreenCastService.applyOutput(root.pickerKind, option.value)
         root.closePicker()
     }
