@@ -241,7 +241,7 @@ Inside Quickshell, launchers also close on `Esc` (handled in `LauncherBase`).
 | Perf drawer (CPU/RAM/Disk/Temp) | Right (collapsible) | `bar/Bar-performance.md` | `PerfService` |
 | Notification bell (next to Date) | Center | `bar/Date.md` | `NotifService` |
 
-Detailed order in bar (left → right): `Workspaces | AppTray | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Audio | AirPods | Bluetooth | USB | Display | Wifi | Battery | Keyboard | Tray`.
+Detailed order in bar (left → right): `Workspaces | AppTray (system tray, after a separator when it has items) | —spacer— | Date(+bell) | —spacer— | PerfDrawer(◀) | Bluetooth | USB | Display | Audio | AirPods | Wifi | VPN(name, only while active) | Battery | Keyboard`.
 
 ### 5.2 Launchers (`./launchers`)
 
