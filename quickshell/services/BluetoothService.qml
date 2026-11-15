@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell.Io
+import "bluetoothParse.js" as BluetoothParse
 
 QtObject {
     id: root
@@ -189,7 +190,7 @@ QtObject {
 
     property Process pollProc: Process {
         running: true
-        command: ["sh", "-c", "bluetoothctl show 2>/dev/null; echo '---SECTION:CONNECTED---'; bluetoothctl devices Connected 2>/dev/null; echo '---SECTION:PAIRED---'; bluetoothctl devices Paired 2>/dev/null; echo '---SECTION:ALL---'; bluetoothctl devices 2>/dev/null"]
+        command: ["sh", "-c", "bluetoothctl show 2>/dev/null; echo '---SECTION:CONNECTED---'; bluetoothctl devices Connected 2>/dev/null; echo '---SECTION:PAIRED---'; bluetoothctl devices Paired 2>/dev/null; echo '---SECTION:ALL---'; bluetoothctl devices 2>/dev/null; echo '---SECTION:INFO---'; bluetoothctl devices Connected 2>/dev/null | while read -r _ a rest; do echo \"===INFO:$a\"; bluetoothctl info \"$a\" 2>/dev/null; done"]
         stdout: StdioCollector {
             onStreamFinished: {
                 // bluetoothctl emits ANSI escapes on error/status lines even piped
@@ -212,7 +213,10 @@ QtObject {
 
                 const connectedSec = (txt.split("---SECTION:CONNECTED---")[1] || "").split("---SECTION:PAIRED---")[0] || ""
                 const pairedSec = (txt.split("---SECTION:PAIRED---")[1] || "").split("---SECTION:ALL---")[0] || ""
-                const allSec = (txt.split("---SECTION:ALL---")[1] || "")
+                // The info section follows ALL, so ALL stops at the INFO marker.
+                const allSec = (txt.split("---SECTION:ALL---")[1] || "").split("---SECTION:INFO---")[0] || ""
+                const infoSec = (txt.split("---SECTION:INFO---")[1] || "")
+                const info = BluetoothParse.parseInfo(infoSec)
                 const parseDevices = sec => {
                     const map = {}
                     sec.trim().split("\n").forEach(l => {
@@ -237,7 +241,9 @@ QtObject {
                     connected: connected[a] !== undefined,
                     paired: paired[a] !== undefined,
                     trusted: paired[a] !== undefined,
-                    battery: -1
+                    battery: -1,
+                    uuids: info[a] ? info[a].uuids : [],
+                    isAirPods: info[a] ? info[a].isAirPods : false
                 }))
                 root.connectedCount = Object.keys(connected).length
                 root.devices = devs
