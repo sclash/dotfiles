@@ -54,6 +54,9 @@
       			export OPENROUTER_MANAGEMENT_API="$(cat /run/secrets/openrouter_management_key)"
       			export OPENROUTER_MANAGEMENT_API_KEY="$(cat /run/secrets/openrouter_management_key)"
     		fi
+		if [ -f /run/secrets/groq ]; then
+      			export GROQ_API_KEY="$(cat /run/secrets/groq)"
+    		fi
             show_eza_tree() {
             	level_arg=''${1:-2}
             	eza --tree --level="$level_arg" --long --icons --git
