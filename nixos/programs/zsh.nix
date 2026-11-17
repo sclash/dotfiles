@@ -50,6 +50,9 @@
       			export OPENROUTER_API="$(cat /run/secrets/openrouter)"
       			export OPENROUTER_API_KEY="$(cat /run/secrets/openrouter)"
     		fi
+		if [ -f /run/secrets/opencode ]; then
+      			export OPENCODE="$(cat /run/secrets/opencode)"
+    		fi
 		if [ -f /run/secrets/openrouter_management_key ]; then
       			export OPENROUTER_MANAGEMENT_API="$(cat /run/secrets/openrouter_management_key)"
       			export OPENROUTER_MANAGEMENT_API_KEY="$(cat /run/secrets/openrouter_management_key)"
