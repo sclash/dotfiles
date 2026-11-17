@@ -52,6 +52,7 @@
     		fi
 		if [ -f /run/secrets/opencode ]; then
       			export OPENCODE="$(cat /run/secrets/opencode)"
+      			export OPENCODE_API_KEY="$(cat /run/secrets/opencode)"
     		fi
 		if [ -f /run/secrets/openrouter_management_key ]; then
       			export OPENROUTER_MANAGEMENT_API="$(cat /run/secrets/openrouter_management_key)"
