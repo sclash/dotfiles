@@ -53,6 +53,7 @@ in
     ./programs/nushell.nix
     ./programs/ripwire.nix
     ./programs/rex.nix
+    ./programs/sioyek.nix
   ];
 
   nix.settings.experimental-features = [
