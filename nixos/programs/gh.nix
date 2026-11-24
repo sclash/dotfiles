@@ -11,7 +11,7 @@
 
   programs.gh = {
     enable = true;
-    package = pkgs.atuin;
+    package = pkgs.gh;
     settings = {
     	git_protocol = "ssh";
     };
