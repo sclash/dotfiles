@@ -216,6 +216,7 @@
                 in
                 {
                   _module.args.pkgs-unstable = hostPkgsUnstable;
+                  _module.args.pkgs-master = hostPkgsMaster;
 
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;

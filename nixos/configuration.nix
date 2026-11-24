@@ -8,6 +8,7 @@
   inputs,
   pkgs,
   pkgs-unstable,
+  pkgs-master,
   nixd,
   username,
   homeDirectory,
@@ -527,8 +528,13 @@
         cargo
         zig
         # inputs.nixd.packages.${pkgs.system}.default
-	fx-sh
-      ]);
+      ])
+	++
+	(with pkgs-master; [
+		fx-sh
+	])
+
+      ;
 
   # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
