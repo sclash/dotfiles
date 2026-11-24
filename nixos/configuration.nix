@@ -527,6 +527,7 @@
         cargo
         zig
         # inputs.nixd.packages.${pkgs.system}.default
+	fx-sh
       ]);
 
   # nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
