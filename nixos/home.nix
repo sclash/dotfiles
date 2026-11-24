@@ -37,6 +37,7 @@ in
 # ./programs/sops.nix
     ./programs/tmux/tmux.nix
     ./programs/zsh.nix
+    ./programs/gh.nix
     ./programs/uv/uv.nix
     ./programs/starship.nix
     ./programs/atuin.nix
@@ -105,7 +106,6 @@ in
     ++ (with pkgs; [
       man-pages
       man-pages-posix
-      gh
       eza
       ncdu
       tor-browser
