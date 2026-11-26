@@ -124,12 +124,12 @@
             });
             # nixpkgs is stuck at 0.0.16; drop this once nixpkgs >= 0.0.17
             fx-sh = prev.fx-sh.overrideAttrs (finalAttrs: prevAttrs: {
-              version = "0.0.17";
+              version = "0.0.18";
               src = prev.fetchFromGitHub {
                 owner = "vercel-labs";
                 repo = "fx";
                 tag = "v${finalAttrs.version}";
-                hash = "sha256-zf+Qg0ep4gbmT1d/kPuP6oM6GgbWE/ahnJo69uqaDvk=";
+                hash = "sha256-4fO/tDl1BwP1ZMFx2s9GK/vBd74dGe8KDdN6B5/+A2E=";
               };
             });
             # opencode = prev.opencode.overrideAttrs (finalAttrs: prevAttrs: {
