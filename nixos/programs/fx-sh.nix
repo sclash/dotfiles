@@ -33,7 +33,7 @@ let
       if [ -f "$dst" ]; then
         links="$(stat -c %h "$dst" 2>/dev/null || echo 1)"
       fi
-      if [ -L "$dst" ] || [ "$links" -ne 1 ] || [ ! -f "$dst" ] || [ "$src" -nt "$dst" ]; then
+      if [ -L "$dst" ] || [ "$links" -ne 1 ] || [ ! -f "$dst" ] || ! cmp -s "$src" "$dst"; then
         install -m 600 "$src" "$dst"
       fi
     fi
@@ -44,6 +44,15 @@ let
     if [ -f "$dst" ]; then
       snap="$(mktemp)" || snap=""
       if [ -n "$snap" ]; then cp -p "$dst" "$snap"; fi
+    fi
+
+    # OpenCode Go rejects coding-agent requests without a stable
+    # per-conversation session id. fx does not send one itself, so give it a
+    # fresh id per launch. The opencode-go connection reads this through its
+    # "headers" entry in fx/settings.json.
+    if [ -z "''${FX_OPENCODE_SESSION:-}" ]; then
+      FX_OPENCODE_SESSION="$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "fx-$$-$(date +%s)")"
+      export FX_OPENCODE_SESSION
     fi
 
     status=0
