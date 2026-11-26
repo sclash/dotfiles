@@ -8,7 +8,6 @@
   inputs,
   pkgs,
   pkgs-unstable,
-  pkgs-master,
   nixd,
   username,
   homeDirectory,
@@ -529,10 +528,6 @@
         zig
         # inputs.nixd.packages.${pkgs.system}.default
       ])
-	++
-	(with pkgs-master; [
-		fx-sh
-	])
 
       ;
 

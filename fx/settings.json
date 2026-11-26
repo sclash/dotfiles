@@ -1,6 +1,11 @@
 {
 	"$schema": "https://fx.sh/schemas/settings.json",
 	"provider": "opencode-go",
+	"status_line": {
+		"context": true,
+		"session": true,
+		"workspace": true
+	},
 	"providers": {
 		"openrouter": {
 			"protocol": "openai-chat-completions",
@@ -9,12 +14,18 @@
 				"type": "bearer",
 				"env": "OPENROUTER_API_KEY"
 			},
+			"fetch_models": true,
+			"model_defaults": {
+				"context_window": 1048576,
+				"max_output_tokens": 1048575,
+				"supports_tool_use": true
+			},
 			"reviewer_model": "deepseek/deepseek-v4.1-flash-1017",
 			"title_model": "deepseek/deepseek-v4.1-flash-1017",
 			"model_metadata": {
 				"deepseek/deepseek-v4.1-flash-1017": {
 					"context_window": 1048576,
-					"max_output_tokens": 131072,
+					"max_output_tokens": 1048575,
 					"supports_tool_use": true,
 					"reasoning_efforts": {
 						"low": {
@@ -40,12 +51,18 @@
 				"type": "bearer",
 				"env": "OPENCODE_API_KEY"
 			},
+			"fetch_models": true,
+			"model_defaults": {
+				"context_window": 1048576,
+				"max_output_tokens": 1048575,
+				"supports_tool_use": true
+			},
 			"reviewer_model": "deepseek-v4.1-flash",
 			"title_model": "deepseek-v4.1-flash",
 			"model_metadata": {
 				"deepseek-v4.1-flash": {
 					"context_window": 1048576,
-					"max_output_tokens": 384000,
+					"max_output_tokens": 1048575,
 					"supports_tool_use": true,
 					"reasoning_efforts": {
 						"low": {
@@ -71,7 +88,7 @@
 		}
 	},
 	"models": {
-		"openrouter": "deepseek/deepseek-v4.1-flash-1017",
+		"openrouter": "perplexity/sonar-pro-search",
 		"opencode-go": "deepseek-v4.1-flash"
 	},
 	"permission_mode": "auto",
