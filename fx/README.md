@@ -13,7 +13,7 @@ Current version: **fx 0.0.18**, carried by an overlay in
 |---|---|
 | `settings.json` | Providers, models, and fx settings. The live file. |
 | `mcp.overrides.json` | Per-server patches on top of the MCP servers defined in `nixos/programs/mcpservers.nix`. |
-| `AGENTS.md` | Personal instructions for fx. Empty means "no extra instructions". |
+| `AGENTS.md` | Symlink to `my-opencode/v2/AGENTS.md`, the instruction file shared with OpenCode. |
 | `agents/` | Agent profiles, each in its own directory with `profile.json` and optional `prompt.md`. |
 | `themes/` | Custom fx themes, `<name>.json`. |
 
@@ -30,6 +30,7 @@ Home Manager creates:
 ~/.fx/agents                        -> ~/dotfiles/fx/agents
 ~/.fx/themes                        -> ~/dotfiles/fx/themes
 ~/.fx/AGENTS.md                     -> ~/dotfiles/fx/AGENTS.md
+                                    -> ~/dotfiles/my-opencode/v2/AGENTS.md
 ```
 
 The `fx` command is a wrapper installed by `home.packages`. It shadows the
@@ -191,6 +192,9 @@ The definitions come from `nixos/programs/mcpservers.nix`, the same
 `programs.mcp.servers` option used by OpenCode and Claude. Every server there
 is `disabled = true`, so fx starts with all of them off.
 
+`mcp.overrides.json` lists all twelve servers with `"enabled": false`, their
+startup timeout, and the secret each one needs. Edit that file to turn one on.
+
 The wrapper converts the neutral shape to fx's `mcp.json`:
 
 | Neutral | fx |
@@ -247,6 +251,15 @@ The wrapper copies the value from its environment into the server's `env` in
 never enters git. If the variable is unset or empty, nothing is added and the
 server sees its normal "not set" error.
 
+For HTTP servers, fx takes the key from `bearer_token_env` instead:
+
+```json
+"hf-mcp-server": { "enabled": false, "bearer_token_env": "HF_TOKEN" }
+"openrouter":    { "enabled": false, "bearer_token_env": "OPENROUTER_API_KEY" }
+```
+
+Those names are in the override already; the values come from the login shell.
+
 ### Add or change a server
 
 1. Edit `nixos/programs/mcpservers.nix`.
@@ -277,8 +290,16 @@ real directory; fx only lists entries whose kind is `directory`.
 `settings.json`. The directory is linked; individual theme files are opened
 without following symlinks, so keep them real files.
 
-**Instructions.** `~/.fx/AGENTS.md` is linked to `fx/AGENTS.md`. It may point
-only to a file inside `$HOME`. An empty file is ignored.
+**Instructions.** `~/.fx/AGENTS.md` is linked to `fx/AGENTS.md`, which is a
+symlink to `my-opencode/v2/AGENTS.md`. That is the same instruction file
+OpenCode uses. fx reads only `AGENTS.md`; Markdown references inside it, such
+as `./CLAUDE.md`, are not followed.
+
+**OpenCode parity.** The OpenCode markdown agents in `my-opencode/v2/agents`
+(24 files) and the custom commands in `my-opencode/v2/commands` are not loaded
+by fx. Port an agent to a profile above if you use it. Plugins and
+LSP/formatter configuration have no fx equivalent. Shared between both:
+`AGENTS.md`, skills, MCP definitions, and the permission intent.
 
 ## Verify and debug
 
@@ -322,13 +343,15 @@ fx mcp show <name> --json | jq '{status, error}'
 ```
 
 The usual causes are a missing secret (`GITHUB_PERSONAL_ACCESS_TOKEN not set`),
-a command that is not on `PATH`, or a server that takes longer than
-`startup_timeout_ms` (30 seconds by default; add `"startup_timeout_ms": 120000`
-to its override).
+a command that is not on `PATH`, or a server that takes longer than its
+`startup_timeout_ms`. The slow `nix run`/`npx`/`uvx` servers already have
+180 seconds in `mcp.overrides.json`; raise that value if a first build is still
+too slow.
 
-**The MCP server has no token.** Add the variable to `envFrom` in
-`mcp.overrides.json` and rebuild if the wrapper itself is stale. Verify the
-wrapper contains the merge logic:
+**The MCP server has no token.** For a stdio server, add the variable to
+`envFrom` in `mcp.overrides.json`; for an HTTP server, use `bearer_token_env`.
+Rebuild if the wrapper itself is stale. Verify the wrapper contains the merge
+logic:
 
 ```bash
 grep -c envFrom "$(readlink -f "$(command -v fx)")"

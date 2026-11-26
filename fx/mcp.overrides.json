@@ -1,8 +1,53 @@
 {
   "mcpServers": {
+    "arxiv": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
+    "chrome-devtools": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
+    "filesystem": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
     "github": {
       "enabled": false,
-      "envFrom": ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+      "envFrom": ["GITHUB_PERSONAL_ACCESS_TOKEN"],
+      "startup_timeout_ms": 180000
+    },
+    "graphify": {
+      "enabled": false,
+      "startup_timeout_ms": 60000
+    },
+    "hf-mcp-server": {
+      "enabled": false,
+      "bearer_token_env": "HF_TOKEN"
+    },
+    "markitdown": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
+    "nixos": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
+    "openrouter": {
+      "enabled": false,
+      "bearer_token_env": "OPENROUTER_API_KEY"
+    },
+    "playwright": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
+    },
+    "ripwire": {
+      "enabled": false,
+      "startup_timeout_ms": 60000
+    },
+    "shadcn-vue": {
+      "enabled": false,
+      "startup_timeout_ms": 180000
     }
   }
 }

@@ -74,10 +74,13 @@ Everything else can be a normal out-of-store link.
     │  pkgs.formats.json
 nixos/programs/mcpservers.nix -> fx-mcp-base.json (store)
 
-~/dotfiles/fx/{agents,themes,AGENTS.md}
+~/dotfiles/fx/{agents,themes}
     │  home.file out-of-store links
     ▼
-~/.fx/{agents,themes,AGENTS.md}  ──fx──▶ profiles, themes, instructions
+~/.fx/{agents,themes}  ──fx──▶ profiles, themes
+
+~/.fx/AGENTS.md -> ~/dotfiles/fx/AGENTS.md
+                 -> ~/dotfiles/my-opencode/v2/AGENTS.md
 ```
 
 `fx` on `PATH` is the wrapper from `home.packages`; it shadows the system
@@ -92,7 +95,7 @@ nixos/programs/mcpservers.nix -> fx-mcp-base.json (store)
 | `~/.fx/mcp.json` | real file, 600 | generated base + `fx/mcp.overrides.json` |
 | `~/.fx/agents` | symlink | `fx/agents` |
 | `~/.fx/themes` | symlink | `fx/themes` |
-| `~/.fx/AGENTS.md` | symlink | `fx/AGENTS.md` |
+| `~/.fx/AGENTS.md` | symlink chain | `fx/AGENTS.md` → `my-opencode/v2/AGENTS.md` |
 | `~/.config/fx/settings.json` | symlink | `fx/settings.json` |
 | `~/.config/fx/mcp.overrides.json` | symlink | `fx/mcp.overrides.json` |
 
@@ -178,11 +181,17 @@ semantic OpenCode uses, so every client starts with the same servers off.
 }
 ```
 
+The tracked file lists all twelve servers with `"enabled": false`. Slow
+`nix run`/`npx`/`uvx` servers carry `startup_timeout_ms`; the HTTP servers carry
+`bearer_token_env`.
+
 The wrapper merges each entry field-by-field over the generated base. An entry
 for a server that is not in the base is ignored. It then expands `envFrom`: for
 each named variable, if the wrapper's environment has a non-empty value, that
 value is added to the server's `env`; an unset or empty variable is skipped.
-Finally `envFrom` is deleted, because it is not an fx field.
+Finally `envFrom` is deleted, because it is not an fx field. `envFrom` is only
+for stdio servers; an HTTP server names its key with `bearer_token_env`, which
+fx reads at request time.
 
 This is how a login-only secret reaches a stdio MCP server without being stored
 in git. The expanded value exists only in `~/.fx/mcp.json`, which is mode 600
@@ -205,9 +214,11 @@ These are plain Home Manager out-of-store links because fx follows them:
   anywhere.
 - `themes`: the directory is followed, but each `<name>.json` is opened with
   `O_NOFOLLOW`. Link the directory, keep the files real.
-- `AGENTS.md`: fx allows a link to a file elsewhere in `$HOME`. A store link
-  would be outside home, so this must remain an out-of-store link into the
-  repository.
+- `AGENTS.md`: fx allows a link to a file elsewhere in `$HOME`. `fx/AGENTS.md`
+  is itself a symlink to `my-opencode/v2/AGENTS.md`, so fx and OpenCode read one
+  instruction file. fx reads only `AGENTS.md`; Markdown references inside it,
+  such as `./CLAUDE.md`, are text, not includes. A store link would be outside
+  home, so this remains an out-of-store chain into the repository.
 
 Skills are the exception. `~/.fx/skills` is fx's managed install directory and
 never follows symlinks. The OpenCode skills root
@@ -216,6 +227,35 @@ inside `$HOME`, so fx discovers those skills without any extra work. For
 fx-only skills, add another discovery root such as `~/.agents/skills` pointing
 at a repository directory; the link must resolve inside `$HOME` or be listed in
 `skill_symlink_authorities`.
+
+## OpenCode parity
+
+What genuinely carries over:
+
+- `AGENTS.md`, through the symlink chain above;
+- skills, through `~/.config/opencode/skills`;
+- MCP definitions, through `programs.mcp.servers` and the override;
+- the permission intent, translated to fx's rule shape;
+- session titles, through `title_model` instead of OpenCode's `title` agent.
+
+What does not:
+
+- **OpenCode markdown agents.** `my-opencode/v2/agents` has 24 `mode: subagent`
+  agents. fx does not read that format; each would need a `profile.json` plus
+  `prompt.md`. The permission lists map to fx's `tools` and `permission_mode`.
+  None are ported yet.
+- **Custom slash commands.** `my-opencode/v2/commands` has 37 commands. fx
+  0.0.18 has no user-defined slash-command directory. Some workflows can be
+  expressed as skills or prompts, but not as `/command`.
+- **Plugins.** fx has no OpenCode plugin system. Skills cover part of the
+  superpowers/context-mode surface.
+- **LSP and formatters.** fx has no LSP or formatter configuration. OpenCode V2
+  currently validates its `lsp` block but, by its own comment, has no LSP
+  runtime either.
+
+The provider/model configuration is deliberately separate. OpenCode addresses
+models as `opencode-go/<id>`; fx needs a connection plus `models` map, so the
+two are kept in sync by hand.
 
 ## Providers and OpenCode Go
 
@@ -289,7 +329,8 @@ The repository contains credential **names** only:
   `[ -f ... ]` per secret.
 - `settings.json` references provider keys by environment variable
   (`auth.env`).
-- `mcp.overrides.json` lists MCP variables in `envFrom`.
+- `mcp.overrides.json` lists stdio MCP variables in `envFrom` and HTTP ones in
+  `bearer_token_env`.
 - The wrapper expands `envFrom` into the local `~/.fx/mcp.json` (600) and never
   prints it.
 - The generated Nix base contains no secret; a token in `mcpservers.nix env`
@@ -346,6 +387,11 @@ The following were used while building this setup:
 - `fx permissions --json` parsed the secret patterns over `read`, `edit`,
   `glob`, and `grep`, plus `mcp_select_tool: ask`;
 - `fx ask --effort high` returned a reply through the declared level;
+- `fx mcp list --json`: all twelve servers `disabled`, with the github timeout
+  and `HF_TOKEN`/`OPENROUTER_API_KEY` bearer fields present in the generated
+  file;
+- `readlink -f ~/.fx/AGENTS.md` resolves to
+  `~/dotfiles/my-opencode/v2/AGENTS.md`;
 - `fx mcp show github --json` with the token in the server's `env`: status
   `ready` with the full tool list.
 
