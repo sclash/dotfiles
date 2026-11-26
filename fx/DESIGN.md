@@ -43,6 +43,8 @@ These were read from fx 0.0.18. They drive every decision below.
 | `~/.fx/skills` | symlinks are never followed in the managed root | do not put linked skills there |
 | Other skill roots | a linked skill is allowed when it resolves inside home/workspace or a configured authority | use `~/.config/opencode/skills` or another root |
 | `/provider` picker | built-in catalog only (`vercel`, `codex`, `grok`) | custom connections are selected outside the picker |
+| `auto` mode review | a custom connection uses its `reviewer_model`, or the selected model | pin a cheap reviewer so safety checks stay cheap |
+| Reasoning effort | fx offers and sends only the levels declared in `model_metadata.reasoning_efforts` | declare levels per model, or `/effort` has nothing to choose |
 | Session binding | a session stays on the connection it started on | switching connections needs a new process |
 | Settings reload | settings are read at startup; MCP config reloads at the next prompt | restart fx for settings, not for MCP toggles |
 
@@ -244,6 +246,41 @@ time from the environment, never stored in settings.
 fx cannot compute automatic compaction. Keep the values aligned with the
 upstream model limits when changing model IDs.
 
+## Permissions and the reviewer
+
+fx's `permission` rules and OpenCode's `permissions` array express the same
+intent in different shapes, so the configuration mirrors the intent rather than
+copying the array. fx uses one object per tool, wildcard patterns, and
+`mcp_select_tool` for MCP access; OpenCode uses a list of action/resource
+records and `mcp_*`.
+
+The chosen policy keeps `permission_mode: "auto"` and adds:
+
+- `read`, `edit`, `glob`, and `grep` deny the same secret-file patterns as the
+  OpenCode config, including `/run/secrets` and `/run/secrets.d`;
+- `mcp_select_tool: "ask"`, so exposing an MCP server or tool through `toolbox`
+  asks first.
+
+`auto` mode is not "ask before anything dangerous." It sends only uncertain
+actions to the reviewer, and the reviewer answers one question: does this action
+show prompt injection or harm to the machine? Deleting code or tests, pushing
+branches, and running a script the agent wrote are not held by that review. The
+rules above are the part that enforces the secrets policy, and rules skip the
+reviewer entirely.
+
+Model choice for the reviewer is a cost decision. A custom connection defaults
+its reviewer to the selected model, so a session on an expensive model would
+also use it for every safety review. Both connections pin `reviewer_model` to
+the flash model used for coding. `title_model` is pinned the same way; it names
+sessions from the first prompt.
+
+Reasoning effort is declared per model as `reasoning_efforts` with the request
+fragment the endpoint expects. Both current endpoints accept
+`reasoning_effort: low|medium|high`; this was verified directly against the
+OpenAI-compatible APIs before adding the levels. With no level selected
+(`effort: auto`), fx sends no effort field. `/effort` and Ctrl+T only offer
+levels a model declares.
+
 ## Secrets
 
 The repository contains credential **names** only:
@@ -269,6 +306,7 @@ The repository contains credential **names** only:
 | Link `fx/mcp.json` directly | works and reloads live, but duplicates every server already in `mcpservers.nix` |
 | Link `~/.fx/mcp.json` to the generated store file | one source, but enabling a server needs a rebuild |
 | Put MCP tokens in the Nix option | secret value would enter the store and git |
+| Copy the OpenCode permissions array literally | the schemas differ (records vs per-tool objects, `mcp_*` vs `mcp_select_tool`); the intent is mirrored instead |
 | Pass the whole environment to MCP servers | fx intentionally limits it; would leak provider keys to every server |
 | `makeWrapper` instead of a script | no post-run hook, so settings could not be written back |
 
@@ -304,14 +342,23 @@ The following were used while building this setup:
 - an override enabling `playwright`/`openrouter` and the merge result;
 - direct requests to OpenCode Go: `400 MissingSessionID` without the header,
   `200` with it;
+- direct requests with `reasoning_effort: low` to both endpoints: `200`;
+- `fx permissions --json` parsed the secret patterns over `read`, `edit`,
+  `glob`, and `grep`, plus `mcp_select_tool: ask`;
+- `fx ask --effort high` returned a reply through the declared level;
 - `fx mcp show github --json` with the token in the server's `env`: status
   `ready` with the full tool list.
 
 ## Maintenance
 
 **Add or change a provider or model.** Edit `fx/settings.json`. Add
-`model_metadata` with context/output limits. `fx provider` and `/model` write
-back to the same file.
+`model_metadata` with context/output limits and `reasoning_efforts`, and update
+`reviewer_model`/`title_model` if the cheap model changes. `fx provider` and
+`/model` write back to the same file.
+
+**Change the secret policy.** Update the `permission` patterns, then check the
+parsed rules with `fx permissions --json`. The rule shapes and wildcard
+semantics are fx's, not OpenCode's.
 
 **Add or change an MCP server.** Edit `nixos/programs/mcpservers.nix`
 (`command`/`args` or `url`, `env`, `disabled`). Rebuild. Enable it in the

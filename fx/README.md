@@ -73,6 +73,10 @@ Two custom OpenAI-compatible connections are configured:
 
 `opencode-go` is the selected provider.
 
+Both connections pin `reviewer_model` and `title_model` to the flash model, so
+`auto` mode's safety reviews and session titles do not spend the selected
+model's tokens.
+
 ### Switch provider
 
 ```bash
@@ -104,6 +108,13 @@ it started on.
 `model_metadata` gives fx the context window and output limit it needs for
 automatic compaction. Keep it in sync with the real limits when changing model
 IDs.
+
+### Reasoning effort
+
+Both models declare `low`, `medium`, and `high` under `reasoning_efforts`. Use
+`/effort` inside fx or Ctrl+T to cycle through them. The saved effort is
+`auto` by default, which sends no effort field; the choice is stored as a
+personal preference, not in this repository.
 
 ### OpenCode Go session header
 
@@ -147,6 +158,32 @@ Check:
 ```bash
 test -n "$OPENCODE_API_KEY" && echo set
 ```
+
+## Permissions and review
+
+fx runs in `permission_mode: "auto"`. In that mode it sends certain actions
+(unrecognised shell commands, writes outside the workspace, sensitive config
+changes, MCP tool use) to the connection's `reviewer_model`. That reviewer
+checks for prompt injection and harm to the machine; it is not a general code
+review. Rules that already allow or deny an action skip the reviewer.
+
+`settings.json` mirrors the intent of the OpenCode policy:
+
+- `read`, `edit`, `glob`, and `grep` deny `.env` and
+  `.env.local`/`.env.production`/`.env.development`, `.secrets*`, `secrets*`,
+  `credentials*`, `id_rsa*`, `*.pem`, `*.key`, `*.p12`, and `/run/secrets*`.
+- `mcp_select_tool` is `ask`, so opening an MCP server or tool through
+  `toolbox` asks first.
+
+Inspect it with:
+
+```bash
+fx permissions --json
+```
+
+To switch to explicit approval for every action, use `/permissions ask`, or set
+`"permission_mode": "ask"` in `settings.json`. `full-access` disables checks
+entirely, including the deny rules.
 
 ## MCP servers
 
@@ -257,6 +294,9 @@ fx config list --show-origin | grep -E '^(file|env):'
 readlink -f ~/.config/fx/settings.json
 readlink -f ~/.config/fx/mcp.overrides.json
 ls -l ~/.fx
+
+# permission mode and configured rules
+fx permissions --json | jq '{mode, rules: (.rules|length)}'
 
 # MCP state and errors
 fx mcp list --json | jq '.servers[] | {name, status, error}'
