@@ -1,3 +1,8 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "github": {
+      "enabled": false,
+      "envFrom": ["GITHUB_PERSONAL_ACCESS_TOKEN"]
+    }
+  }
 }

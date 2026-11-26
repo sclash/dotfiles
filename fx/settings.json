@@ -1,1 +1,47 @@
-{"$schema":"https://fx.sh/schemas/settings.json","provider":"opencode-go","providers":{"openrouter":{"protocol":"openai-chat-completions","base_url":"https://openrouter.ai/api/v1","auth":{"type":"bearer","env":"OPENROUTER_API_KEY"},"model_metadata":{"deepseek/deepseek-v4.1-flash-1017":{"context_window":1048576,"max_output_tokens":131072,"supports_tool_use":true}}},"opencode-go":{"protocol":"openai-chat-completions","base_url":"https://opencode.ai/inference/go/openai/v1","auth":{"type":"bearer","env":"OPENCODE_API_KEY"},"model_metadata":{"deepseek-v4.1-flash":{"context_window":1048576,"max_output_tokens":384000,"supports_tool_use":true}},"headers":{"x-opencode-session":{"env":"FX_OPENCODE_SESSION"}}}},"models":{"openrouter":"deepseek/deepseek-v4.1-flash-1017","opencode-go":"deepseek-v4.1-flash"},"fast_mode":false,"ultrafast_mode":false}
+{
+	"$schema": "https://fx.sh/schemas/settings.json",
+	"provider": "opencode-go",
+	"providers": {
+		"openrouter": {
+			"protocol": "openai-chat-completions",
+			"base_url": "https://openrouter.ai/api/v1",
+			"auth": {
+				"type": "bearer",
+				"env": "OPENROUTER_API_KEY"
+			},
+			"model_metadata": {
+				"deepseek/deepseek-v4.1-flash-1017": {
+					"context_window": 1048576,
+					"max_output_tokens": 131072,
+					"supports_tool_use": true
+				}
+			}
+		},
+		"opencode-go": {
+			"protocol": "openai-chat-completions",
+			"base_url": "https://opencode.ai/inference/go/openai/v1",
+			"auth": {
+				"type": "bearer",
+				"env": "OPENCODE_API_KEY"
+			},
+			"model_metadata": {
+				"deepseek-v4.1-flash": {
+					"context_window": 1048576,
+					"max_output_tokens": 384000,
+					"supports_tool_use": true
+				}
+			},
+			"headers": {
+				"x-opencode-session": {
+					"env": "FX_OPENCODE_SESSION"
+				}
+			}
+		}
+	},
+	"models": {
+		"openrouter": "deepseek/deepseek-v4.1-flash-1017",
+		"opencode-go": "deepseek-v4.1-flash"
+	},
+	"fast_mode": false,
+	"ultrafast_mode": false
+}

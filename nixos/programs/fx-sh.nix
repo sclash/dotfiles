@@ -76,6 +76,15 @@ let
         | (.[1].mcpServers // {}) as $overrides
         | $base
         | .mcpServers |= with_entries(.value += ($overrides[.key] // {}))
+        | .mcpServers |= with_entries(
+            .value.env = ((.value.env // {}) + (
+              reduce (((.value.envFrom // []) | if type == "array" then . else [] end))[] as $name ({};
+                (env[$name] // "") as $value
+                | if $value != "" then . + {($name): $value} else . end
+              )
+            ))
+            | del(.value.envFrom)
+          )
       ' "${fxMcpBase}" "$over" > "$merged" 2>/dev/null; then
       install -m 600 "$merged" "$HOME/.fx/mcp.json"
     else
@@ -143,6 +152,9 @@ in
     # override on top and writes a real ~/.fx/mcp.json. Add entries here to
     # enable a server without rebuilding, for example:
     #   { "mcpServers": { "playwright": { "enabled": true } } }
+    # Secrets are passed by name, never stored here:
+    #   { "github": { "enabled": true,
+    #                 "envFrom": ["GITHUB_PERSONAL_ACCESS_TOKEN"] } }
     ".config/fx/mcp.overrides.json".source =
       config.lib.file.mkOutOfStoreSymlink "${dotfiles}/fx/mcp.overrides.json";
   };
