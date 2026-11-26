@@ -47,6 +47,7 @@ in
     ./programs/mcpservers.nix
     ./programs/zathura.nix
     ./programs/opencode/opencode.nix
+    # ./programs/fx-sh.nix
     ./programs/quickshell.nix
     ./programs/herdr.nix
     ./programs/nvim-lsp.nix
