@@ -1,0 +1,8 @@
+{
+  "description": "Expert Go code reviewer specializing in idiomatic Go, concurrency patterns, error handling, and performance.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Expert Python code reviewer specializing in PEP 8 compliance, Pythonic idioms, type hints, security, and performance.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

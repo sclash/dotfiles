@@ -1,0 +1,6 @@
+{
+  "description": "Go build, vet, and compilation error resolution specialist. Fixes Go build errors with minimal changes.",
+  "tools": [
+    "*"
+  ]
+}

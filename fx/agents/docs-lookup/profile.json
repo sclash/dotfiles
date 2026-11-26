@@ -1,0 +1,8 @@
+{
+  "description": "Documentation specialist using Context7 MCP to fetch current library and API documentation with code examples.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Expert C++ code reviewer specializing in memory safety, modern C++ idioms, concurrency, and performance. Use for all C++ code changes.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

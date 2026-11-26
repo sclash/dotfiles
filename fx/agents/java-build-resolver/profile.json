@@ -1,0 +1,6 @@
+{
+  "description": "Java/Maven/Gradle build, compilation, and dependency error resolution specialist. Fixes build errors with minimal changes.",
+  "tools": [
+    "*"
+  ]
+}

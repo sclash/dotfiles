@@ -14,7 +14,7 @@ Current version: **fx 0.0.18**, carried by an overlay in
 | `settings.json` | Providers, models, and fx settings. The live file. |
 | `mcp.overrides.json` | Per-server patches on top of the MCP servers defined in `nixos/programs/mcpservers.nix`. |
 | `AGENTS.md` | Symlink to `my-opencode/v2/AGENTS.md`, the instruction file shared with OpenCode. |
-| `agents/` | Agent profiles, each in its own directory with `profile.json` and optional `prompt.md`. |
+| `agents/` | 24 agent profiles ported from OpenCode v2, each with `profile.json` and `prompt.md`. |
 | `themes/` | Custom fx themes, `<name>.json`. |
 
 The module that deploys all of this is `nixos/programs/fx-sh.nix`, imported by
@@ -276,15 +276,28 @@ It is then available to OpenCode, Claude, and fx from one definition.
 never follows symlinks in that managed directory. Use another discovery root
 (for example `~/.agents/skills`) if you need fx-only skills.
 
-**Agents.** Put profiles in `fx/agents/<name>/`:
+**Agents.** `fx/agents/` contains the 24 agents from
+`my-opencode/v2/agents`, translated to fx profiles:
 
 ```text
-fx/agents/reviewer/profile.json
-fx/agents/reviewer/prompt.md
+fx/agents/planner/profile.json
+fx/agents/planner/prompt.md
 ```
 
 The whole `agents` directory is linked. A profile directory itself must be a
 real directory; fx only lists entries whose kind is `directory`.
+
+Every profile inherits the selected model, effort, and permission mode. The
+translation maps the OpenCode frontmatter:
+
+- description → `description`
+- body → `prompt.md`
+- read/shell allow + edit deny → `tools = ["*", "!write_file", "!edit_file"]`
+- read/shell/edit allow → `tools = ["*"]` (full)
+
+Use a profile for a whole session with `fx --profile <name>`, or ask for a
+subagent in that profile. The prompts are a mechanical port; some mention
+OpenCode-specific tools, so refine them as you use them.
 
 **Themes.** Put `<name>.json` in `fx/themes/` and set `"theme": "<name>"` in
 `settings.json`. The directory is linked; individual theme files are opened
@@ -295,11 +308,11 @@ symlink to `my-opencode/v2/AGENTS.md`. That is the same instruction file
 OpenCode uses. fx reads only `AGENTS.md`; Markdown references inside it, such
 as `./CLAUDE.md`, are not followed.
 
-**OpenCode parity.** The OpenCode markdown agents in `my-opencode/v2/agents`
-(24 files) and the custom commands in `my-opencode/v2/commands` are not loaded
-by fx. Port an agent to a profile above if you use it. Plugins and
-LSP/formatter configuration have no fx equivalent. Shared between both:
-`AGENTS.md`, skills, MCP definitions, and the permission intent.
+**OpenCode parity.** The 24 OpenCode markdown agents are now available as fx
+profiles. The 37 custom commands in `my-opencode/v2/commands` are not available:
+fx has no user-defined slash commands. Plugins and LSP/formatter configuration
+also have no fx equivalent. Shared between both: `AGENTS.md`, skills, MCP
+definitions, agents (as profiles), and the permission intent.
 
 ## Verify and debug
 

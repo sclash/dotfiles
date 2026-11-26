@@ -1,0 +1,6 @@
+{
+  "description": "Dead code cleanup and consolidation specialist. Use for removing unused code, duplicates, and refactoring.",
+  "tools": [
+    "*"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Analyze and improve the local agent harness configuration for reliability, cost, and throughput.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "description": "Expert Rust code reviewer specializing in idiomatic Rust, ownership, lifetimes, concurrency, and performance.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

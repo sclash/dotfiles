@@ -1,0 +1,8 @@
+{
+  "description": "Operate autonomous agent loops, monitor progress, and intervene safely when loops stall.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Rust build, Cargo, and compilation error resolution specialist. Fixes Rust build errors with minimal changes.",
+  "tools": [
+    "*"
+  ]
+}

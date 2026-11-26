@@ -1,0 +1,8 @@
+{
+  "description": "Software architecture specialist for system design, scalability, and technical decision-making.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

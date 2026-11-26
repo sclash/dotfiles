@@ -93,7 +93,7 @@ nixos/programs/mcpservers.nix -> fx-mcp-base.json (store)
 | `~/.fx` | real directory | fx, chmod 700 |
 | `~/.fx/settings.json` | real file, 600 | `fx/settings.json` via wrapper |
 | `~/.fx/mcp.json` | real file, 600 | generated base + `fx/mcp.overrides.json` |
-| `~/.fx/agents` | symlink | `fx/agents` |
+| `~/.fx/agents` | symlink | `fx/agents` (24 ported profiles) |
 | `~/.fx/themes` | symlink | `fx/themes` |
 | `~/.fx/AGENTS.md` | symlink chain | `fx/AGENTS.md` → `my-opencode/v2/AGENTS.md` |
 | `~/.config/fx/settings.json` | symlink | `fx/settings.json` |
@@ -211,7 +211,8 @@ These are plain Home Manager out-of-store links because fx follows them:
 - `agents`: the root is opened with normal symlink following. The individual
   profile directories must be real directories; a symlinked profile directory
   is skipped. Home profiles may link their `profile.json` and `prompt.md`
-  anywhere.
+  anywhere. The repository holds one profile per OpenCode v2 agent, ported from
+  that agent's description, prompt body, and permissions.
 - `themes`: the directory is followed, but each `<name>.json` is opened with
   `O_NOFOLLOW`. Link the directory, keep the files real.
 - `AGENTS.md`: fx allows a link to a file elsewhere in `$HOME`. `fx/AGENTS.md`
@@ -240,10 +241,16 @@ What genuinely carries over:
 
 What does not:
 
-- **OpenCode markdown agents.** `my-opencode/v2/agents` has 24 `mode: subagent`
-  agents. fx does not read that format; each would need a `profile.json` plus
-  `prompt.md`. The permission lists map to fx's `tools` and `permission_mode`.
-  None are ported yet.
+- **OpenCode markdown agents.** All 24 `mode: subagent` agents are ported to
+  `fx/agents/<name>/` as `profile.json` plus `prompt.md`. The translation is
+  mechanical: `description` is copied, the body becomes the prompt, a final
+  `edit: deny` becomes `["*", "!write_file", "!edit_file"]`, and full edit
+  access becomes `["*"]`. Model, effort, and permission mode are inherited.
+  The prompts may still mention OpenCode-specific tools; refine them in place.
+
+  The two agents with contradictory rules (`harness-optimizer`,
+  `loop-operator`) allow edit and then deny it; the last rule wins in OpenCode,
+  so they are ported read-only.
 - **Custom slash commands.** `my-opencode/v2/commands` has 37 commands. fx
   0.0.18 has no user-defined slash-command directory. Some workflows can be
   expressed as skills or prompts, but not as `/command`.
@@ -392,6 +399,8 @@ The following were used while building this setup:
   file;
 - `readlink -f ~/.fx/AGENTS.md` resolves to
   `~/dotfiles/my-opencode/v2/AGENTS.md`;
+- `fx --profile __missing__` listed all 24 ported profiles beside the built-in
+  `main` and `agent` profiles;
 - `fx mcp show github --json` with the token in the server's `env`: status
   `ready` with the full tool list.
 
@@ -410,6 +419,14 @@ semantics are fx's, not OpenCode's.
 (`command`/`args` or `url`, `env`, `disabled`). Rebuild. Enable it in the
 override if it should be on by default. If it needs a login secret, add its
 variable to `envFrom`.
+
+**Add or change an agent.** Copy an OpenCode agent's description to
+`profile.json`, its body to `prompt.md`, and map its final `edit` permission to
+the tools list (`["*", "!write_file", "!edit_file"]` for read-only, `["*"]` for
+full). The `agents` directory is linked live, so no rebuild is needed. The
+repository's `*prompt.md` ignore rule has an exception for
+`fx/agents/*/prompt.md`; keep it when adding profiles, or their prompts will
+not be committed.
 
 **Upgrade fx.** The overlay in `nixos/flake.nix` pins the version and source
 hash. After an upgrade, check that the schema still accepts:

@@ -1,0 +1,8 @@
+{
+  "description": "Kotlin and Android/KMP code reviewer. Reviews Kotlin code for idiomatic patterns, coroutine safety, Compose best practices.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}

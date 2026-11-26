@@ -1,0 +1,6 @@
+{
+  "description": "Kotlin/Gradle build, compilation, and dependency error resolution specialist. Fixes Kotlin build errors with minimal changes.",
+  "tools": [
+    "*"
+  ]
+}

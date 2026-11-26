@@ -3,6 +3,7 @@ __pycache__/
 .opencode/
 .claude/
 *prompt.md
+!fx/agents/*/prompt.md
 release-notes.json
 .superpowers/
 

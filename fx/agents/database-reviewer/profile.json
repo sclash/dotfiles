@@ -1,0 +1,6 @@
+{
+  "description": "PostgreSQL database specialist for query optimization, schema design, security, and performance. Incorporates Supabase best practices.",
+  "tools": [
+    "*"
+  ]
+}

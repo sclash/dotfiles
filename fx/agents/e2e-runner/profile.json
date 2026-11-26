@@ -1,0 +1,6 @@
+{
+  "description": "End-to-end testing specialist using Playwright. Generates, maintains, and runs E2E tests for critical user flows.",
+  "tools": [
+    "*"
+  ]
+}

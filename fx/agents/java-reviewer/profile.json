@@ -1,0 +1,8 @@
+{
+  "description": "Expert Java and Spring Boot code reviewer specializing in layered architecture, JPA patterns, security, and concurrency.",
+  "tools": [
+    "*",
+    "!write_file",
+    "!edit_file"
+  ]
+}
