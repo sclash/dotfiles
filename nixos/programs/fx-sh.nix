@@ -11,14 +11,41 @@ let
   # launcher below materializes this file into a real ~/.fx/settings.json.
   fxSettings = "${dotfiles}/fx/settings.json";
 
+  # MCP servers are defined once in nixos/programs/mcpservers.nix and shared
+  # with OpenCode/Claude. Convert the neutral shape to fx's mcp.json shape,
+  # keeping `disabled` as `"enabled": false` so every server stays off until
+  # it is turned on. The tracked override file applies per-server patches at
+  # launch without a rebuild.
+  mcpEnabled = server: if server.enabled != null then server.enabled else !server.disabled;
+  toFxMcp =
+    _name: server:
+    if server.url != null then
+      {
+        type = "http";
+        inherit (server) url;
+        enabled = mcpEnabled server;
+      }
+    else
+      {
+        type = "stdio";
+        command = [ server.command ] ++ server.args;
+        enabled = mcpEnabled server;
+      }
+      // lib.optionalAttrs (server.env != { }) { env = server.env; };
+
+  fxMcpBase = (pkgs.formats.json { }).generate "fx-mcp-base.json" {
+    mcpServers = lib.mapAttrs toFxMcp config.programs.mcp.servers;
+  };
+
   # fx opens ~/.fx/settings.json with O_NOFOLLOW, rejects hard links, and saves
   # settings with a temp file + rename. A home-manager symlink at that path is
   # therefore rejected (or replaced on the first write), so the wrapper copies
   # the repo file into a real, private file first and writes changes back
   # through the symlink after fx exits.
   #
-  # Everything else under ~/.fx that is configuration, rather than runtime
-  # state, is linked directly below: fx follows those.
+  # Agents, themes and AGENTS.md are linked directly below: fx follows those.
+  # MCP servers are generated from mcpservers.nix and merged with a tracked
+  # override at launch, because fx needs a real (non-link) mcp.json.
   fx = pkgs.writeShellScriptBin "fx" ''
     set -eu
 
@@ -37,6 +64,27 @@ let
         install -m 600 "$src" "$dst"
       fi
     fi
+
+    # MCP servers are generated from nixos/programs/mcpservers.nix. Apply the
+    # tracked override file so a server can be enabled without a rebuild.
+    # fx reads a real file here; it cannot edit a link.
+    mkdir -p "$HOME/.fx"
+    over="$HOME/.config/fx/mcp.overrides.json"
+    merged="$(mktemp 2>/dev/null || true)"
+    if [ -n "$merged" ] && [ -f "$over" ] && ${lib.getExe pkgs.jq} -s '
+        .[0] as $base
+        | (.[1].mcpServers // {}) as $overrides
+        | $base
+        | .mcpServers |= with_entries(.value += ($overrides[.key] // {}))
+      ' "${fxMcpBase}" "$over" > "$merged" 2>/dev/null; then
+      install -m 600 "$merged" "$HOME/.fx/mcp.json"
+    else
+      if [ -n "$merged" ] && [ -f "$over" ]; then
+        echo "fx: could not merge $over; using the generated MCP servers" >&2
+      fi
+      install -m 600 "${fxMcpBase}" "$HOME/.fx/mcp.json"
+    fi
+    [ -z "$merged" ] || rm -f "$merged"
 
     # Remember what fx starts from, so only changes made during this run are
     # written back to the repo.
@@ -91,8 +139,11 @@ in
     # ~/.fx/AGENTS.md may link to a file elsewhere in $HOME.
     ".fx/AGENTS.md".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/fx/AGENTS.md";
 
-    # fx follows this for reads but refuses to edit a linked file, so /mcp add
-    # and /mcp remove will fail; edit the repo and restart fx instead.
-    ".fx/mcp.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/fx/mcp.json";
+    # Servers come from nixos/programs/mcpservers.nix; the launcher merges this
+    # override on top and writes a real ~/.fx/mcp.json. Add entries here to
+    # enable a server without rebuilding, for example:
+    #   { "mcpServers": { "playwright": { "enabled": true } } }
+    ".config/fx/mcp.overrides.json".source =
+      config.lib.file.mkOutOfStoreSymlink "${dotfiles}/fx/mcp.overrides.json";
   };
 }
