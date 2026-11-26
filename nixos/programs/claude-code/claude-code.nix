@@ -194,11 +194,11 @@ in
         claude-plugins-official
         superpowers
         # firecrawl
-        claude-mem
+        # claude-mem
         ecc
         # context-mode-clean
-        context-mode
-        caveman
+        # context-mode
+        # caveman
         wshobson-agents
         ;
     };
@@ -219,7 +219,7 @@ in
       "${claude-plugins-official}/plugins/ralph-loop"
       # "${claude-plugins-official}/plugins/data-engineering"
       "${claude-plugins-official}/external_plugins/playwright"
-      superpowers
+      # superpowers
       # firecrawl
       # claude-mem
       # context-mode-clean
