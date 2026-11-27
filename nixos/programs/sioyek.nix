@@ -12,7 +12,9 @@
     enable = true;
     bindings = {
     
-  "move_left" = "h";
+  "move_up" = "k";
+  "move_down" = "j";
+  "move_lef" = "h";
   "move_right" = "l";
   "screen_down" = [ "d" "<c-d>" ];
   "screen_up" = [ "u" "<c-u>" ];
@@ -20,6 +22,4 @@
   "goto_next_tab" = [ "k" "K" ];
   "goto_prev_tab" = [ "j" "J" ];
   "goto_mark" = "'";
-    };
-  };
-}
+    }; }; }
