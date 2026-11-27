@@ -142,8 +142,8 @@ QtObject {
             root.nmVpnUpProc.running = true
             return
         }
-        root.connecting = true
         root.connectingSsid = name
+        root.connecting = true
         root._runHelper("connect", { uuid: uuid, mode: mode || "", secrets: secrets || {}, data: data || {} }, r => {
             root.connecting = false
             root.connectingSsid = ""

@@ -376,6 +376,15 @@ ShellRoot {
             nc.selIndex = nc.navItems.findIndex(it => it.kind === "vpn")
             nc.activate()
             check("network: reactivating reopens the mode prompt", nc.modePromptOpen)
+            NetworkService.connecting = true
+            NetworkService.connectingSsid = "Office"
+            check("network: starting the connect closes the route chooser", !nc.modePromptOpen)
+            nc.activate()
+            check("network: a second activation while connecting does not reopen it", !nc.modePromptOpen)
+            NetworkService.connecting = false
+            NetworkService.connectingSsid = ""
+            nc.activate()
+            check("network: the route chooser can open again after the connect", nc.modePromptOpen)
         },
         function () {
             const nc = shell.nc

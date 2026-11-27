@@ -89,12 +89,15 @@ WlrLayershell {
             NetworkService.vpnDisconnect(v.uuid)
             return
         }
+        // A connect already in flight owns the keyboard and the dialogs; a
+        // second Enter must not reopen the route chooser behind it.
+        if (NetworkService.connecting) return
         if (!NetworkService.helperAvailable || v.type === "wireguard") {
             NetworkService.vpnConnect(v.uuid)
             return
         }
         modePrompt.open(v.uuid, v.name)
-        Qt.callLater(() => root.scrollToAnchor(modePrompt))
+        Qt.callLater(() => { root.scrollToAnchor(modePrompt); modePrompt.forceActiveFocus() })
     }
 
     // A view slot of the stack (STYLE.md §2.5 slide + cross-fade).
@@ -480,8 +483,9 @@ WlrLayershell {
                 id: modePrompt
                 visible: modePrompt.uuid !== "" && root.view === "vpn"
                 onPicked: (uuid, mode) => {
+                    modePrompt.close()
                     NetworkService.vpnConnect(uuid, {}, mode)
-                    Qt.callLater(() => mainCol.forceActiveFocus())
+                    Qt.callLater(() => { modePrompt.close(); mainCol.forceActiveFocus() })
                 }
                 onCancelled: Qt.callLater(() => mainCol.forceActiveFocus())
             }
@@ -849,6 +853,20 @@ WlrLayershell {
     Connections {
         target: NetworkService
         function onDataUpdated(){ updateModels() }
+        function onConnectingChanged() {
+            if (modePrompt.visible && NetworkService.connecting
+                && NetworkService.connectingSsid === modePrompt.vpnName)
+                modePrompt.close()
+        }
+        function onConnectingSsidChanged() {
+            if (modePrompt.visible && NetworkService.connecting
+                && NetworkService.connectingSsid === modePrompt.vpnName)
+                modePrompt.close()
+        }
+        function onVpnActiveChanged() {
+            if (modePrompt.visible && NetworkService.vpnIsActive(modePrompt.vpnName))
+                modePrompt.close()
+        }
         function onVpnNeedChanged(){
             if (NetworkService.vpnNeed.length === 0) return
             if (!root.isOpen) { NetworkService.vpnCancelNeed(); return }   // the user left; don't prompt on the next visit
