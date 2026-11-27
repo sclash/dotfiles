@@ -26,6 +26,7 @@ cat > "$tmp/bin/nmcli" <<'STUB'
 # Stand-in nmcli: three saved profiles and nothing else.
 printf '%s\n' "$*" >> "$NMCLI_LOG"
 case "$*" in
+  *"connection show --active"*) : ;;
   *"connection show"*) printf 'Office:uuid-l2tp:vpn\nWork:uuid-openvpn:vpn\nHome WG:uuid-wg:wireguard\nCafe:uuid-wifi:802-11-wireless\n' ;;
 esac
 exit 0

@@ -37,7 +37,7 @@ var TYPES = {
     openvpn: { label: "OpenVPN", service: "org.freedesktop.NetworkManager.openvpn", importExt: [".ovpn", ".conf"], fields: [
         { key: "remote", label: "Gateway", kind: "text", required: true, placeholder: "vpn.example.com:1194" },
         { key: "connection-type", label: "Authentication", kind: "choice", default: "password", absent: "tls", options: [{ value: "password", label: "Password" }, { value: "tls", label: "Certificates" }, { value: "password-tls", label: "Password and certificates" }, { value: "static-key", label: "Static key" }] },
-        { key: "username", label: "Username", kind: "text", showIf: { "connection-type": ["password", "password-tls"] } },
+        { key: "username", label: "Username", kind: "text", placeholder: "leave empty to be asked when connecting", showIf: { "connection-type": ["password", "password-tls"] } },
         { key: "password", label: "Password", kind: "secret", showIf: { "connection-type": ["password", "password-tls"] } },
         { key: "ca", label: "CA certificate", kind: "file", showIf: { "connection-type": ["password", "tls", "password-tls"] } },
         { key: "cert", label: "User certificate", kind: "file", showIf: { "connection-type": ["tls", "password-tls"] } },
@@ -222,14 +222,6 @@ function validate(state) {
         const v = String(state.values[f.key] === undefined || state.values[f.key] === null ? "" : state.values[f.key]).trim()
         if (f.required && v === "") return { key: f.key, message: f.label + " is required" }
         if (f.kind === "number" && v !== "" && !/^[0-9]+$/.test(v)) return { key: f.key, message: f.label + " must be a whole number" }
-    }
-    // nm-openvpn needs a username for password modes. An imported .ovpn names a
-    // credentials file, but NetworkManager never reads it, so the form must.
-    if (state.type === "openvpn") {
-        const ctype = String(state.values["connection-type"] || "")
-        const user = state.values.username === undefined || state.values.username === null ? "" : String(state.values.username)
-        if ((ctype === "password" || ctype === "password-tls") && user.trim() === "")
-            return { key: "username", message: "Username is required" }
     }
     const seen = {}
     const adv = state.advanced || []

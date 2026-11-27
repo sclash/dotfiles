@@ -90,6 +90,18 @@ ShellRoot {
         },
         function () {
             check("service: need cleared once connected", NetworkService.vpnNeed.length === 0)
+            NetworkService.vpnActive = true
+            NetworkService.vpnName = "Office"
+            NetworkService.vpnActiveNames = ["Office", "Home WG"]
+            check("service: every active VPN is tracked",
+                  NetworkService.vpnIsActive("Office") && NetworkService.vpnIsActive("Home WG")
+                  && !NetworkService.vpnIsActive("Work"))
+            check("service: several active VPNs are summarized",
+                  NetworkService.vpnActiveLabel === "Office +1" && NetworkService.vpnActiveSummary === "Office, Home WG",
+                  NetworkService.vpnActiveLabel + " / " + NetworkService.vpnActiveSummary)
+            NetworkService.vpnActive = false
+            NetworkService.vpnName = ""
+            NetworkService.vpnActiveNames = []
             NetworkService.refreshImportCandidates()
         },
         function () {
@@ -191,6 +203,11 @@ ShellRoot {
                   "visible=" + sp.visible + " fields=" + f.length)
             check("prompt: username label comes from the schema",
                   f.length === 2 && f[0].placeholder === "Username", f.length ? f[0].placeholder : "")
+            check("prompt: visible before confirming", sp.visible)
+            NetworkService.connecting = true
+            check("prompt: boxes disappear while connecting", !sp.visible)
+            NetworkService.connecting = false
+            check("prompt: a second need brings the boxes back", sp.visible)
             if (f.length === 2) {
                 f[0].text = "alice"
                 f[1].text = "smoke-password"
@@ -382,11 +399,13 @@ ShellRoot {
             const vpnIdx = nc.navItems.findIndex(it => it.kind === "vpn")
             NetworkService.vpnActive = true
             NetworkService.vpnName = "Office"
+            NetworkService.vpnActiveNames = ["Office"]
             nc.selIndex = vpnIdx
             nc.activate()
             check("network: an active VPN disconnects without the prompt", !nc.modePromptOpen)
             NetworkService.vpnActive = false
             NetworkService.vpnName = ""
+            NetworkService.vpnActiveNames = []
             NetworkService.helperAvailable = false
             nc.activate()
             check("network: without nm-vpn the prompt is skipped", !nc.modePromptOpen)

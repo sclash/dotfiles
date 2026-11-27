@@ -31,6 +31,7 @@ import re
 import socket
 import subprocess
 import sys
+import time
 
 FLAG_AGENT_OWNED = 1
 FLAG_NOT_SAVED = 2
@@ -361,17 +362,35 @@ def cmd_connect(backend, req):
     need_user = username_needed(rec) and not (data.get(USERNAME) or "").strip()
     if missing or need_user:
         return {"ok": False, "need": ([USERNAME] if need_user else []) + missing, "type": rec["type"]}
+    # A username supplied here is the profile's first one. Saving it and
+    # activating in the same request must not race: the VPN plugin otherwise
+    # occasionally reads the profile before the username lands, rejects the
+    # empty username, and only a second manual connect works.
+    first_username = username_needed(rec) and bool((data.get(USERNAME) or "").strip())
     if data:
         if rec["type"] != OPENVPN:
             raise Failure("cannot set data when connecting")
         extra = sorted(set(data) - {USERNAME})
         if extra:
             raise Failure("cannot set %s when connecting" % ", ".join(extra))
-        backend.set_data(uuid, USERNAME, data[USERNAME].strip())
+        value = data[USERNAME].strip()
+        backend.set_data(uuid, USERNAME, value)
+        if backend.load(uuid)["data"].get(USERNAME) != value:
+            raise Failure("Could not save the VPN username")
     wanted = {k: given[k] for k in asked}
     old = backend.set_mode(uuid, mode == "split") if mode else None
     try:
-        nmcli_up(uuid, passwd_lines(rec, wanted), list(wanted.values()))
+        started = time.monotonic()
+        try:
+            nmcli_up(uuid, passwd_lines(rec, wanted), list(wanted.values()))
+        except Failure:
+            # Only a first connect that saved a username gets one retry, and
+            # only after a quick failure (bad credentials/timeouts are not
+            # retried). The retry then sees the now-settled profile.
+            if not first_username or time.monotonic() - started > 20:
+                raise
+            time.sleep(0.5)                         # let NetworkManager finish tearing down the first attempt
+            nmcli_up(uuid, passwd_lines(rec, wanted), list(wanted.values()))
     except Failure:
         if old is not None:
             try:

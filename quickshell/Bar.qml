@@ -244,7 +244,7 @@ Scope {
                         Text {
                             id: vpnText
                             anchors.centerIn: parent
-                            text: Icons.vpn + " " + NetworkService.vpnName
+                            text: Icons.vpn + " " + NetworkService.vpnActiveLabel
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.barIconSize
                             color: Theme.accent

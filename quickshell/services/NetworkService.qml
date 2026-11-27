@@ -13,6 +13,14 @@ QtObject {
     property int signalStrength: -1
     property bool vpnActive: false
     property string vpnName: ""
+    property var vpnActiveNames: []           // every active VPN/WireGuard, not just the first
+    readonly property string vpnActiveLabel: {
+        const n = root.vpnActiveNames.length
+        if (n === 0) return root.vpnName
+        return n === 1 ? root.vpnActiveNames[0] : root.vpnActiveNames[0] + " +" + (n - 1)
+    }
+    readonly property string vpnActiveSummary: root.vpnActiveNames.length > 0
+        ? root.vpnActiveNames.join(", ") : root.vpnName
     property bool connecting: false
     property string connectingSsid: ""
     property var knownNetworks: []
@@ -155,6 +163,10 @@ QtObject {
         })
     }
     function vpnCancelNeed() { root.vpnNeed = []; root.vpnNeedUuid = ""; root.vpnNeedName = ""; root.vpnNeedType = ""; root.vpnNeedMode = "" }
+    function vpnIsActive(name) {
+        if (root.vpnActiveNames.length > 0) return root.vpnActiveNames.indexOf(name) !== -1
+        return root.vpnActive && root.vpnName === name   // fallback for tests/older state
+    }
     function vpnLoad(uuid, cb) { root._runHelper("get", { uuid: uuid }, cb) }
     function vpnSave(request, cb) {
         root._runHelper(request.uuid ? "update" : "add", request, r => { if (r.ok) root.vpnProc.running = true; if (cb) cb(r) })
@@ -220,7 +232,10 @@ QtObject {
                 const parts = txt.split("---IP---")
                 const devSection = parts[0] || ""
                 const ipPart = (parts[1] || "").split("---VPN---")[0] || ""
-                const vpnPart = (parts[1] || "").split("---VPN---")[1] || ""
+                // Stop at ---WIFI---: the VPN section otherwise swallows the
+                // following markers and scan lines (which once showed up as a
+                // fake active VPN in the bar).
+                const vpnPart = ((parts[1] || "").split("---VPN---")[1] || "").split("---WIFI---")[0] || ""
                 const wifiRaw = (parts[1] || "").split("---WIFI---")[1] || ""
                 const wifiPart = wifiRaw.split("---RADIO---")[0] || ""
                 const radioRaw = (parts[1] || "").split("---RADIO---")[1] || ""
@@ -252,9 +267,10 @@ QtObject {
                 }
                 const ipLines = ipPart.trim().split("\n").filter(Boolean).map(l=> l.replace("IP4.ADDRESS[1]:","").split("/")[0].trim()).filter(ip=> ip && ip !== "127.0.0.1" && !ip.startsWith("172.17."))
                 root.ipaddr = ipLines.length > 0 ? ipLines[0] : ""
-                const vpnLines = vpnPart.trim().split("\n").filter(Boolean).filter(l => l.indexOf("vpn") !== -1)
-                root.vpnActive = vpnLines.length > 0
-                root.vpnName = vpnLines.length > 0 ? vpnLines[0].split(":")[0] : ""
+                const vpnLines = vpnPart.trim().split("\n").filter(Boolean)
+                root.vpnActiveNames = vpnLines.map(l => l.split(":")[0])
+                root.vpnActive = root.vpnActiveNames.length > 0
+                root.vpnName = root.vpnActive ? root.vpnActiveNames[0] : ""
                 root.dataUpdated()
                 if (root.iface !== "" && !root.trafficProc.running) root.trafficProc.running = true
             }

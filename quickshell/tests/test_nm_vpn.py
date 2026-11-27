@@ -21,6 +21,11 @@ printf '%s\n' "$@" > "$FAKE_NMCLI_ARGS"
 pf=""; prev=""
 for a in "$@"; do [[ $prev == passwd-file ]] && pf=$a; prev=$a; done
 if [[ -n $pf ]]; then cat "$pf" > "$FAKE_NMCLI_PASSWD"; else : > "$FAKE_NMCLI_PASSWD"; fi
+if [[ -n ${FAKE_NMCLI_FAIL_ONCE:-} && ! -e ${FAKE_NMCLI_FAIL_ONCE}.used ]]; then
+  : > "${FAKE_NMCLI_FAIL_ONCE}.used"
+  echo "Error: Connection activation failed: AUTH_FAILED" >&2
+  exit 4
+fi
 if [[ -n ${FAKE_NMCLI_FAIL:-} ]]; then
   echo "Error: Connection activation failed: $FAKE_NMCLI_FAIL" >&2
   exit 4
@@ -327,6 +332,21 @@ class Cli(unittest.TestCase):
         # for the password.
         r = self.run_cli("connect", {"uuid": "u-openvpn", "secrets": {"password": "pw-1"}})
         self.assertEqual(r, {"ok": True})
+
+    def test_connect_retries_once_after_saving_a_username(self):
+        marker = os.path.join(self.tmp.name, "fail-once")
+        r = self.run_cli("connect", {"uuid": "u-openvpn", "data": {"username": "andrea.sergi"},
+                                     "secrets": {"password": "pw-1"}},
+                         FAKE_NMCLI_FAIL_ONCE=marker)
+        self.assertEqual(r, {"ok": True})
+        self.assertTrue(os.path.exists(marker + ".used"))
+        self.assertEqual(self.stored("u-openvpn")["data"]["username"], "andrea.sergi")
+
+    def test_connect_does_not_retry_without_a_new_username(self):
+        marker = os.path.join(self.tmp.name, "fail-l2tp")
+        r = self.run_cli("connect", {"uuid": "u-office", "secrets": {"ipsec-psk": "p"}},
+                         FAKE_NMCLI_FAIL_ONCE=marker)
+        self.assertFalse(r["ok"])
 
     def test_connect_rejects_non_username_data(self):
         r = self.run_cli("connect", {"uuid": "u-openvpn", "data": {"username": "alice", "remote": "x"},

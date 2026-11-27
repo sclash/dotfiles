@@ -85,7 +85,7 @@ WlrLayershell {
     // asks for the route mode first.
     function requestVpnConnect(v) {
         if (!v) return
-        if (NetworkService.vpnActive && NetworkService.vpnName === v.name) {
+        if (NetworkService.vpnIsActive(v.name)) {
             NetworkService.vpnDisconnect(v.uuid)
             return
         }
@@ -262,7 +262,7 @@ WlrLayershell {
                             }
                             Text {
                                 visible: NetworkService.connected && !currentCard.isConnecting
-                                text: (NetworkService.ipaddr || "") + (NetworkService.iface !== "" ? " · " + NetworkService.iface : "") + (NetworkService.vpnActive ? " · via " + NetworkService.vpnName : "")
+                                text: (NetworkService.ipaddr || "") + (NetworkService.iface !== "" ? " · " + NetworkService.iface : "") + (NetworkService.vpnActive ? " · via " + NetworkService.vpnActiveSummary : "")
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                                 color: Theme.fgMuted
@@ -337,7 +337,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view ? ListView.view.width : 0
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "nearby" && it.idx === index }
@@ -376,7 +376,7 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view ? ListView.view.width : 0
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "known" && it.idx === index }
@@ -418,11 +418,13 @@ WlrLayershell {
                 delegate: Rectangle {
                     required property var modelData
                     required property int index
-                    width: parent.width
+                    width: ListView.view ? ListView.view.width : 0
                     height: 44
                     radius: Theme.roundingItem
                     readonly property bool isSel: { const it = root.navItems[root.selIndex]; return it !== undefined && it.kind === "vpn" && it.idx === index }
-                    readonly property bool isActive: NetworkService.vpnActive && NetworkService.vpnName === modelData.name
+                    readonly property bool isActive: NetworkService.vpnActiveNames.indexOf(modelData.name) !== -1
+                        || (NetworkService.vpnActiveNames.length === 0 && NetworkService.vpnActive
+                            && NetworkService.vpnName === modelData.name)
                     color: isSel ? Theme.bgSelected : (vpnMA.containsMouse ? Theme.bgHover : "transparent")
                     border.color: isSel ? Theme.borderSelected : "transparent"
                     border.width: 1

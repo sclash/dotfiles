@@ -22,7 +22,7 @@ Rectangle {
     }
     signal done()
 
-    visible: keys.length > 0
+    visible: keys.length > 0 && !NetworkService.connecting
     Layout.fillWidth: true
     implicitHeight: col.implicitHeight + Theme.padL * 2
     radius: Theme.roundingItem
