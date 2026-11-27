@@ -46,8 +46,11 @@ WlrLayershell {
             else viewHost.forceActiveFocus()
         })
     }
-    function pushView(name) { stack = stack.concat([name]); refocusTop() }
-    function popView() { stack = stack.slice(0, stack.length - 1); refocusTop() }
+    // Opening a view must start at its top: the Flickable otherwise keeps the
+    // scroll position from the list (import, VPN list) that was open before.
+    function scrollTop() { Qt.callLater(() => { if (scrollView) scrollView.contentY = 0 }) }
+    function pushView(name) { stack = stack.concat([name]); scrollTop(); refocusTop() }
+    function popView() { stack = stack.slice(0, stack.length - 1); scrollTop(); refocusTop() }
     // Clear the stack and every view that leaves it (typed secrets die with them).
     function leaveViews() { stack = []; typeView.reset(); formView.reset(); importView.reset() }
     function resetVpnViews() { leaveViews(); secretPrompt.clear(); modePrompt.close() }
@@ -64,6 +67,7 @@ WlrLayershell {
             importView.reset()
             formView.startEdit(r.profile)
             root.stack = ["form"]                 // after an import too: Esc returns to the list
+            root.scrollTop()
             root.refocusTop()
         })
     }
@@ -75,7 +79,7 @@ WlrLayershell {
         if (!NetworkService.helperAvailable) { NetworkService.lastError = "nm-vpn is not installed — run update"; return }
         editProfile(v.uuid)
     }
-    function formSaved() { formView.reset(); stack = []; NetworkService.refresh(); refocusTop() }
+    function formSaved() { formView.reset(); stack = []; NetworkService.refresh(); scrollTop(); refocusTop() }
     // One activation path for Enter and row clicks: an active VPN disconnects;
     // WireGuard and the no-helper fallback connect directly; everything else
     // asks for the route mode first.
@@ -850,7 +854,7 @@ WlrLayershell {
             modePrompt.close()
             root.view = "vpn"
             root.updateModels()
-            Qt.callLater(() => secretPrompt.focusFirst())
+            Qt.callLater(() => { secretPrompt.focusFirst(); root.scrollToAnchor(secretPrompt) })
         }
     }
     Component.onCompleted: updateModels()

@@ -81,7 +81,22 @@ Item {
         Qt.callLater(focusFirst)
     }
     function syncName() { nameStop.setText(view.name) }
-    function focusFirst() { nameStop.focusInput() }
+    // A password-mode OpenVPN profile cannot connect without a username.
+    // Imported .ovpn files point at a credentials file, but NetworkManager
+    // never reads it, so the form opens on this field instead of the name.
+    function needsUsername() {
+        const ctype = String(view.values["connection-type"] || "")
+        return view.isEdit && view.type === "openvpn"
+            && (ctype === "password" || ctype === "password-tls")
+            && String(view.values.username === undefined || view.values.username === null ? "" : view.values.username).trim() === ""
+    }
+    function focusFirst() {
+        if (view.needsUsername()) {
+            const s = view.stopFor("username")
+            if (s) { s.focusInput(); return }
+        }
+        nameStop.focusInput()
+    }
     function next(from) {
         if (!from) return
         const n = from.nextItemInFocusChain(true)

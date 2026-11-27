@@ -3,11 +3,13 @@
     nm-vpn types|get|add|update|import|connect   < one JSON request on stdin
 
 Prints exactly one JSON line: {"ok": true, ...} or {"ok": false, "error": ...}.
-`connect` takes an optional "mode": "full"|"split" (empty or absent leaves
-the profile's never-default setting untouched) and answers
-{"ok": false, "need": [keys], "type": t} while secrets set to
-Ask are missing. Secrets travel only on stdin and, when connecting, through
-nmcli's passwd-file on a pipe: never in argv, the environment or the output.
+`connect` takes optional "mode": "full"|"split" (empty or absent leaves
+the profile's never-default setting untouched) and "data": {"username": ...}
+for non-secret values the connection needs. It answers
+{"ok": false, "need": [keys], "type": t} while secrets set to Ask, or a
+missing OpenVPN username, are missing. Secrets travel only on stdin and, when
+connecting, through nmcli's passwd-file on a pipe: never in argv, the
+environment or the output.
 Reads and writes go through libnm (PyGObject) over D-Bus; connecting runs
 `nmcli connection up uuid U passwd-file /dev/fd/N`, which makes nmcli a
 one-shot secret agent for that activation.
@@ -36,6 +38,8 @@ FLAG_NOT_REQUIRED = 4
 ASK_FLAGS = FLAG_AGENT_OWNED | FLAG_NOT_SAVED
 WIREGUARD = "wireguard"
 OPENVPN = "openvpn"
+OPENVPN_PASSWORD_MODES = ("password", "password-tls")
+USERNAME = "username"
 WG_SECRETS = ("wireguard.private-key", "peer.preshared-key")
 WG_ASKABLE = ("wireguard.private-key",)
 NATIVE_KEEP = ("peer.count", "connection.interface-name")
@@ -138,6 +142,18 @@ def ask_keys(rec):
         # only asks for it when the profile has a static challenge.
         keys = [k for k in keys if k != "challenge-response"]
     return sorted(keys)
+
+
+def username_needed(rec):
+    """True when an OpenVPN password profile has no username to send.
+
+    nm-openvpn reads the username from vpn.data. A client .ovpn may name a
+    credentials file for --auth-user-pass, but libnm's importer does not read
+    that file, so the profile can arrive with the username empty.
+    """
+    return (rec["type"] == OPENVPN
+            and rec["data"].get("connection-type") in OPENVPN_PASSWORD_MODES
+            and not (rec["data"].get(USERNAME) or "").strip())
 
 
 def apply_request(rec, req):
@@ -337,12 +353,21 @@ def cmd_connect(backend, req):
     given = req.get("secrets") or {}
     if not isinstance(given, dict) or not all(isinstance(v, str) for v in given.values()):
         raise Failure("secrets must map keys to strings")
+    data = str_map(req.get("data"), "data")
     mode = connect_mode(req)
     rec = backend.load(uuid)
     asked = ask_keys(rec)
-    missing = [k for k in asked if k not in given]
-    if missing:
-        return {"ok": False, "need": missing, "type": rec["type"]}
+    missing = [k for k in asked if not given.get(k)]
+    need_user = username_needed(rec) and not (data.get(USERNAME) or "").strip()
+    if missing or need_user:
+        return {"ok": False, "need": ([USERNAME] if need_user else []) + missing, "type": rec["type"]}
+    if data:
+        if rec["type"] != OPENVPN:
+            raise Failure("cannot set data when connecting")
+        extra = sorted(set(data) - {USERNAME})
+        if extra:
+            raise Failure("cannot set %s when connecting" % ", ".join(extra))
+        backend.set_data(uuid, USERNAME, data[USERNAME].strip())
     wanted = {k: given[k] for k in asked}
     old = backend.set_mode(uuid, mode == "split") if mode else None
     try:
@@ -425,6 +450,11 @@ class FakeBackend:
         native["ipv6.never-default"] = "yes" if split else "no"
         self._write()
         return "split" if old else "full"
+
+    def set_data(self, uuid, key, value):
+        rec = self.load(uuid)
+        rec["data"][key] = value
+        self._store(rec)
 
     def import_file(self, type_name, path):
         src = self.state["imports"].get(os.path.basename(path))
@@ -730,6 +760,18 @@ class LibnmBackend:
         self._call(lambda cb: rc.commit_changes_async(True, None, cb, None),
                    lambda src, res: src.commit_changes_finish(res))
         return "split" if old else "full"
+
+    def set_data(self, uuid, key, value):
+        """Change one vpn.data item without touching the stored secrets."""
+        rc = self._remote(uuid)
+        conn = self.NM.SimpleConnection.new_clone(rc)
+        s = conn.get_setting_vpn()
+        if s is None:
+            raise Failure("%s is not a VPN" % rc.get_id())
+        s.add_data_item(key, value)
+        rc.replace_settings_from_connection(conn)
+        self._call(lambda cb: rc.commit_changes_async(True, None, cb, None),
+                   lambda src, res: src.commit_changes_finish(res))
 
     def import_file(self, type_name, path):
         NM, GLib = self.NM, self.GLib

@@ -112,7 +112,17 @@ pkgs.testers.runNixOSTest {
         print("VM FINDING imported openvpn: " + json.dumps(p))
         # imports are created with autoconnect off, like added profiles
         assert machine.succeed(f"nmcli -g connection.autoconnect connection show uuid {uuid}").strip() == "no"
-        # the importer marks challenge-response Ask, but without a static-challenge it is never asked
+        # the importer marks challenge-response Ask, but without a static-challenge it is never asked.
+        # It never reads the .ovpn's auth-user-pass file, so it also asks for the username.
+        r = vpn("connect", {"uuid": uuid})
+        assert r == {"ok": False, "need": ["username", "password"], "type": "openvpn"}, r
+        # a connect-time username is stored on the profile; later connects ask only for the password
+        r = vpn("connect", {"uuid": uuid, "data": {"username": "alice"}, "secrets": {"password": "dummy-ovpn"}},
+                env=f"NM_VPN_NMCLI_BIN={true_bin}")
+        assert r == {"ok": True}, r
+        p = ok(vpn("get", {"uuid": uuid}))["profile"]
+        assert p["data"].get("username") == "alice", p
+        assert "dummy-ovpn" not in json.dumps(p), p
         r = vpn("connect", {"uuid": uuid})
         assert r == {"ok": False, "need": ["password"], "type": "openvpn"}, r
         # a profile with no stored secrets can still be edited (secrets read as empty)

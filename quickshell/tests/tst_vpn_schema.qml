@@ -199,6 +199,20 @@ TestCase {
         s.values.gateway = "g"
         compare(Schema.validate(s), null)
     }
+    function test_validate_openvpn_username_for_password_modes() {
+        const s = { type: "openvpn", uuid: "", name: "Work", values: Schema.defaults("openvpn"),
+                    modes: Schema.defaultModes("openvpn"), stored: {}, secretValues: {}, advanced: [] }
+        s.values.remote = "vpn.example.com"
+        s.modes.password = "ask"                       // the username is checked first
+        compare(Schema.validate(s).key, "username")
+        s.values.username = "andrea.sergi"
+        compare(Schema.validate(s), null)
+        s.values["connection-type"] = "tls"            // certificate auth needs no username
+        s.values.username = ""
+        compare(Schema.validate(s), null)
+        s.values["connection-type"] = "password-tls"
+        compare(Schema.validate(s).key, "username")
+    }
     function test_validate_required_secret_respects_ask_and_stored() {
         const s = wgState()
         compare(Schema.validate(s).key, "wireguard.private-key")

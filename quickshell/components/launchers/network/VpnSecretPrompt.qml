@@ -3,16 +3,23 @@ import QtQuick.Layouts
 import "../../../theme"
 import "../../../services"
 import "../../../services/vpnSchema.js" as Schema
-import ".."                                   // SecretField
 
-// Connect-time prompt for secrets set to Ask (NetworkService.vpnNeed),
-// inline in the /vpn view like the Wi-Fi password box. The values go to
-// NetworkService.vpnConnect (→ nm-vpn stdin → nmcli passwd-file pipe), and
-// the fields are cleared at once. Spec §9–10.
+// Connect-time prompt for secrets set to Ask (NetworkService.vpnNeed) and for
+// profile data the helper needs but the profile lacks, such as OpenVPN's
+// username. Values go to NetworkService.vpnConnect (→ nm-vpn stdin; secrets
+// then through nmcli's passwd-file pipe), and the fields are cleared at once.
+// Spec §9–10.
 Rectangle {
     id: prompt
     property bool reveal: false
     readonly property var keys: NetworkService.vpnNeed
+    readonly property bool hasSecret: {
+        for (let i = 0; i < keys.length; i++) {
+            const f = Schema.fieldByKey(NetworkService.vpnNeedType, keys[i])
+            if (!f || f.kind === "secret") return true
+        }
+        return false
+    }
     signal done()
 
     visible: keys.length > 0
@@ -24,17 +31,24 @@ Rectangle {
     border.width: 1
 
     function fieldAt(i) { return rep.itemAt(i) }
-    function focusFirst() { const f = fieldAt(0); if (f) f.forceActiveFocus() }
+    function focusFirst() { const f = fieldAt(0); if (f) f.focusInput() }
     function clear() {
-        for (let i = 0; i < rep.count; i++) { const f = fieldAt(i); if (f) f.text = "" }
+        for (let i = 0; i < rep.count; i++) { const f = fieldAt(i); if (f) f.clear() }
         reveal = false
     }
     function submit() {
-        const secrets = {}
-        for (let i = 0; i < rep.count; i++) { const f = fieldAt(i); if (f) secrets[prompt.keys[i]] = f.text }
+        const secrets = {}, data = {}
+        for (let i = 0; i < rep.count; i++) {
+            const f = fieldAt(i)
+            if (!f) continue
+            const key = prompt.keys[i]
+            const field = Schema.fieldByKey(NetworkService.vpnNeedType, key)
+            if (field && field.kind !== "secret") data[key] = f.text
+            else secrets[key] = f.text
+        }
         const uuid = NetworkService.vpnNeedUuid
         clear()
-        NetworkService.vpnConnect(uuid, secrets, NetworkService.vpnNeedMode)
+        NetworkService.vpnConnect(uuid, secrets, NetworkService.vpnNeedMode, data)
         prompt.done()
     }
     function cancel() { clear(); NetworkService.vpnCancelNeed(); prompt.done() }
@@ -61,18 +75,20 @@ Rectangle {
         Repeater {
             id: rep
             model: prompt.keys
-            delegate: SecretField {
+            delegate: VpnNeedField {
                 required property var modelData
                 required property int index
+                vpnType: NetworkService.vpnNeedType
+                key: modelData
                 placeholder: Schema.labelFor(NetworkService.vpnNeedType, modelData)
                 revealed: prompt.reveal
                 onRevealToggled: prompt.reveal = !prompt.reveal
-                onAccepted: { const next = prompt.fieldAt(index + 1); if (next) next.forceActiveFocus(); else prompt.submit() }
+                onAccepted: { const next = prompt.fieldAt(index + 1); if (next) next.focusInput(); else prompt.submit() }
                 onEscaped: prompt.cancel()
             }
         }
         Text {
-            text: "Ctrl+s show/hide · Enter next / connect · Esc cancel"
+            text: (prompt.hasSecret ? "Ctrl+s show/hide · " : "") + "Enter next / connect · Esc cancel"
             font.family: Theme.fontFamily
             font.pixelSize: 10
             color: Theme.fgDim

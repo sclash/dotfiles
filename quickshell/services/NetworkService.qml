@@ -122,10 +122,10 @@ QtObject {
         root.nmRadioProc.command = ["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]
         root.nmRadioProc.running = true
     }
-    // Connects through nm-vpn. Secrets set to Ask come back as `need`: the
-    // Network Center prompts and calls this again with them. Without nm-vpn,
-    // plain nmcli (no prompt).
-    function vpnConnect(uuid, secrets, mode) {
+    // Connects through nm-vpn. Secrets set to Ask come back as `need`, and so
+    // does a missing OpenVPN username; the Network Center prompts and calls
+    // this again with them. Without nm-vpn, plain nmcli (no prompt).
+    function vpnConnect(uuid, secrets, mode, data) {
         const v = root.vpnConnections.filter(x => x.uuid === uuid)[0]
         const name = v ? v.name : ""
         root.lastError = ""
@@ -136,7 +136,7 @@ QtObject {
         }
         root.connecting = true
         root.connectingSsid = name
-        root._runHelper("connect", { uuid: uuid, mode: mode || "", secrets: secrets || {} }, r => {
+        root._runHelper("connect", { uuid: uuid, mode: mode || "", secrets: secrets || {}, data: data || {} }, r => {
             root.connecting = false
             root.connectingSsid = ""
             if (r.ok) root.vpnCancelNeed()

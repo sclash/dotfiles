@@ -526,6 +526,7 @@
         rustc
         cargo
         zig
+	herdr-core
         # inputs.nixd.packages.${pkgs.system}.default
       ])
 

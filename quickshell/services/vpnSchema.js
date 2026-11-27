@@ -223,6 +223,14 @@ function validate(state) {
         if (f.required && v === "") return { key: f.key, message: f.label + " is required" }
         if (f.kind === "number" && v !== "" && !/^[0-9]+$/.test(v)) return { key: f.key, message: f.label + " must be a whole number" }
     }
+    // nm-openvpn needs a username for password modes. An imported .ovpn names a
+    // credentials file, but NetworkManager never reads it, so the form must.
+    if (state.type === "openvpn") {
+        const ctype = String(state.values["connection-type"] || "")
+        const user = state.values.username === undefined || state.values.username === null ? "" : String(state.values.username)
+        if ((ctype === "password" || ctype === "password-tls") && user.trim() === "")
+            return { key: "username", message: "Username is required" }
+    }
     const seen = {}
     const adv = state.advanced || []
     for (let i = 0; i < adv.length; i++) {

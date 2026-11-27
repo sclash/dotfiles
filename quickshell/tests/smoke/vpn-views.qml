@@ -17,6 +17,7 @@ ShellRoot {
     property var tv: null
     property var iv: null
     property var sp: null
+    property var sp2: null
     property var mp: null
     property var fv: null
     property var fv2: null
@@ -169,6 +170,37 @@ ShellRoot {
         function () {
             check("prompt: hidden once connected", shell.sp !== null && !shell.sp.visible)
             if (shell.sp) shell.sp.destroy()
+        },
+        function () {
+            NetworkService.vpnConnect("uuid-openvpn", {})
+        },
+        function () {
+            check("prompt: a missing OpenVPN username is asked with the password",
+                  JSON.stringify(NetworkService.vpnNeed) === JSON.stringify(["username", "password"]),
+                  JSON.stringify(NetworkService.vpnNeed))
+            shell.sp2 = shell.make("VpnSecretPrompt.qml")
+        },
+        function () {
+            const sp = shell.sp2
+            if (!sp) return
+            const f = shell.findFields(sp, [])
+            check("prompt: username is plain and password masked",
+                  sp.visible && f.length === 2
+                  && f[0].input.echoMode === TextInput.Normal
+                  && f[1].input.echoMode === TextInput.Password,
+                  "visible=" + sp.visible + " fields=" + f.length)
+            check("prompt: username label comes from the schema",
+                  f.length === 2 && f[0].placeholder === "Username", f.length ? f[0].placeholder : "")
+            if (f.length === 2) {
+                f[0].text = "alice"
+                f[1].text = "smoke-password"
+                sp.submit()
+                check("prompt: username fields clear after submit", f[0].text === "" && f[1].text === "")
+            }
+        },
+        function () {
+            check("prompt: OpenVPN username need cleared", shell.sp2 !== null && !shell.sp2.visible)
+            if (shell.sp2) shell.sp2.destroy()
         },
         function () {
             const fv = shell.make("VpnFormView.qml")

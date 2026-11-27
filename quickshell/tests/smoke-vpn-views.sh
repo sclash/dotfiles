@@ -26,7 +26,7 @@ cat > "$tmp/bin/nmcli" <<'STUB'
 # Stand-in nmcli: three saved profiles and nothing else.
 printf '%s\n' "$*" >> "$NMCLI_LOG"
 case "$*" in
-  *"connection show"*) printf 'Office:uuid-l2tp:vpn\nHome WG:uuid-wg:wireguard\nCafe:uuid-wifi:802-11-wireless\n' ;;
+  *"connection show"*) printf 'Office:uuid-l2tp:vpn\nWork:uuid-openvpn:vpn\nHome WG:uuid-wg:wireguard\nCafe:uuid-wifi:802-11-wireless\n' ;;
 esac
 exit 0
 STUB
@@ -51,6 +51,9 @@ PROFILES = {
     "uuid-imported": {"uuid": "uuid-imported", "name": "office", "type": "openvpn",
                       "data": {"remote": "vpn.example.com", "connection-type": "password"},
                       "secrets": {"password": "unset"}, "native": {"ipv4.never-default": "no"}, "user": {}},
+    "uuid-openvpn": {"uuid": "uuid-openvpn", "name": "Work", "type": "openvpn",
+                     "data": {"remote": "vpn.example.com", "connection-type": "password", "password-flags": "2"},
+                     "secrets": {}, "native": {"ipv4.never-default": "no"}, "user": {}},
 }
 if cmd == "types":
     out = {"ok": True, "types": TYPES}
@@ -64,6 +67,15 @@ elif cmd == "import":
 elif cmd == "connect":
     if req.get("uuid") == "uuid-wg":
         out = {"ok": True}
+    elif req.get("uuid") == "uuid-openvpn":
+        data = req.get("data") or {}
+        secrets = req.get("secrets") or {}
+        need = []
+        if not (data.get("username") or "").strip():
+            need.append("username")
+        if not (secrets.get("password") or "").strip():
+            need.append("password")
+        out = {"ok": True} if not need else {"ok": False, "need": need, "type": "openvpn"}
     else:
         has = "ipsec-psk" in (req.get("secrets") or {})
         out = {"ok": True} if has else {"ok": False, "need": ["ipsec-psk"], "type": "l2tp"}
@@ -90,12 +102,16 @@ def ok(cond, msg):
     print(("OK   " if cond else "FAIL ") + msg)
     if not cond:
         bad += 1
-ok(all("smoke-secret" not in " ".join(c["argv"]) for c in calls), "secrets never reach nm-vpn's argv")
+ok(all("smoke-secret" not in " ".join(c["argv"]) and "smoke-password" not in " ".join(c["argv"]) for c in calls),
+   "secrets never reach nm-vpn's argv")
 connects = [c for c in calls if c["argv"][:1] == ["connect"]]
 ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-1" for c in connects),
    "an Ask secret reaches nm-vpn on stdin")
 ok(any((c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for c in connects),
    "the prompt's secret reaches nm-vpn on stdin")
+ok(any((c["req"].get("data") or {}).get("username") == "alice"
+       and (c["req"].get("secrets") or {}).get("password") == "smoke-password" for c in connects),
+   "a connect-time username reaches nm-vpn as data, the password as a secret")
 ok(any(c["req"].get("mode") == "full" for c in connects),
    "the mode prompt's choice reaches nm-vpn")
 ok(any(c["req"].get("mode") == "split" and (c["req"].get("secrets") or {}).get("ipsec-psk") == "smoke-secret-2" for c in connects),

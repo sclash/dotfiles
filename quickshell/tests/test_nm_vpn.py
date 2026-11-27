@@ -37,6 +37,15 @@ def l2tp(**over):
     return rec
 
 
+def openvpn(**over):
+    rec = {"uuid": "u-openvpn", "name": "Work", "type": "openvpn",
+           "service": "org.freedesktop.NetworkManager.openvpn",
+           "data": {"remote": "vpn.example.com", "connection-type": "password", "password-flags": "2"},
+           "secrets": {}, "native": {"ipv4.never-default": "no"}, "user": {}}
+    rec.update(over)
+    return rec
+
+
 def edit(**over):
     req = {"type": "l2tp", "name": "Office", "data": {"gateway": "g"}, "secrets": {}, "native": {}, "user": {}}
     req.update(over)
@@ -87,6 +96,14 @@ class PureLogic(unittest.TestCase):
         self.assertEqual(nv.ask_keys(ovpn), ["challenge-response", "password"])
         other = l2tp(data={"gateway": "g", "challenge-response-flags": "2"})
         self.assertEqual(nv.ask_keys(other), ["challenge-response"])   # only OpenVPN is special-cased
+
+    def test_username_needed(self):
+        self.assertTrue(nv.username_needed(openvpn()))
+        self.assertTrue(nv.username_needed(openvpn(data={"remote": "r", "connection-type": "password-tls"})))
+        self.assertFalse(nv.username_needed(openvpn(data={"remote": "r", "connection-type": "password",
+                                                         "username": "andrea.sergi"})))
+        self.assertFalse(nv.username_needed(openvpn(data={"remote": "r", "connection-type": "tls"})))
+        self.assertFalse(nv.username_needed(l2tp()))
 
     def test_apply_keeps_flags_and_removes_absent_data(self):
         rec = nv.apply_request(l2tp(), edit(name="Office 2"))
@@ -167,7 +184,8 @@ class Cli(unittest.TestCase):
                     {"name": "openvpn", "service": "org.freedesktop.NetworkManager.openvpn", "import": True},
                     {"name": "wireguard", "service": None, "import": True},
                 ],
-                "profiles": {"u-office": {k: v for k, v in l2tp(secrets={"password": "stored-pw-1"}).items() if k != "uuid"}},
+                "profiles": {"u-office": {k: v for k, v in l2tp(secrets={"password": "stored-pw-1"}).items() if k != "uuid"},
+                             "u-openvpn": {k: v for k, v in openvpn().items() if k != "uuid"}},
                 "imports": {"office.ovpn": {"name": "office", "type": "openvpn", "service": "org.freedesktop.NetworkManager.openvpn",
                                             "data": {"remote": "ovpn.example.com", "connection-type": "password"},
                                             "secrets": {}, "native": {}, "user": {}}},
@@ -218,15 +236,15 @@ class Cli(unittest.TestCase):
     def test_add_then_store(self):
         r = self.run_cli("add", edit(name="New", secrets={"password": {"mode": "save", "value": "new-pw-2"},
                                                           "ipsec-psk": {"mode": "ask", "value": ""}}))
-        self.assertEqual(r, {"ok": True, "uuid": "fake-2"})
-        s = self.stored("fake-2")
+        self.assertTrue(r["ok"], r)
+        s = self.stored(r["uuid"])
         self.assertEqual(s["data"]["password-flags"], "0")
         self.assertEqual(s["data"]["ipsec-psk-flags"], "2")
         self.assertEqual(s["secrets"], {"password": "new-pw-2"})
 
     def test_add_empty_save_is_not_required(self):
-        self.run_cli("add", edit(secrets={"password": {"mode": "save", "value": ""}}))
-        self.assertEqual(self.stored("fake-2")["data"]["password-flags"], "4")
+        r = self.run_cli("add", edit(secrets={"password": {"mode": "save", "value": ""}}))
+        self.assertEqual(self.stored(r["uuid"])["data"]["password-flags"], "4")
 
     def test_add_unknown_type(self):
         r = self.run_cli("add", edit(type="fortisslvpn"))
@@ -292,6 +310,40 @@ class Cli(unittest.TestCase):
         self.assertIn("u-office", args)
         with open(self.passwd_file) as f:
             self.assertEqual(f.read(), "vpn.secrets.ipsec-psk:psk-secret-3\n")
+
+    def test_connect_asks_missing_openvpn_username(self):
+        r = self.run_cli("connect", {"uuid": "u-openvpn"})
+        self.assertEqual(r, {"ok": False, "need": ["username", "password"], "type": "openvpn"})
+        self.assertFalse(os.path.exists(self.args_file))   # nmcli never ran
+
+    def test_connect_saves_openvpn_username_then_connects(self):
+        r = self.run_cli("connect", {"uuid": "u-openvpn", "data": {"username": "andrea.sergi"},
+                                     "secrets": {"password": "pw-1"}})
+        self.assertEqual(r, {"ok": True})
+        self.assertEqual(self.stored("u-openvpn")["data"]["username"], "andrea.sergi")
+        with open(self.passwd_file) as f:
+            self.assertEqual(f.read(), "vpn.secrets.password:pw-1\n")
+        # The profile now carries the username, so the next connect asks only
+        # for the password.
+        r = self.run_cli("connect", {"uuid": "u-openvpn", "secrets": {"password": "pw-1"}})
+        self.assertEqual(r, {"ok": True})
+
+    def test_connect_rejects_non_username_data(self):
+        r = self.run_cli("connect", {"uuid": "u-openvpn", "data": {"username": "alice", "remote": "x"},
+                                     "secrets": {"password": "pw-1"}})
+        self.assertFalse(r["ok"])
+        self.assertIn("cannot set remote when connecting", r["error"])
+
+    def test_connect_rejects_data_for_other_types(self):
+        r = self.run_cli("connect", {"uuid": "u-office", "data": {"username": "x"},
+                                     "secrets": {"ipsec-psk": "p"}})
+        self.assertFalse(r["ok"])
+        self.assertIn("cannot set data when connecting", r["error"])
+
+    def test_connect_empty_openvpn_username_is_asked_again(self):
+        r = self.run_cli("connect", {"uuid": "u-openvpn", "data": {"username": "  "},
+                                     "secrets": {"password": "pw-1"}})
+        self.assertEqual(r, {"ok": False, "need": ["username"], "type": "openvpn"})
 
     def test_connect_without_ask_secrets_has_no_passwd_file(self):
         self.run_cli("update", edit(uuid="u-office", secrets={"ipsec-psk": {"mode": "save", "value": "p"}}))
